@@ -1,0 +1,114 @@
+#!/bin/sh
+
+mk_init_component()
+{
+    name="$1"
+    file="${MK_COMPONENT_DIR}/${name}"
+    mk_log_enter "${name}"
+    MK_COMP_SOURCE_DIR="${MK_SOURCE_DIR}/${name}"
+    [ -d "${MK_COMP_SOURCE_DIR}" ] || mk_fail "Source not present for component ${name}"
+    ( 
+	cd "${MK_COMP_SOURCE_DIR}"
+	. "${file}" || mk_fail "Failed to source component ${file}"
+	if mk_function_exists "init"
+	then
+	    expanded="`mk_expand_depends "${MK_MODULE_DIR}" ${MODULES}`" || exit 1
+	    for module in ${expanded}
+	    do
+		. "${MK_MODULE_DIR}/${module}" || mk_fail "Failed to source module ${module}"
+		if mk_function_exists "load"
+		then
+		    load
+		fi
+	    done
+	    init || mk_fail "Failed to initialize component ${name}"
+	fi
+    ) || exit $?
+    mk_log_leave
+}
+
+MK_HOME="`dirname "$0"`"
+
+if [ -z "${MK_ROOT_DIR}" ]
+then
+    MK_ROOT_DIR="`pwd`"
+fi
+
+. "${MK_HOME}/lib/constants.sh"
+. "${MK_HOME}/lib/paths.sh"
+. "${MK_HOME}/lib/util.sh"
+. "${MK_HOME}/lib/generate.sh"
+
+MK_PROJECT_NAME=""
+OPT_INIT=true
+OPT_INSTALL=false
+OPT_FORCE=false
+
+while [ -n "$1" ]
+do
+    param="$1"
+    shift
+    case "$param" in
+	--no-init)
+	    OPT_INIT=false
+	    ;;
+	--install)
+	    OPT_INSTALL=true
+	    ;;
+	--force)
+	    OPT_FORCE=true
+	    ;;
+	*)
+	    mk_fail "unrecognized parameter $param"
+	    ;;
+    esac
+done
+
+if [ -f "${MK_MANIFEST_FILE}" ]
+then
+    MK_PROJECT_NAME="`mk_extract_var "${MK_MANIFEST_FILE}" PROJECT_NAME`" || mk_fail "could not read manifest"
+fi
+
+if [ -n "${MK_PROJECT_NAME}" ]
+then
+    mk_log "Initializing metakit for project ${MK_PROJECT_NAME}"
+else
+    mk_log "Initializing metakit"
+fi
+
+if $OPT_INSTALL
+then
+    mk_log "Installing default modules"
+    mk_log_enter "module"
+    mkdir -p "${MK_MODULE_DIR}"
+    for file in "${MK_HOME}/${MK_MODULE_DIRNAME}/"*
+    do
+	name="`basename "${file}"`"
+	if [ "${OPT_FORCE}" != "true" -a -f "${MK_MODULE_DIR}/${name}" ]
+	then
+	    mk_log "Skipping ${name}"
+	else
+	    mk_log "Installing ${name}"
+	    cp -f "${file}" "${MK_MODULE_DIR}/."
+	fi
+    done
+    mk_log_leave
+fi
+
+if $OPT_INIT
+then
+    # Run init functions for all components
+    mk_log "Initializing components"
+    for file in "${MK_COMPONENT_DIR}/"*
+    do
+	mk_init_component "`basename "$file"`"
+    done
+fi
+
+mk_log "Generating ${MK_CONFIGURE_FILENAME}"
+mk_generate_configure > "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
+chmod +x "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
+mk_log "Generating ${MK_ACTION_FILENAME}.in"
+mk_generate_action_in > "${MK_ROOT_DIR}/${MK_ACTION_FILENAME}.in"
+mk_log "Generating ${MK_MAKEFILE_FILENAME}.in"
+mk_generate_makefile_in > "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in"

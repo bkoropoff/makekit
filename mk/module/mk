@@ -1,0 +1,7 @@
+configure()
+{
+    mk_check_program_path MK_SHELL "shell" bash sh || mk_fail "could not find a usable shell"
+    mk_check_program MK_MAKE "make" gmake make || mk_fail "could not find a usable make program"
+
+    mk_define MK_SHELL MK_MAKE
+}

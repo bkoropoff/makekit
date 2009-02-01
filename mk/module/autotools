@@ -1,0 +1,123 @@
+DEPENDS="installpath"
+
+load()
+{
+    __libtool_rewrite_dep()
+    {
+	if echo "$1" | grep "^-L${MK_STAGE_DIR}" >/dev/null
+	then
+	    # Appears to be a -L pointing into a staging directory
+	    # Remove it since the autotools module will add it LDFLAGS automatically
+	    return 0
+	elif echo "$1" | grep "^${MK_LIBDIR}/.*\.la" >/dev/null
+	then
+	    # Appears to be a dependency on another .la file in the
+	    # final install path -- prepend it with the staging path of
+	    # whatever module contains it
+	    for __comp in ${MK_COMP_DEPENDS}
+	    do
+		if [ -f "${MK_STAGE_DIR}/${__comp}$1" ]
+		then
+		    echo "${MK_STAGE_DIR}/${__comp}$1"
+		    return 0
+		fi
+	    done
+	else
+	    # Just pass it through verbatim
+	    echo "$1"
+	fi
+    }
+
+    auto_configure()
+    {
+	if [ -z "${AUTO_CONFIGURE_FILE}" ]
+	then
+	    AUTO_CONFIGURE_FILE="${MK_COMP_SOURCE_DIR}/configure"
+	fi
+
+	mk_show_args "${AUTO_CONFIGURE_FILE}" \
+	    CC="${CC}" \
+	    MAKE="${MAKE}" \
+	    CPPFLAGS="${CPPFLAGS}" \
+	    CFLAGS="${CFLAGS}" \
+	    LDFLAGS="${LDFLAGS}" \
+    	    --prefix="${MK_PREFIX}" \
+	    --libdir="${MK_LIBDIR}" \
+	    --bindir="${MK_BINDIR}" \
+	    --sbindir="${MK_SBINDIR}" \
+	    --localstatedir="${MK_LOCALSTATEDIR}" \
+	    --sysconfdir="${MK_SYSCONFDIR}" \
+	    "$@" || mk_fail "configure failed"
+    }
+
+    auto_make_build()
+    {
+	mk_show_args ${MAKE} "$@" || mk_fail "make failed"
+    }
+
+    auto_make_stage()
+    {
+	mk_show_args ${MAKE} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
+    }
+
+    auto_init()
+    {
+	mk_log "Running autotools"
+	autoreconf -fi || mk_fail "autoreconf failed"
+    }
+}
+
+configure()
+{
+    mk_check_program MK_CC "C compiler" gcc cc || mk_fail "could not find a C compiler"
+    mk_define MK_CC MK_MAKE MK_MFLAGS MK_CFLAGS MK_CPPFLAGS MK_LDFLAGS
+}
+
+pre_prepare()
+{
+    SHELL="${MK_SHELL}"
+    CC="${MK_CC}"
+    CFLAGS="${MK_CFLAGS}"
+    CPPFLAGS="${MK_CPPFLAGS}"
+    LDFLAGS="${MK_LDFLAGS}"
+    MFLAGS="${MFLAGS} ${MK_MFLAGS}"
+
+    for __dep in ${MK_COMP_DEPENDS}
+    do
+	if [ "$__dep" != "$MK_COMP" ]
+	then
+	    if [ -d "${MK_STAGE_DIR}/${__dep}${MK_PREFIX}/include" ]
+	    then
+		CPPFLAGS="${CPPFLAGS} -I${MK_STAGE_DIR}/${__dep}${MK_PREFIX}/include"
+	    fi
+	    if [ -d "${MK_STAGE_DIR}/${__dep}${MK_LIBDIR}" ]
+	    then
+		LDFLAGS="${LDFLAGS} -L${MK_STAGE_DIR}/${__dep}${MK_LIBDIR}"
+	    fi
+	fi
+    done
+
+    export SHELL CC CFLAGS CPPFLAGS LDFLAGS MAKE MFLAGS
+}
+
+post_stage()
+{
+    mk_log "Updating libtool archives"
+    mk_log_enter "file"
+    for __la in "${MK_COMP_STAGE_DIR}/${MK_LIBDIR}"/*.la
+    do
+	mk_log "`basename "${__la}"`"
+	__deps="`(. "${__la}" && echo "${dependency_libs}")`"
+	__newdeps=""
+	for __dep in ${__deps}
+	do
+	    __newdep="`__libtool_rewrite_dep "$__dep"`"
+	    __newdeps="$__newdeps $__newdep"
+	done
+	
+	mk_sed_file "$__la" \
+	    -e "s:^dependency_libs=.*$:dependency_libs=`mk_quote "$__newdeps"`:" \
+	    -e "s:^installed=.*$:installed=no:"
+    done
+    mk_log_leave
+}
