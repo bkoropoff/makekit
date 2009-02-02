@@ -12,8 +12,6 @@ MK_EXPORT_LIST=""
 
 @mk_include lib/paths.sh@
 
-@mk_generate_configure@
-
 mk_define()
 {
     for __var in "$@"
@@ -111,84 +109,13 @@ mk_check_program_path()
     return 1
 }
 
-mk_configure_options()
-{
-    for module in ${MK_MODULE_INVENTORY}
-    do
-	varname="MK_MODULE_`mk_make_identifier "${module}"`_OPTIONS"
-	mk_deref "${varname}"
-	echo ""
-    done
-
-    for comp in ${MK_COMPONENT_INVENTORY}
-    do
-	varname="MK_COMPONENT_`mk_make_identifier "${comp}"`_OPTIONS"
-	mk_deref "${varname}"
-	echo ""
-    done
-}
-
 mk_configure_help()
 {
-    awk_prog='
-
-/^[a-zA-Z-]+/ {
-    print ""
-    if ($2 == "-")
-    {
-        form=sprintf("--%s", $1);
-    }
-    else
-    {
-        form=sprintf("--%s=%s", $1, $2);
-    }
-    i=length(form);
-    while (i < justify - 1)
-    {
-        form = form " ";
-        i++;
-    }
-    i=3
-    printf("%s", form);
-    while (i <= NF)
-    {
-        printf(" %s",$i);
-        i++
-    }
-    printf("\n");
-}
-
-/^[ \t]+/ {
-    i=0;
-    while (i < justify - 1)
-    {
-        printf(" ")
-        i++;
-    }
-
-    i=1
-    while (i <= NF)
-    {
-        printf(" %s",$i);
-        i++;
-    }
-    printf("\n");
-}'
-
-    echo "Usage: ${MK_CONFIGURE_FILENAME} [ options ... ]"
-    echo ""
-    echo "Options:"
-    echo ""
-    echo "--help 　 　　　     　　　　　         Display this help message"
-
-    mk_configure_options | awk "${awk_prog}" justify=40
-
-    exit 0
+    @mk_generate_configure_help@
 }
 
 # Load manifest
 . "${MK_MANIFEST_FILE}" || mk_fail "could not read ${MK_MANIFEST_FILENAME}"
-
 
 # Save our arguments to write to the makefile
 MK_CONFIGURE_ARGS=""
@@ -207,32 +134,16 @@ do
 	    mk_configure_help
 	    exit 0
 	    ;;
-	--*)
-	    __name="`echo "$_param" | sed -e 's/^--//' -e 's/=.*$//'`"
-	    __argname="`mk_configure_options | grep "^${__name}" | awk '{print $2; }'`"
-	    if [ -n "$__argname" ]
-	    then
-		__var="MK_`mk_make_identifier "$__name"`"
-		if [ "$__argname" = "-" ]
-		then
-		    __val="true"
-		else
-		    __val="`echo "$_param" | cut -d= -f2`"
-		fi
-		__quoted="`mk_quote $__val`"
-		mk_assign "$__var" "$__val"
-	    else
-		mk_fail "unrecognized option: $_param"
-	    fi
+@mk_generate_configure_parse@
+        *)
+	    mk_fail "unrecognized option: $_param"
+	    exit 1
 	    ;;
     esac
 done
 
-mk_log Loading modules
-mk_load_modules
-mk_log Configuring project
-mk_configure_modules
-mk_configure_components
+mk_log "Configuring ${PROJECT_NAME}"
+@mk_generate_configure_body@
 
 mk_log "Creating ${MK_CONFIG_FILENAME}"
 # Open config file

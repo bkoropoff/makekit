@@ -14,13 +14,12 @@ mk_include()
     echo ""
 }
 
-mk_generate_configure()
+mk_generate_configure_body()
 {
     modules="`mk_order_by_depends "${MK_RESOURCE_DIR}/module/"*`" || exit 1
     components="`mk_order_by_depends "${MK_RESOURCE_DIR}/component/"*`" || exit 1
 
-    echo "mk_load_modules()"
-    echo "{"
+    echo "mk_log 'Loading modules'"
     for file in ${modules}
     do
 	name="`basename "$file"`"
@@ -28,10 +27,8 @@ mk_generate_configure()
 	mk_extract_function "${file}" "load"
 	echo "mk_log_leave"
     done
-    echo "}"
 
-    echo "mk_configure_modules()"
-    echo "{"
+    echo "mk_log 'Configuring modules'"
     for file in ${modules}
     do
 	name="`basename "$file"`"
@@ -39,10 +36,8 @@ mk_generate_configure()
 	mk_extract_function "${file}" "configure"
 	echo "mk_log_leave"
     done
-    echo "}"
 
-    echo "mk_configure_components()"
-    echo "{"
+    echo "mk_log 'Configuring components'"
     for file in ${components}
     do
 	name="`basename "$file"`"
@@ -50,7 +45,104 @@ mk_generate_configure()
 	mk_extract_function "${file}" "configure"
 	echo "mk_log_leave"
     done
-    echo "}"
+}
+
+mk_configure_options()
+{
+    for file in \
+	`mk_order_by_depends "${MK_MODULE_DIR}/"*` \
+	`mk_order_by_depends "${MK_COMPONENT_DIR}/"*`
+    do
+	mk_extract_var "${file}" OPTIONS
+    done
+}
+
+mk_generate_configure_help()
+{
+    awk_prog='
+
+/^[a-zA-Z-]+/ {
+    print ""
+    if ($2 == "-")
+    {
+        form=sprintf("--%s", $1);
+    }
+    else
+    {
+        form=sprintf("--%s=%s", $1, $2);
+    }
+    i=length(form);
+    while (i < justify - 1)
+    {
+        form = form " ";
+        i++;
+    }
+    i=3
+    printf("%s", form);
+    while (i <= NF)
+    {
+        printf(" %s",$i);
+        i++
+    }
+    printf("\n");
+}
+
+/^[ \t]+/ {
+    i=0;
+    while (i < justify - 1)
+    {
+        printf(" ")
+        i++;
+    }
+
+    i=1
+    while (i <= NF)
+    {
+        printf(" %s",$i);
+        i++;
+    }
+    printf("\n");
+}'
+
+    echo "    cat <<EOF"
+    echo "Usage: ${MK_CONFIGURE_FILENAME} [ options ... ]"
+    echo ""
+    echo "Options:"
+    echo ""
+    echo "--help 　 　　　     　　　　　         Display this help message"
+
+    mk_configure_options | awk "${awk_prog}" justify=40
+    
+    echo "EOF"
+    echo "    exit 0"
+}
+
+mk_generate_configure_parse()
+{
+    options="`mk_configure_options | grep '^[^ \t]' | awk '{print $1 " " $2;}'`"
+    __IFS="$IFS"
+    IFS='
+'
+    for pair in ${options}
+    do
+	IFS="$IFS"
+	option="`echo "${pair}" | cut -d' ' -f1`"
+	var="MK_`mk_make_identifier "${option}"`"
+	argname="`echo "${pair}" | cut -d' ' -f2`"
+	if [ "$argname" = "-" ]
+	then
+	    echo "        --${option})"
+	    echo "            ${var}=true"
+	    echo "            ;;"
+	else
+	    echo "        --${option}=*)"
+	    echo '            __val="`echo "${_param}" | cut -d= -f2`"'
+	    echo "            ${var}=\"\${__val}\""
+	    echo "            ;;"
+	fi
+	IFS='
+'
+    done
 }
 
 mk_generate_action_rules()
@@ -298,9 +390,8 @@ mk_process_template()
 	IFS="$__IFS"
 	if echo "$__line" | grep "^[ \t]*@[^@]*@[ \t]*$" >/dev/null
 	then
-	    __space="`echo "$__line" | sed 's/@.*$//'`"
 	    __func="`echo "$__line" | sed -e 's/[ \t]*@//' -e 's/@[ \t]*//'`"
-	    ${__func} | sed "s/\$/${__space}/g"
+	    ${__func}
 	else
 	    echo "$__line"
 	fi
