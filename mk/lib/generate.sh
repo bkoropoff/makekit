@@ -8,7 +8,7 @@ mk_include()
     echo ""
     echo "### Included file: `basename "$1"`"
     echo ""
-    cat "$1"
+    cat "${MK_HOME}/$1"
     echo ""
     echo "### End included file"
     echo ""
@@ -16,13 +16,6 @@ mk_include()
 
 mk_generate_configure()
 {
-    echo "#!/bin/sh"
-
-    mk_include "${MK_HOME}/lib/constants.sh"
-    mk_include "${MK_HOME}/lib/util.sh"
-    mk_include "${MK_HOME}/lib/configure-header.sh"
-    mk_include "${MK_HOME}/lib/paths.sh"
-
     modules="`mk_order_by_depends "${MK_RESOURCE_DIR}/module/"*`" || exit 1
     components="`mk_order_by_depends "${MK_RESOURCE_DIR}/component/"*`" || exit 1
 
@@ -58,17 +51,10 @@ mk_generate_configure()
 	echo "mk_log_leave"
     done
     echo "}"
-
-    mk_include "${MK_HOME}/lib/configure-footer.sh"
 }
 
-mk_generate_action_in()
+mk_generate_action_rules()
 {
-    mk_include "${MK_HOME}/lib/constants.sh"
-    mk_include "${MK_HOME}/lib/paths.sh"
-    mk_include "${MK_HOME}/lib/util.sh"
-    mk_include "${MK_HOME}/lib/action-header.sh"
-
     # Suck in all module bits
     for file in "${MK_MODULE_DIR}/"*
     do
@@ -117,11 +103,9 @@ mk_generate_action_in()
 	    echo "}"
 	done
     done
-
-    mk_include "${MK_HOME}/lib/action-footer.sh"
 }
 
-mk_generate_makefile_in()
+mk_generate_makefile_rules()
 {
     PHONY=""
     # Emit definitions of depedencies within the resource directory
@@ -262,7 +246,8 @@ mk_generate_makefile_in()
 
 mk_generate_manifest()
 {
-    mk_include "${MK_MANIFEST_FILE}.in"
+    cat "${MK_MANIFEST_FILE}.in"
+    echo ""
 
     # Generate a list of modules and components
     printf "MK_MODULE_INVENTORY='"
@@ -302,4 +287,24 @@ mk_generate_manifest()
 	    mk_extract_defines "${file}" "`mk_make_identifier "MK_COMPONENT_${name}"`_"
 	fi
     done
+}
+
+mk_process_template()
+{
+    __IFS="$IFS"
+    IFS=""
+    while read -r __line
+    do
+	IFS="$__IFS"
+	if echo "$__line" | grep "^[ \t]*@[^@]*@[ \t]*$" >/dev/null
+	then
+	    __space="`echo "$__line" | sed 's/@.*$//'`"
+	    __func="`echo "$__line" | sed -e 's/[ \t]*@//' -e 's/@[ \t]*//'`"
+	    ${__func} | sed "s/\$/${__space}/g"
+	else
+	    echo "$__line"
+	fi
+	IFS=""
+    done
+    IFS="$__IFS"
 }

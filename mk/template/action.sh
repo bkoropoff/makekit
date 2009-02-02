@@ -1,3 +1,7 @@
+@mk_include lib/constants.sh@
+@mk_include lib/paths.sh@
+@mk_include lib/util.sh@
+
 . "${MK_MANIFEST_FILE}" || mk_fail "could not read ${MK_MANIFEST_FILENAME}"
 . "${MK_CONFIG_FILE}" || mk_fail "coould not read ${MK_CONFIG_FILENAME}"
 
@@ -59,3 +63,47 @@ mk_install()
 
     ${1}_install || mk_fail "Installing component $1 failed"
 }
+
+@mk_generate_action_rules@
+
+while [ -n "$1" ]
+do
+    action="$1"
+    shift
+    case "$action" in
+	--make)
+	    MAKE="$1"
+	    shift;
+	    export MAKE
+	    ;;
+	prepare)
+	    comp="$1"
+	    shift
+	    mk_prepare "${comp}"
+	    ;;
+	build)
+	    comp="$1"
+	    shift
+	    mk_build "${comp}"
+	    ;;
+	stage)
+	    comp="$1"
+	    shift
+	    mk_stage "${comp}"
+	    ;;
+	install)
+	    comp="$1"
+	    shift
+	    dir="$1"
+	    shift
+	    if [ -z "$dir" ]
+	    then
+		dir="/"
+	    fi
+	    mk_install "${comp}" "${dir}"
+	    ;;
+	*)
+	    mk_fail "Unrecognized parameter: $action"
+	    ;;
+    esac
+done

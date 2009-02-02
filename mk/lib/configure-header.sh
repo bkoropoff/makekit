@@ -1,6 +1,0 @@
-DIRNAME="`dirname "$0"`"
-MK_ROOT_DIR="`mk_canonical_path "$DIRNAME"`"
-MK_WORK_DIR="`pwd`"
-MK_PREFIX="/usr/local"
-MK_DEFINE_LIST=""
-MK_EXPORT_LIST=""

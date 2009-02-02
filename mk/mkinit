@@ -108,11 +108,20 @@ then
 fi
 
 mk_log "Generating ${MK_CONFIGURE_FILENAME}"
-mk_generate_configure > "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
+mk_process_template \
+    < "${MK_HOME}/template/configure.sh" \
+    > "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
 chmod +x "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
+
 mk_log "Generating ${MK_ACTION_FILENAME}.in"
-mk_generate_action_in > "${MK_ROOT_DIR}/${MK_ACTION_FILENAME}.in"
+mk_process_template \
+    < "${MK_HOME}/template/action.sh" \
+    > "${MK_ROOT_DIR}/${MK_ACTION_FILENAME}.in"
+
 mk_log "Generating ${MK_MAKEFILE_FILENAME}.in"
-mk_generate_makefile_in > "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in"
+mk_process_template \
+    < "${MK_HOME}/template/makefile" \
+    > "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in"
+
 mk_log "Generating ${MK_MANIFEST_FILENAME}"
 mk_generate_manifest > "${MK_MANIFEST_FILE}"
