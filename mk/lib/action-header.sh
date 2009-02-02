@@ -44,3 +44,18 @@ mk_stage()
 
     ${1}_stage || mk_fail "Staging component $1 failed"
 }
+
+mk_install()
+{
+    mk_log "Installing component: $1"
+    mk_log "Destination: $2"
+    mk_set_comp_vars "$1"
+
+    MK_COMP_INSTALL_DIR="$2"
+
+    mkdir -p "${MK_COMP_INSTALL_DIR}" || mk_fail "could not create install directory"
+
+    cd "$MK_COMP_STAGE_DIR" || exit 1
+
+    ${1}_install || mk_fail "Installing component $1 failed"
+}

@@ -335,3 +335,13 @@ mk_make_identifier()
 {
     echo "$1" | tr -- '-a-z' '_A-Z'
 }
+
+mk_sync()
+{
+    if echo "$1" | grep '/$' >/dev/null 2>&1
+    then
+	cp -fpPR "$1"* "$2"
+    else
+	cp -fpPR "$1" "$2"
+    fi
+}

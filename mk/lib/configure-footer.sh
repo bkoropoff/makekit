@@ -226,6 +226,7 @@ mk_make_define MK_ROOT_DIR "${MK_ROOT_DIR}"
 mk_make_define MK_WORK_DIR "${MK_WORK_DIR}"
 mk_make_define ACTION      "\$(MK_WORK_DIR)/${MK_ACTION_FILENAME} --make \"\$(MAKE)\""
 mk_make_define MK_CONFIGURE_ARGS "${MK_CONFIGURE_ARGS}"
+mk_make_define DESTDIR     "/"
 
 # Decide if resources are present
 if [ -d "${MK_RESOURCE_DIR}" ]

@@ -1,5 +1,5 @@
-MK_COMPONENT_STEPS="prepare build stage"
-MK_DISTCLEAN_ROOT_FILES="${MK_CONFIGURE_FILENAME} ${MK_ACTION_FILENAME}.in ${MK_MAKEFILE_FILENAME}.in"
+MK_COMPONENT_STEPS="prepare build stage install"
+MK_DISTCLEAN_ROOT_FILES="${MK_CONFIGURE_FILENAME} ${MK_ACTION_FILENAME}.in ${MK_MAKEFILE_FILENAME}.in ${MK_MANIFEST_FILENAME}"
 MK_DISTCLEAN_WORK_FILES="${MK_CONFIG_FILENAME} ${MK_ACTION_FILENAME} ${MK_MAKEFILE_FILENAME}"
 MK_DISTCLEAN_WORK_DIRS="${MK_BUILD_DIRNAME} ${MK_DIST_DIRNAME} ${MK_STAGE_DIRNAME} ${MK_TARGET_DIRNAME}"
 
@@ -53,10 +53,6 @@ mk_generate_configure()
 
 mk_generate_action_in()
 {
-    local file
-    local comp
-    local depends
-    
     mk_include "${MK_HOME}/lib/constants.sh"
     mk_include "${MK_HOME}/lib/paths.sh"
     mk_include "${MK_HOME}/lib/util.sh"
@@ -66,7 +62,9 @@ mk_generate_action_in()
     for file in "${MK_MODULE_DIR}/"*
     do
 	module="`basename "${file}"`"
-	for func in load pre_prepare post_prepare pre_build post_build pre_stage post_stage
+	for func in \
+	    load pre_prepare post_prepare pre_build post_build \
+	    pre_stage post_stage pre_install post_install
 	do
 	    echo "${module}_${func}()"
 	    echo "{"
@@ -114,6 +112,7 @@ mk_generate_action_in()
 
 mk_generate_makefile_in()
 {
+    PHONY=""
     # Emit definitions of depedencies within the resource directory
     # These are preceeded with @MK_RESOURCE_YES@ and @MK_RESOURCE_NO@
     # so that configure can turn them off if resources have been stripped
@@ -146,6 +145,7 @@ mk_generate_makefile_in()
     printf "### End auto-generated dependency lists ###\n\n"
 
     printf "all: all-comp\n\n"
+    PHONY="$PHONY all"
 
     # Rule for regenerating the makefile
     printf "${MK_MAKEFILE_FILENAME}: \$(makefile_resource_deps)\n"
@@ -175,21 +175,38 @@ mk_generate_makefile_in()
 	printf "\t@\$(ACTION) stage ${comp}\n"
 	printf "\t@touch ${MK_TARGET_DIRNAME}/stage_${comp}\n\n"
 
+	printf "install_${comp}: ${MK_TARGET_DIRNAME}/stage_${comp}\n"
+	printf "\t@\$(ACTION) install ${comp} \$(DESTDIR)\n\n"
+	PHONY="$PHONY install_${comp}"
+
 	printf "rebuild_${comp}:\n"
 	printf "\t@rm -f ${MK_TARGET_DIRNAME}/build_${comp}\n"
 	printf "\t@rm -f ${MK_TARGET_DIRNAME}/stage_${comp}\n"
 	printf "\t@\$(MAKE) ${MK_TARGET_DIRNAME}/stage_${comp}\n\n"
+	PHONY="$PHONY rebuild_${comp}"
 
 	printf "clean_${comp}:\n"
 	printf "\t@echo \"Cleaning component ${comp}\"\n"
 	printf "\t@rm -rf ${MK_BUILD_DIRNAME}/${comp} ${MK_STAGE_DIRNAME}/${comp}\n"
 	printf "\t@rm -f"
+	PHONY="$PHONY clean_${comp}"
+
 	for step in ${MK_COMPONENT_STEPS}
 	do
 	    printf " ${MK_TARGET_DIRNAME}/${step}_${comp}"
 	done
 	printf "\n\n"
     done
+
+    # Emit install rule
+    printf "install:"
+    for file in "${MK_RESOURCE_DIR}/component/"*
+    do
+	comp="`basename "${file}"`"
+	printf " install_${comp}"
+    done
+    printf "\n\n"
+    PHONY="$PHONY install"
 
     # Emit clean rule
     printf "clean:"
@@ -199,6 +216,7 @@ mk_generate_makefile_in()
 	printf " clean_${comp}"
     done
     printf "\n\n"
+    PHONY="$PHONY clean"
 
     # Emit distclean rule
     printf "distclean: clean\n"
@@ -215,8 +233,9 @@ mk_generate_makefile_in()
 	printf "\trm -rf \$(MK_WORK_DIR)/${file}\n"	
     done
     printf "\n"
+    PHONY="$PHONY distclean"
 
-    # Emit all rule
+    # Emit all-comp rule
     printf "all-comp:"
     for file in "${MK_COMPONENT_DIR}/"*
     do
@@ -224,9 +243,10 @@ mk_generate_makefile_in()
 	printf " ${MK_TARGET_DIRNAME}/stage_${comp}"
     done
     printf "\n\n"
+    PHONY="$PHONY all-comp"
 
     # Emit phony rule
-    printf ".PHONY: all-comp all clean\n"
+    printf ".PHONY: $PHONY\n"
 }
 
 mk_generate_manifest()
