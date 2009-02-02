@@ -95,13 +95,37 @@ mk_check_program_path()
     return 1
 }
 
+mk_configure_options()
+{
+    for module in ${MK_MODULE_INVENTORY}
+    do
+	varname="MK_MODULE_`mk_make_identifier "${module}"`_OPTIONS"
+	mk_deref "${varname}"
+	echo ""
+    done
+
+    for comp in ${MK_COMPONENT_INVENTORY}
+    do
+	varname="MK_COMPONENT_`mk_make_identifier "${comp}"`_OPTIONS"
+	mk_deref "${varname}"
+	echo ""
+    done
+}
+
 mk_configure_help()
 {
     awk_prog='
 
 /^[a-zA-Z-]+/ {
     print ""
-    form=sprintf("--%s-%s=%s", type, $1, $2);
+    if ($2 == "-")
+    {
+        form=sprintf("--%s", $1);
+    }
+    else
+    {
+        form=sprintf("--%s=%s", $1, $2);
+    }
     i=length(form);
     while (i < justify - 1)
     {
@@ -141,25 +165,8 @@ mk_configure_help()
     echo ""
     echo "--help 　 　　　     　　　　　         Display this help message"
 
-    for module in ${MK_MODULE_INVENTORY}
-    do
-	varname="MK_MODULE_`mk_make_identifier "${module}"`_WITH_OPTIONS"
-	options="`mk_deref "${varname}"`"
-	if [ -n "$options" ]
-	then
-	    echo "${options}" | awk "${awk_prog}" type=with justify=40
-	fi
-    done
+    mk_configure_options | awk "${awk_prog}" justify=40
 
-    for comp in ${MK_COMPONENT_INVENTORY}
-    do
-	varname="MK_COMPONENT_`mk_make_identifier "${comp}"`_WITH_OPTIONS"
-	options="`mk_deref "${varname}"`"
-	if [ -n "$options" ]
-	then
-	    echo "${options}" | awk "${awk_prog}" type=with justify=40
-	fi
-    done
     exit 0
 }
 
@@ -184,14 +191,23 @@ do
 	    mk_configure_help
 	    exit 0
 	    ;;
-	--with-*)
-	    __var="MK_`echo "$_param" | sed -e 's/^--with-//' -e 's/=.*$//' | tr 'a-z' 'A-Z' | tr '-' '_'`"
-	    __val="`echo "$_param" | cut -d= -f2`"
-	    __quoted="`mk_quote $__val`"
-	    eval "${__var}=${__quoted}"
-	    ;;	
-	-*|--*)
-	    mk_fail "Unrecognized option: ${_param}"
+	--*)
+	    __name="`echo "$_param" | sed -e 's/^--//' -e 's/=.*$//'`"
+	    __argname="`mk_configure_options | grep "^${__name}" | awk '{print $2; }'`"
+	    if [ -n "$__argname" ]
+	    then
+		__var="MK_`mk_make_identifier "$__name"`"
+		if [ "$__argname" = "-" ]
+		then
+		    __val="true"
+		else
+		    __val="`echo "$_param" | cut -d= -f2`"
+		fi
+		__quoted="`mk_quote $__val`"
+		mk_assign "$__var" "$__val"
+	    else
+		mk_fail "unrecognized option: $_param"
+	    fi
 	    ;;
     esac
 done

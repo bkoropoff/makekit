@@ -124,7 +124,12 @@ mk_log_domain()
 mk_show()
 {
     mk_log "$@"
-    "$@"
+    if [ "${MK_SUPPRESS_COMMAND_OUTPUT}" = "true" ]
+    then
+	"$@" >/dev/null 2>&1
+    else
+	"$@"
+    fi
 }
 
 mk_show_args()
@@ -138,7 +143,13 @@ mk_show_args()
 	    echo "  $__arg"
 	done
     ) | mk_log_pipe
-    "$__first" "$@"
+
+    if [ "${MK_SUPPRESS_COMMAND_OUTPUT}" = "true" ]
+    then
+	"$__first" "$@" >/dev/null 2>&1
+    else
+	"$__first" "$@"
+    fi
 }
 
 mk_extract_function()

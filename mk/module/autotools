@@ -1,5 +1,5 @@
 DEPENDS="installpath"
-WITH_OPTIONS='
+OPTIONS='
 cc        program       Set name or path of the preferred
                         C compiler
 cflags    flags         Set default flags passed to the

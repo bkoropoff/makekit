@@ -1,5 +1,5 @@
 DEPENDS="mk"
-WITH_OPTIONS='
+OPTIONS='
 prefix                 path       Set install prefix
 
 libdir-name            name       Set name of directory for installed

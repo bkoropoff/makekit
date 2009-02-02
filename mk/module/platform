@@ -1,5 +1,5 @@
 DEPENDS="mk"
-WITH_OPTIONS='
+OPTIONS='
 arch            name    Specify machine architecture
 arch-variants   list    Specify set of machine architecture
                         compatibility variants
