@@ -47,11 +47,11 @@ configure()
     [ -z "${MK_SYSCONFDIR}" ] && MK_SYSCONFDIR="${MK_PREFIX}/${MK_SYSCONFDIR_NAME}"
     [ -z "${MK_LOCALSTATEDIR}" ] && MK_LOCALSTATEDIR="${MK_PREFIX}/${MK_LOCALSTATEDIR_NAME}"
     
-    mk_log "prefix:        ${MK_PREFIX}"
-    mk_log "libdir:        ${MK_LIBDIR}"
-    mk_log "bindir:        ${MK_BINDIR}"
-    mk_log "sbindir:       ${MK_SBINDIR}"
-    mk_log "sysconfdir:    ${MK_SYSCONFDIR}"
+    mk_log "prefix: ${MK_PREFIX}"
+    mk_log "libdir: ${MK_LIBDIR}"
+    mk_log "bindir: ${MK_BINDIR}"
+    mk_log "sbindir: ${MK_SBINDIR}"
+    mk_log "sysconfdir: ${MK_SYSCONFDIR}"
     mk_log "localstatedir: ${MK_LOCALSTATEDIR}"
 
     mk_define MK_PREFIX  

@@ -26,6 +26,17 @@ mk_generate_configure()
     modules="`mk_order_by_depends "${MK_RESOURCE_DIR}/module/"*`" || exit 1
     components="`mk_order_by_depends "${MK_RESOURCE_DIR}/component/"*`" || exit 1
 
+    echo "mk_load_modules()"
+    echo "{"
+    for file in ${modules}
+    do
+	name="`basename "$file"`"
+	echo "mk_log_enter '${name}'"
+	mk_extract_function "${file}" "load"
+	echo "mk_log_leave"
+    done
+    echo "}"
+
     echo "mk_configure_modules()"
     echo "{"
     for file in ${modules}

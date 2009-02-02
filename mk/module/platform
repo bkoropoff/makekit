@@ -1,0 +1,60 @@
+DEPENDS="mk"
+WITH_OPTIONS='
+arch            name    Specify machine architecture
+arch-variants   list    Specify set of machine architecture
+                        compatibility variants
+os              name    Specify operating system
+'
+
+load()
+{
+    MK_PLAT_ARCH_TESTS=""
+    MK_PLAT_OS_TESTS=""
+
+    mk_platform_add_arch()
+    {
+	MK_PLAT_ARCH_TESTS="$MK_PLAT_ARCH_TESTS $1"
+    }
+
+    mk_platform_add_os()
+    {
+	MK_PLAT_OS_TESTS="$MK_PLAT_ARCH_TESTS $1"
+    }
+}
+
+configure()
+{
+    mk_check_program_path MK_UNAME "uname" uname || mk_fail "no usable uname program found"
+
+    if [ -z "${MK_ARCH}" ]
+    then
+	for __test in ${MK_PLAT_ARCH_TESTS}
+	do
+	    if ${__test}
+	    then
+		break
+	    fi
+	done
+	
+	[ -z "${MK_ARCH}" ] && mk_fail "could not identify machine architecture"
+    fi
+
+    if [ -z "${MK_OS}" ]
+    then
+	for __test in ${MK_PLAT_OS_TESTS}
+	do
+	    if ${__test}
+	    then
+		break
+	    fi
+	done
+    fi
+
+    [ -z "${MK_OS}" ] && mk_fail "could not identify operating system"
+
+    mk_log "architecture: $MK_ARCH"
+    mk_log "architecture variants: $MK_ARCH_VARIANTS"
+    mk_log "operating system: $MK_OS"
+    
+    mk_define MK_ARCH MK_ARCH_VARIANTS MK_OS
+}

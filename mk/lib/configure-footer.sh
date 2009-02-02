@@ -196,8 +196,9 @@ do
     esac
 done
 
+mk_log Loading modules
+mk_load_modules
 mk_log Configuring project
-
 mk_configure_modules
 mk_configure_components
 

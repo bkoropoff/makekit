@@ -1,0 +1,20 @@
+DEPENDS="platform"
+
+load()
+{
+    __test_x86()
+    {
+	case "`${MK_UNAME} -m`" in
+	    i?86)
+		MK_ARCH="x86"
+		MK_ARCH_VARIANTS=""
+		return 0
+		;;
+	    *)
+		return 1
+		;;
+	esac
+    }
+
+    mk_platform_add_arch __test_x86
+}

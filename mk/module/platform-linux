@@ -1,0 +1,19 @@
+DEPENDS="platform"
+
+load()
+{
+    __test_linux()
+    {
+	case "`${MK_UNAME} -s`" in
+	    Linux)
+		MK_OS="linux"
+		return 0
+		;;
+	    *)
+		return 1
+		;;
+	esac
+    }
+
+    mk_platform_add_os __test_linux
+}
