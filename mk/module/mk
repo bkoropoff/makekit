@@ -1,3 +1,9 @@
+WITH_OPTIONS='
+shell    program       Set the name or path of the default
+                       Bourne-compatible shell
+make     program       Set the name or path of the default
+                       UNIX make utility'
+
 configure()
 {
     mk_check_program_path MK_SHELL "shell" bash sh || mk_fail "could not find a usable shell"

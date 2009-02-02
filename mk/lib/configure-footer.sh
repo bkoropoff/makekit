@@ -1,3 +1,206 @@
+mk_define()
+{
+    for __var in "$@"
+    do
+	if echo "${MK_DEFINE_LIST}" | grep " $__var " >/dev/null
+	then
+	    :
+	else
+	    MK_DEFINE_LIST="${MK_DEFINE_LIST} $__var "
+	fi
+    done
+}
+
+mk_export()
+{
+    for __var in "$@"
+    do
+	if echo "${MK_DEFINE_LIST}" | grep " $__var " >/dev/null
+	then
+	    :
+	else
+	    MK_DEFINE_LIST="${MK_DEFINE_LIST} $__var "
+	fi
+	
+	if echo "${MK_EXPORT_LIST}" | grep " $__var " >/dev/null
+	then
+	    :
+	else
+	    MK_EXPORT_LIST="${MK_EXPORT_LIST} $__var "
+	fi
+    done
+}
+
+mk_make_define()
+{
+    printf "$1=$2\n" >&4
+}
+
+mk_check_program()
+{
+    __var="$1"
+    shift
+    __desc="$1"
+    shift
+    __val="`mk_deref "$__var"`"
+
+    mk_log_start "$__desc: "
+    if type "${__val}" >/dev/null 2>&1
+    then
+	mk_log_end "$__val"
+	return 0
+    else
+	for __prog in "$@"
+	do
+	    if type "${__prog}" >/dev/null 2>&1
+	    then
+		mk_log_end "${__prog}"
+		mk_assign "${__var}" "${__prog}"
+		return 0
+	    fi
+	done
+    fi
+
+    mk_log_end "not found"
+    return 1
+}
+
+mk_check_program_path()
+{
+    __var="$1"
+    shift
+    __desc="$1"
+    shift
+    __val="`mk_deref "$__var"`"
+
+    mk_log_start "$__desc: "
+    if __path="`mk_resolve_program_path "${__val}"`"
+    then
+	mk_log_end "$__path"
+	mk_assign "${__var}" "${__path}"
+	return 0
+    else
+	for __prog in "$@"
+	do
+	    if __path="`mk_resolve_program_path "${__prog}"`"
+	    then
+		mk_log_end "${__path}"
+		mk_assign "${__var}" "${__path}"
+		return 0
+	    fi
+	done
+    fi
+
+    mk_log_end "not found"
+    return 1
+}
+
+mk_configure_help()
+{
+    awk_prog='
+
+/^[a-zA-Z-]+/ {
+    print ""
+    form=sprintf("--%s-%s=%s", type, $1, $2);
+    i=length(form);
+    while (i < justify - 1)
+    {
+        form = form " ";
+        i++;
+    }
+    i=3
+    printf("%s", form);
+    while (i <= NF)
+    {
+        printf(" %s",$i);
+        i++
+    }
+    printf("\n");
+}
+
+/^[ \t]+/ {
+    i=0;
+    while (i < justify - 1)
+    {
+        printf(" ")
+        i++;
+    }
+
+    i=1
+    while (i <= NF)
+    {
+        printf(" %s",$i);
+        i++;
+    }
+    printf("\n");
+}'
+
+    echo "Usage: ${MK_CONFIGURE_FILENAME} [ options ... ]"
+    echo ""
+    echo "Options:"
+    echo ""
+    echo "--help 　 　　　     　　　　　         Display this help message"
+
+    for module in ${MK_MODULE_INVENTORY}
+    do
+	varname="MK_MODULE_`mk_make_identifier "${module}"`_WITH_OPTIONS"
+	options="`mk_deref "${varname}"`"
+	if [ -n "$options" ]
+	then
+	    echo "${options}" | awk "${awk_prog}" type=with justify=40
+	fi
+    done
+
+    for comp in ${MK_COMPONENT_INVENTORY}
+    do
+	varname="MK_COMPONENT_`mk_make_identifier "${comp}"`_WITH_OPTIONS"
+	options="`mk_deref "${varname}"`"
+	if [ -n "$options" ]
+	then
+	    echo "${options}" | awk "${awk_prog}" type=with justify=40
+	fi
+    done
+    exit 0
+}
+
+# Load manifest
+. "${MK_MANIFEST_FILE}" || mk_fail "could not read ${MK_MANIFEST_FILENAME}"
+
+
+# Save our arguments to write to the makefile
+MK_CONFIGURE_ARGS=""
+for __arg in "$@"
+do
+    MK_CONFIGURE_ARGS="$MK_CONFIGURE_ARGS `mk_quote "$__arg"`"
+done
+
+while [ -n "$1" ]
+do
+    _param="$1"
+    shift
+    
+    case "${_param}" in
+	--help)
+	    mk_configure_help
+	    exit 0
+	    ;;
+	--with-*)
+	    __var="MK_`echo "$_param" | sed -e 's/^--with-//' -e 's/=.*$//' | tr 'a-z' 'A-Z' | tr '-' '_'`"
+	    __val="`echo "$_param" | cut -d= -f2`"
+	    __quoted="`mk_quote $__val`"
+	    eval "${__var}=${__quoted}"
+	    ;;	
+	-*|--*)
+	    mk_fail "Unrecognized option: ${_param}"
+	    ;;
+    esac
+done
+
+mk_log Configuring project
+
+mk_configure_modules
+mk_configure_components
+
 mk_log "Creating ${MK_CONFIG_FILENAME}"
 # Open config file
 exec 4>${MK_CONFIG_FILE}

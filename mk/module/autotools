@@ -1,4 +1,14 @@
 DEPENDS="installpath"
+WITH_OPTIONS='
+cc        program       Set name or path of the preferred
+                        C compiler
+cflags    flags         Set default flags passed to the
+                        C compiler
+cppflags  flags         Set default flags passed to the
+                        C preprocessor
+ldflags   flags         Set default flags passed to the
+                        C compiler when linking
+'
 
 load()
 {
@@ -70,7 +80,7 @@ load()
 configure()
 {
     mk_check_program MK_CC "C compiler" gcc cc || mk_fail "could not find a C compiler"
-    mk_define MK_CC MK_MAKE MK_MFLAGS MK_CFLAGS MK_CPPFLAGS MK_LDFLAGS
+    mk_define MK_CC MK_MFLAGS MK_CFLAGS MK_CPPFLAGS MK_LDFLAGS
 }
 
 pre_prepare()

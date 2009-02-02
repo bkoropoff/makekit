@@ -26,6 +26,8 @@ mk_generate_configure()
     modules="`mk_order_by_depends "${MK_RESOURCE_DIR}/module/"*`" || exit 1
     components="`mk_order_by_depends "${MK_RESOURCE_DIR}/component/"*`" || exit 1
 
+    echo "mk_configure_modules()"
+    echo "{"
     for file in ${modules}
     do
 	name="`basename "$file"`"
@@ -33,7 +35,10 @@ mk_generate_configure()
 	mk_extract_function "${file}" "configure"
 	echo "mk_log_leave"
     done
+    echo "}"
 
+    echo "mk_configure_components()"
+    echo "{"
     for file in ${components}
     do
 	name="`basename "$file"`"
@@ -41,6 +46,7 @@ mk_generate_configure()
 	mk_extract_function "${file}" "configure"
 	echo "mk_log_leave"
     done
+    echo "}"
 
     mk_include "${MK_HOME}/lib/configure-footer.sh"
 }
@@ -226,14 +232,43 @@ mk_generate_makefile_in()
 mk_generate_manifest()
 {
     mk_include "${MK_MANIFEST_FILE}.in"
+
+    # Generate a list of modules and components
+    printf "MK_MODULE_INVENTORY='"
+    for file in `mk_order_by_depends "${MK_MODULE_DIR}/"*`
+    do
+	if [ -f "${file}" ]
+	then
+	    printf "`basename "${file}"` "
+	fi
+    done
+    printf "'\n"
+
+    printf "MK_COMPONENT_INVENTORY='"
+    for file in `mk_order_by_depends "${MK_COMPONENT_DIR}/"*`
+    do
+	if [ -f "${file}" ]
+	then
+	    printf "`basename "${file}"` "
+	fi
+    done
+    printf "'\n"
     
+    for file in "${MK_MODULE_DIR}/"*
+    do
+	if [ -f "${file}" ]
+	then
+	    name="`basename "${file}"`"
+	    mk_extract_defines "${file}" "`mk_make_identifier "MK_MODULE_${name}"`_"
+	fi
+    done
+
     for file in "${MK_COMPONENT_DIR}/"*
     do
 	if [ -f "${file}" ]
 	then
-	    name="`basename "${file}" | tr -- '-a-z' '_A-Z'`"
-	    mk_extract_defines "${file}" | sed "s/^/MK_${name}_/g"
+	    name="`basename "${file}"`"
+	    mk_extract_defines "${file}" "`mk_make_identifier "MK_COMPONENT_${name}"`_"
 	fi
     done
 }
-

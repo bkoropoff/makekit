@@ -1,7 +1,39 @@
 DEPENDS="mk"
+WITH_OPTIONS='
+prefix                 path       Set install prefix
+
+libdir-name            name       Set name of directory for installed
+                                  libraries (within prefix)
+
+bindir-name            name       Set name of directory for installed
+                                  user binaries (within prefix)
+
+sbindir-name           name       Set name of directory for installed
+                                  system binaries (within prefix)
+
+sysconfdir-name        name       Set name of directory for configuration
+                                  files (within prefix)
+
+localstatedir          path       Set path of directory for state files
+
+libdir                 path       Set path of directory for installed
+                                  libraries
+
+bindir                 path       Set path of directory for installed
+                                  user binaries
+
+sbindir                path       Set path of directory for installed
+                                  system binaries
+
+sysconfdir             path       Set path of directory for configuration
+                                  files
+
+localstatedir          path       Set path of directory for state files
+'
 
 configure()
 {
+    [ -z "${MK_PREFIX}" ] && MK_PREFIX="/usr/local"
     [ -z "${MK_LIBDIR_NAME}" ] && MK_LIBDIR_NAME="lib"
     [ -z "${MK_BINDIR_NAME}" ] && MK_BINDIR_NAME="bin"
     [ -z "${MK_SBINDIR_NAME}" ] && MK_SBINDIR_NAME="sbin"
@@ -15,7 +47,7 @@ configure()
     [ -z "${MK_SYSCONFDIR}" ] && MK_SYSCONFDIR="${MK_PREFIX}/${MK_SYSCONFDIR_NAME}"
     [ -z "${MK_LOCALSTATEDIR}" ] && MK_LOCALSTATEDIR="${MK_PREFIX}/${MK_LOCALSTATEDIR_NAME}"
     
-
+    mk_define MK_PREFIX  
     mk_define MK_LIBDIR_NAME MK_SBINDIR_NAME MK_SYSCONFDIR_NAME MK_LOCALSTATEDIR_NAME
-    mk_define MK_PREFIX MK_LIBDIR MK_BINDIR MK_SBINDIR MK_SYSCONFDIR MK_LOCALSTATEDIR
+    mk_define MK_LIBDIR MK_BINDIR MK_SBINDIR MK_SYSCONFDIR MK_LOCALSTATEDIR
 }

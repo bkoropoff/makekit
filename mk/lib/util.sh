@@ -157,7 +157,12 @@ mk_extract_function()
 
 mk_extract_defines()
 {
-    grep "^[a-zA-Z0-9_]*=.*$" "$1"
+    __vars="`grep "^[a-zA-Z0-9_]*=.*$" "$1" | sed 's/=.*$//g'`"
+    for __var in ${__vars}
+    do
+	__val="`mk_extract_var "$1" "${__var}"`"
+	echo "${2}${__var}=`mk_quote "${__val}"`"
+    done
 }
 
 mk_extract_var()
@@ -324,4 +329,9 @@ mk_recreate_dir()
 {
     rm -rf "$1"
     mkdir -p "$1"
+}
+
+mk_make_identifier()
+{
+    echo "$1" | tr -- '-a-z' '_A-Z'
 }
