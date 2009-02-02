@@ -143,7 +143,21 @@ mk_show_args()
 
 mk_extract_function()
 {
-    awk 'BEGIN { found=0; } /^}/ { found = 0; } { if (found == 2) print; } /^'"$2"' *\(\)/ { found=1; } /^{/ { if (found == 1) found = 2; }' < "$1"
+    if grep "^$2 *\(\)" "$1" >/dev/null
+    then
+	echo ""
+	echo "### Included function: $2() from `basename "$1"`"
+	echo ""
+	awk 'BEGIN { found=0; } /^}/ { found = 0; } { if (found == 2) print; } /^'"$2"' *\(\)/ { found=1; } /^{/ { if (found == 1) found = 2; }' < "$1"
+	echo ""
+	echo "### End included function"
+	echo ""
+    fi
+}
+
+mk_extract_defines()
+{
+    grep "^[a-zA-Z0-9_]*=.*$" "$1"
 }
 
 mk_extract_var()
@@ -248,7 +262,7 @@ mk_expand_depends()
 
 mk_function_exists()
 {
-    type "$1" | grep "function" >/dev/null
+    type "$1" 2>/dev/null | grep "function" >/dev/null
 }
 
 mk_sed_file()

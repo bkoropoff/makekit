@@ -1,4 +1,5 @@
-. "${MK_CONFIG_FILE}"
+. "${MK_MANIFEST_FILE}" || mk_fail "could not read ${MK_MANIFEST_FILENAME}"
+. "${MK_CONFIG_FILE}" || mk_fail "coould not read ${MK_CONFIG_FILENAME}"
 
 if [ -n "${MK_EXPORT_LIST}" ]
 then

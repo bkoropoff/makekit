@@ -64,9 +64,11 @@ do
     esac
 done
 
-if [ -f "${MK_MANIFEST_FILE}" ]
+if [ -f "${MK_MANIFEST_FILE}.in" ]
 then
-    MK_PROJECT_NAME="`mk_extract_var "${MK_MANIFEST_FILE}" PROJECT_NAME`" || mk_fail "could not read manifest"
+    MK_PROJECT_NAME="`mk_extract_var "${MK_MANIFEST_FILE}.in" PROJECT_NAME`" || mk_fail "could not read manifest"
+else
+    mk_fail "manifest input file ${MK_MANIFEST_FILE}.in not found"
 fi
 
 if [ -n "${MK_PROJECT_NAME}" ]
@@ -112,3 +114,5 @@ mk_log "Generating ${MK_ACTION_FILENAME}.in"
 mk_generate_action_in > "${MK_ROOT_DIR}/${MK_ACTION_FILENAME}.in"
 mk_log "Generating ${MK_MAKEFILE_FILENAME}.in"
 mk_generate_makefile_in > "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in"
+mk_log "Generating ${MK_MANIFEST_FILENAME}"
+mk_generate_manifest > "${MK_MANIFEST_FILE}"

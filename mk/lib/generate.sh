@@ -7,7 +7,10 @@ mk_include()
 {
     echo ""
     echo "### Included file: `basename "$1"`"
+    echo ""
     cat "$1"
+    echo ""
+    echo "### End included file"
     echo ""
 }
 
@@ -219,3 +222,18 @@ mk_generate_makefile_in()
     # Emit phony rule
     printf ".PHONY: all-comp all clean\n"
 }
+
+mk_generate_manifest()
+{
+    mk_include "${MK_MANIFEST_FILE}.in"
+    
+    for file in "${MK_COMPONENT_DIR}/"*
+    do
+	if [ -f "${file}" ]
+	then
+	    name="`basename "${file}" | tr -- '-a-z' '_A-Z'`"
+	    mk_extract_defines "${file}" | sed "s/^/MK_${name}_/g"
+	fi
+    done
+}
+

@@ -106,18 +106,21 @@ post_stage()
     mk_log_enter "file"
     for __la in "${MK_COMP_STAGE_DIR}/${MK_LIBDIR}"/*.la
     do
-	mk_log "`basename "${__la}"`"
-	__deps="`(. "${__la}" && echo "${dependency_libs}")`"
-	__newdeps=""
-	for __dep in ${__deps}
-	do
-	    __newdep="`__libtool_rewrite_dep "$__dep"`"
-	    __newdeps="$__newdeps $__newdep"
-	done
-	
-	mk_sed_file "$__la" \
-	    -e "s:^dependency_libs=.*$:dependency_libs=`mk_quote "$__newdeps"`:" \
-	    -e "s:^installed=.*$:installed=no:"
+	if [ -f "${__la}" ]
+	then
+	    mk_log "`basename "${__la}"`"
+	    __deps="`(. "${__la}" && echo "${dependency_libs}")`"
+	    __newdeps=""
+	    for __dep in ${__deps}
+	    do
+		__newdep="`__libtool_rewrite_dep "$__dep"`"
+		__newdeps="$__newdeps $__newdep"
+	    done
+	    
+	    mk_sed_file "$__la" \
+		-e "s:^dependency_libs=.*$:dependency_libs=`mk_quote "$__newdeps"`:" \
+		-e "s:^installed=.*$:installed=no:"
+	fi
     done
     mk_log_leave
 }
