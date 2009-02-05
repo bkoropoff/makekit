@@ -1,3 +1,22 @@
+## 
+##  metakit -- the extensible meta-build system
+##  Copyright (C) Brian Koropoff
+## 
+##  This program is free software; you can redistribute it and/or
+##  modify it under the terms of the GNU General Public License
+##  as published by the Free Software Foundation; either version 2
+##  of the License, or (at your option) any later version.
+## 
+##  This program is distributed in the hope that it will be useful,
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##  GNU General Public License for more details.
+## 
+##  You should have received a copy of the GNU General Public License
+##  along with this program; if not, write to the Free Software
+##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+## 
+
 MK_COMPONENT_STEPS="prepare build stage install"
 MK_DISTCLEAN_ROOT_FILES="${MK_CONFIGURE_FILENAME} ${MK_ACTION_FILENAME}.in ${MK_MAKEFILE_FILENAME}.in ${MK_MANIFEST_FILENAME}"
 MK_DISTCLEAN_WORK_FILES="${MK_CONFIG_FILENAME} ${MK_ACTION_FILENAME} ${MK_MAKEFILE_FILENAME}"
@@ -8,7 +27,7 @@ mk_include()
     echo ""
     echo "### Included file: `basename "$1"`"
     echo ""
-    cat "${MK_HOME}/$1"
+    grep -v "^##" < "${MK_HOME}/$1"
     echo ""
     echo "### End included file"
     echo ""
@@ -383,19 +402,22 @@ mk_generate_manifest()
 
 mk_process_template()
 {
-    __IFS="$IFS"
-    IFS=""
-    while read -r __line
-    do
-	IFS="$__IFS"
-	if echo "$__line" | grep "^[ \t]*@[^@]*@[ \t]*$" >/dev/null
-	then
-	    __func="`echo "$__line" | sed -e 's/[ \t]*@//' -e 's/@[ \t]*//'`"
-	    ${__func}
-	else
-	    echo "$__line"
-	fi
+    grep -v "^##" | (
+	__IFS="$IFS"
 	IFS=""
-    done
-    IFS="$__IFS"
+
+	while read -r __line
+	do
+	    IFS="$__IFS"
+	    if echo "$__line" | grep "^[ \t]*@[^@]*@[ \t]*$" >/dev/null
+	    then
+		__func="`echo "$__line" | sed -e 's/[ \t]*@//' -e 's/@[ \t]*//'`"
+		${__func}
+	    else
+		echo "$__line"
+	    fi
+	    IFS=""
+	done
+	IFS="$__IFS"
+    )
 }
