@@ -65,6 +65,10 @@
 ##      of (3.ii), it means the entirety of the Program.
 ##
 
+.POSIX:
+
+.DEFAULT: all
+
 DESTDIR="/"
 
 @mk_generate_makefile_rules@

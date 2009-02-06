@@ -17,10 +17,72 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ## 
 
-MK_COMPONENT_STEPS="prepare build stage install"
-MK_DISTCLEAN_ROOT_FILES="${MK_CONFIGURE_FILENAME} ${MK_ACTION_FILENAME}.in ${MK_MAKEFILE_FILENAME}.in ${MK_MANIFEST_FILENAME}"
-MK_DISTCLEAN_WORK_FILES="${MK_CONFIG_FILENAME} ${MK_ACTION_FILENAME} ${MK_MAKEFILE_FILENAME}"
-MK_DISTCLEAN_WORK_DIRS="${MK_BUILD_DIRNAME} ${MK_DIST_DIRNAME} ${MK_STAGE_DIRNAME} ${MK_TARGET_DIRNAME}"
+mk_load_modules()
+{
+    __phases=""
+    mk_log_enter "module"
+    for file in "${MK_MODULE_DIR}/"*
+    do
+	module="$(basename "${file}")"
+	. "${file}" || mk_fail "Failed to source module ${module}"
+	if mk_function_exists "load"
+	then
+	    mk_log "${module}"
+	    load
+	    unset -f load
+	fi
+	__phases="$__phases `mk_extract_var "${file}" "PHASES"`"
+    done
+
+    MK_ALL_PHASES="`mk_unique_list ${__phases}`"
+
+    mk_log_leave
+}
+
+mk_modules_for_component()
+{
+    __modules="`mk_extract_var "${MK_COMPONENT_DIR}/${1}" "MODULES"`" || mk_fail "could not read component $1"
+    mk_expand_depends "${MK_MODULE_DIR}" ${__modules} || exit 1
+}
+
+mk_phases_for_module()
+{
+    __modules="`mk_expand_depends "${MK_MODULE_DIR}" "${1}"`" || exit 1
+    __list="$(for __module in ${__modules}
+	do
+	    mk_extract_var "${MK_MODULE_DIR}/${__module}" "PHASES" || mk_fail "could not read module $__module"
+	done
+    )" || exit 1
+
+    mk_unique_list ${__list}
+}
+
+mk_phases_for_component()
+{
+    __modules="`mk_modules_for_component "$1"`"
+    __list="$(for __module in ${__modules}
+	do
+	    mk_extract_var "${MK_MODULE_DIR}/${__module}" "PHASES" || mk_fail "could not read module $__module"
+	done
+    )" || exit 1
+
+    mk_unique_list ${__list}
+}
+
+mk_components_for_module()
+{
+    # This reverse calculation is really hairy
+    for __file in "${MK_COMPONENT_DIR}/"*
+    do
+	__comp="`basename "$__file"`"
+	__modules="`mk_modules_for_component "$__comp"`" || exit 1
+	if mk_contains "$__modules" "$1"
+	then
+	    echo "$__comp"
+	    continue
+	fi
+    done
+}
 
 mk_include()
 {
@@ -35,8 +97,8 @@ mk_include()
 
 mk_generate_configure_body()
 {
-    modules="`mk_order_by_depends "${MK_RESOURCE_DIR}/module/"*`" || exit 1
-    components="`mk_order_by_depends "${MK_RESOURCE_DIR}/component/"*`" || exit 1
+    modules="`mk_order_by_depends "${MK_MODULE_DIR}/"*`" || exit 1
+    components="`mk_order_by_depends "${MK_COMPONENT_DIR}/"*`" || exit 1
 
     echo "mk_log 'Loading modules'"
     for file in ${modules}
@@ -166,21 +228,33 @@ mk_generate_configure_parse()
 
 mk_generate_action_rules()
 {
+    basic_funcs="load"
     # Suck in all module bits
     for file in "${MK_MODULE_DIR}/"*
     do
 	module="`basename "${file}"`"
-	for func in \
-	    load pre_prepare post_prepare pre_build post_build \
-	    pre_stage post_stage pre_install post_install
+	phases="`mk_phases_for_module "${module}"`"
+	funcs="${basic_funcs}"
+	for phase in ${phases}
 	do
-	    echo "${module}_${func}()"
-	    echo "{"
-	    echo "    mk_log_enter '${module}'"
-	    mk_extract_function "${file}" "${func}"
-	    echo "    mk_log_leave"
-	    echo "}"
-	    echo ""
+	    for step in pre default post
+	    do
+		funcs="${funcs} ${step}_${phase}"
+	    done
+	done
+
+	for func in ${funcs}
+	do
+	    if mk_function_exists_in_file "${file}" "${func}"
+	    then
+		echo "${module}_${func}()"
+		echo "{"
+		echo "    mk_log_enter '${module}'"
+		mk_extract_function "${file}" "${func}"
+		echo "    mk_log_leave"
+		echo "}"
+		echo ""
+	    fi
 	done
     done
 
@@ -188,58 +262,75 @@ mk_generate_action_rules()
     do
 	comp="`basename "${file}"`"
 	depends="`mk_expand_depends "${MK_COMPONENT_DIR}" "${comp}"`" || exit 1
-	modules="`mk_extract_var "${file}" MODULES`" || mk_fail "component not found: ${comp}"
-	modules="`mk_expand_depends "${MK_MODULE_DIR}" ${modules}`" || exit 1
-	for step in ${MK_COMPONENT_STEPS}
+	modules="`mk_modules_for_component "${comp}"`" || exit 1
+	phases="`mk_phases_for_component "${comp}"`" || exit 1
+
+	for phase in ${phases}
 	do
-	    echo ""
-	    echo "${comp}_${step}()"
-	    echo "{"
-	    echo "    MK_COMP_DEPENDS=\"${depends}\""
-	    for module in ${modules}
-	    do
-		echo "    ${module}_load"
-	    done
-	    echo "    mk_log_enter '${comp}-${step}'"
-	    for module in ${modules}
-	    do
-		echo "    ${module}_pre_${step}"
-	    done
-	    mk_extract_function "${file}" "${step}"
-	    for module in `mk_reverse_list ${modules}`
-	    do
-		echo "    ${module}_post_${step}"
-	    done
-	    echo "    mk_log_leave"
-	    echo "}"
+	    extract_file=""
+	    extract_func=""
+	    
+	    if mk_function_exists_in_file "${file}" "${phase}"
+	    then
+		extract_file="${file}"
+		extract_func="${phase}"
+	    else
+		# The phase is not defined in the component, so look through
+		# the list of modules for a default implementation
+		for module in `mk_reverse_list ${modules}`
+		do
+		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "default_${phase}"
+		    then
+			extract_file="${MK_MODULE_DIR}/${module}"
+			extract_func="default_${phase}"
+			break;
+		    fi
+		done
+	    fi
+	    
+	    if [ -n "${extract_file}" ]
+	    then
+		echo ""
+		echo "${comp}_${phase}()"
+		echo "{"
+		echo "    MK_COMP_DEPENDS=\"${depends}\""
+		for module in ${modules}
+		do
+		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "load"
+		    then
+			echo "    ${module}_load"
+		    fi
+		done
+		echo "    mk_log_enter '${comp}-${phase}'"
+		for module in ${modules}
+		do
+		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "pre_${phase}"
+		    then
+			echo "    ${module}_pre_${phase} \"\$@\""
+		    fi
+		done
+		mk_extract_function "${extract_file}" "${extract_func}"
+		for module in `mk_reverse_list ${modules}`
+		do	
+		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "post_${phase}"
+		    then
+			echo "    ${module}_post_${phase} \"\$@\""
+		    fi
+		done
+		echo "    mk_log_leave"
+		echo "}"
+	    fi
 	done
     done
 }
 
 mk_generate_makefile_rules()
 {
-    PHONY=""
     # Emit definitions of depedencies within the resource directory
     # These are preceeded with @MK_RESOURCE_YES@ and @MK_RESOURCE_NO@
     # so that configure can turn them off if resources have been stripped
     # from the source distribution
-    printf "### Begin auto-generated dependency lists ###\n\n"
-    for file in "${MK_COMPONENT_DIR}/"*
-    do
-	comp="`basename "${file}"`"
-	modules="`mk_extract_var "${file}" "MODULES"`" || mk_fail "module not found: ${comp}"
-	modules="`mk_expand_depends "${MK_MODULE_DIR}" ${modules}`" || exit 1
-	depstr="${file}"
-	
-	for module in ${modules}
-	do
-	    depstr="$depstr ${MK_MODULE_DIR}/${module}"
-	done
-	
-	printf "@MK_RESOURCE_YES@${comp}_resource_deps=${depstr}\n"
-	printf "@MK_RESOURCE_NO@${comp}_resource_deps=\n"
-    done
-    
+
     # Dependencies for regenerating the makefile
     depstr=""
     for file in "${MK_COMPONENT_DIR}/"*  "${MK_MODULE_DIR}/"*
@@ -248,10 +339,6 @@ mk_generate_makefile_rules()
     done
     printf "@MK_RESOURCE_YES@makefile_resource_deps=${depstr}\n"
     printf "@MK_RESOURCE_NO@makefile_resource_deps=\n\n"
-    printf "### End auto-generated dependency lists ###\n\n"
-
-    printf "all: all-comp\n\n"
-    PHONY="$PHONY all"
 
     # Rule for regenerating the makefile
     printf "${MK_MAKEFILE_FILENAME}: \$(makefile_resource_deps)\n"
@@ -262,97 +349,42 @@ mk_generate_makefile_rules()
     for file in "${MK_COMPONENT_DIR}/"*
     do
 	comp="`basename "${file}"`"
-	deps="`mk_extract_var "${file}" "DEPENDS"`" || mk_fail "component not found: ${comp}"
+	modules="`mk_modules_for_component "${comp}"`" || exit 1
+	phases="`mk_phases_for_component "${comp}"`" || exit 1
+	deps="`mk_extract_var "${file}" "DEPENDS"`" || mk_fail "could not read component: $comp"
 
-	for dep in ${deps}
+	for phase in ${phases}
 	do
-	    depstr="$depstr ${MK_TARGET_DIRNAME}/stage_${dep}"
+	    makedeps=""
+	    for module in ${modules}
+	    do
+		if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "makerule_${phase}"
+		then
+		    (
+			. "${MK_MODULE_DIR}/${module}" || mk_fail "could not read module: ${module}"
+			if mk_function_exists "makerule_${phase}"
+			then
+			    "makerule_${phase}" "${comp}" "${deps}"
+			fi
+		    ) || exit 1
+		fi
+	    done
 	done
-
-	printf "${MK_TARGET_DIRNAME}/prepare_${comp}:${depstr} \$(${comp}_resource_deps)\n"
-	printf "\t@\$(ACTION) prepare ${comp}\n"
-	printf "\t@touch ${MK_TARGET_DIRNAME}/prepare_${comp}\n\n"
-
-	printf "${MK_TARGET_DIRNAME}/build_${comp}: ${MK_TARGET_DIRNAME}/prepare_${comp}\n"
-	printf "\t@\$(ACTION) build ${comp}\n"
-	printf "\t@touch ${MK_TARGET_DIRNAME}/build_${comp}\n\n"
-
-	printf "${MK_TARGET_DIRNAME}/stage_${comp}: ${MK_TARGET_DIRNAME}/build_${comp}\n"
-	printf "\t@\$(ACTION) stage ${comp}\n"
-	printf "\t@touch ${MK_TARGET_DIRNAME}/stage_${comp}\n\n"
-
-	printf "install_${comp}: ${MK_TARGET_DIRNAME}/stage_${comp}\n"
-	printf "\t@\$(ACTION) install ${comp} \$(DESTDIR)\n\n"
-	PHONY="$PHONY install_${comp}"
-
-	printf "rebuild_${comp}:\n"
-	printf "\t@rm -f ${MK_TARGET_DIRNAME}/build_${comp}\n"
-	printf "\t@rm -f ${MK_TARGET_DIRNAME}/stage_${comp}\n"
-	printf "\t@\$(MAKE) ${MK_TARGET_DIRNAME}/stage_${comp}\n\n"
-	PHONY="$PHONY rebuild_${comp}"
-
-	printf "clean_${comp}:\n"
-	printf "\t@echo \"Cleaning component ${comp}\"\n"
-	printf "\t@rm -rf ${MK_BUILD_DIRNAME}/${comp} ${MK_STAGE_DIRNAME}/${comp}\n"
-	printf "\t@rm -f"
-	PHONY="$PHONY clean_${comp}"
-
-	for step in ${MK_COMPONENT_STEPS}
-	do
-	    printf " ${MK_TARGET_DIRNAME}/${step}_${comp}"
-	done
-	printf "\n\n"
     done
 
-    # Emit install rule
-    printf "install:"
-    for file in "${MK_RESOURCE_DIR}/component/"*
+    # Emit custom rules for each module
+    for file in "${MK_MODULE_DIR}/"*
     do
-	comp="`basename "${file}"`"
-	printf " install_${comp}"
+	if mk_function_exists_in_file "${file}" "makerule_all"
+	then
+	    module="`basename "${file}"`"
+	    comps="`mk_components_for_module "${module}"`" || exit 1
+	    (
+		. "${MK_MODULE_DIR}/${module}" || mk_fail "could not read module: ${module}"
+		makerule_all "$comps"
+	    ) || exit 1
+	fi
     done
-    printf "\n\n"
-    PHONY="$PHONY install"
-
-    # Emit clean rule
-    printf "clean:"
-    for file in "${MK_RESOURCE_DIR}/component/"*
-    do
-	comp="`basename "${file}"`"
-	printf " clean_${comp}"
-    done
-    printf "\n\n"
-    PHONY="$PHONY clean"
-
-    # Emit distclean rule
-    printf "distclean: clean\n"
-    for file in ${MK_DISTCLEAN_ROOT_FILES}
-    do
-	printf "\trm -f \$(MK_ROOT_DIR)/${file}\n"	
-    done
-    for file in ${MK_DISTCLEAN_WORK_FILES}
-    do
-	printf "\trm -f \$(MK_WORK_DIR)/${file}\n"	
-    done
-    for file in ${MK_DISTCLEAN_WORK_DIRS}
-    do
-	printf "\trm -rf \$(MK_WORK_DIR)/${file}\n"	
-    done
-    printf "\n"
-    PHONY="$PHONY distclean"
-
-    # Emit all-comp rule
-    printf "all-comp:"
-    for file in "${MK_COMPONENT_DIR}/"*
-    do
-	comp="`basename "${file}"`"
-	printf " ${MK_TARGET_DIRNAME}/stage_${comp}"
-    done
-    printf "\n\n"
-    PHONY="$PHONY all-comp"
-
-    # Emit phony rule
-    printf ".PHONY: $PHONY\n"
 }
 
 mk_generate_manifest()

@@ -18,6 +18,31 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ##
 
+mk_load_modules()
+{
+    __phases=""
+    __phony=""
+    mk_log_enter "module"
+    for file in "${MK_MODULE_DIR}/"*
+    do
+	module="$(basename "${file}")"
+	. "${file}" || mk_fail "Failed to source module ${module}"
+	if mk_function_exists "load"
+	then
+	    mk_log "${module}"
+	    load
+	    unset -f load
+	fi
+	__phases="$__phases `mk_extract_var "${file}" "PHASES"`"
+	__phony="$__phases `mk_extract_var "${file}" "PHONY"`"
+    done
+
+    MK_ALL_PHASES="`mk_unique_list ${__phases}`"
+    MK_ALL_PHONY="`mk_unique_list ${__phony}`"
+
+    mk_log_leave
+}
+
 mk_init_component()
 {
     name="$1"
@@ -30,16 +55,8 @@ mk_init_component()
 	. "${file}" || mk_fail "Failed to source component ${file}"
 	if mk_function_exists "init"
 	then
-	    expanded="`mk_expand_depends "${MK_MODULE_DIR}" ${MODULES}`" || exit 1
-	    for module in ${expanded}
-	    do
-		. "${MK_MODULE_DIR}/${module}" || mk_fail "Failed to source module ${module}"
-		if mk_function_exists "load"
-		then
-		    load
-		fi
-	    done
 	    init || mk_fail "Failed to initialize component ${name}"
+	    unset -f init
 	fi
     ) || exit $?
     mk_log_leave
@@ -114,6 +131,9 @@ then
     done
     mk_log_leave
 fi
+
+mk_log "Loading modules"
+mk_load_modules
 
 if $OPT_INIT
 then

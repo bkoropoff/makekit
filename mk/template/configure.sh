@@ -247,6 +247,7 @@ else
     MK_RESOURCE_NO=""
 fi
 
+# FIXME: make this generic
 echo "" >&4
 sed \
     -e "s:@MK_WORK_DIR@:${MK_WORK_DIR}:g" \
@@ -274,7 +275,8 @@ exec 4>&-
 chmod +x "${MK_ACTION_FILE}"
 
 # Set up basic directory structure
-for dir in ${MK_TARGET_DIRNAME} ${MK_BUILD_DIRNAME} ${MK_STAGE_DIRNAME} ${MK_DIST_DIRNAME}
+# FIXME: move this into modules
+for dir in ${MK_TARGET_DIRNAME} ${MK_BUILD_DIRNAME} ${MK_STAGE_DIRNAME}
 do
     mk_log "Creating directory ${dir}"
     mkdir -p "${MK_WORK_DIR}/${dir}"

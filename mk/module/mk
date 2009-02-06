@@ -80,18 +80,3 @@ configure()
 
     mk_define MK_SHELL MK_MAKE MK_SUPPRESS_COMMAND_OUTPUT
 }
-
-load()
-{
-    # Simple function that installs all files in a component
-    # for use in the install() step
-    mk_install_all()
-    {
-	mk_log "Installing files from staging area"
-	mk_log_enter "file"
-	( cd "${MK_COMP_STAGE_DIR}" && find . | sed 's:^./::g' | grep -v '^\.$') | mk_log_pipe
-	mk_log_leave
-	mkdir -p "${MK_COMP_INSTALL_DIR}/${MK_PREFIX}" || mk_fail "could not create install directory"
-	mk_sync "${MK_COMP_STAGE_DIR}/${MK_PREFIX}/" "${MK_COMP_INSTALL_DIR}/${MK_PREFIX}/" || mk_fail "could not sync files"
-    }
-}

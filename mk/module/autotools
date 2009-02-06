@@ -65,7 +65,7 @@
 ##      of (3.ii), it means the entirety of the Program.
 ##
 
-DEPENDS="installpath"
+DEPENDS="installpath source"
 OPTIONS='
 cc        program       Set name or path of the preferred
                         C compiler

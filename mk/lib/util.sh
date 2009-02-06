@@ -67,7 +67,9 @@
 
 MK_LOG_DEPTH="0"
 MK_LOG_DOMAIN=""
-MK_LOG_FD="1"
+MK_LOG_FD="3"
+
+exec 3>&1
 
 mk_head()
 {
@@ -348,6 +350,11 @@ mk_function_exists()
     type "$1" 2>/dev/null | grep "function" >/dev/null
 }
 
+mk_function_exists_in_file()
+{
+    grep "^${2} *\(\)" "${1}" >/dev/null 2>&1
+}
+
 mk_sed_file()
 {
     __file="$1"
@@ -422,4 +429,17 @@ mk_sync()
     else
 	cp -fpPR "$1" "$2"
     fi
+}
+
+mk_contains()
+{
+    for __ele in ${1}
+    do
+	if [ "$__ele" = "$2" ]
+	then
+	    return 0
+	fi
+    done
+    
+    return 1
 }
