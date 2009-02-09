@@ -67,9 +67,9 @@
 
 MK_LOG_DEPTH="0"
 MK_LOG_DOMAIN=""
-MK_LOG_FD="3"
+MK_LOG_FD="9"
 
-exec 3>&1
+exec 9>&1
 
 mk_head()
 {
@@ -209,7 +209,7 @@ mk_show_args()
 	echo "`basename "$__first"`"
 	for __arg in "$@"
 	do
-	    echo "  $__arg"
+	    printf "  %s\n" "$__arg"
 	done
     ) | mk_log_pipe
 
@@ -442,4 +442,26 @@ mk_contains()
     done
     
     return 1
+}
+
+mk_get_component_var()
+{
+    __var="MK_COMPONENT_`mk_make_identifier "${1}"`_${2}"
+    mk_deref "${__var}"
+}
+
+mk_get_module_var()
+{
+    __var="MK_MODULE_`mk_make_identifier "${1}"`_${2}"
+    mk_deref "${__var}"
+}
+
+mk_safe_rm()
+{
+    if [ "${1##$MK_WORK_DIR/}" = "$1" ]
+    then
+	mk_fail "attempted unsafe removal of $1"
+    else
+	rm -rf "$1"
+    fi
 }

@@ -22,18 +22,49 @@ mk_init_component()
 {
     name="$1"
     file="${MK_COMPONENT_DIR}/${name}"
+    modules="`mk_modules_for_component "${name}"`"
+    MK_COMP="${name}"
+    run_file=""
+    run_func=""
+
     mk_log_enter "${name}"
-    MK_COMP_SOURCE_DIR="${MK_SOURCE_DIR}/${name}"
-    [ -d "${MK_COMP_SOURCE_DIR}" ] || mk_fail "Source not present for component ${name}"
-    ( 
-	cd "${MK_COMP_SOURCE_DIR}"
-	. "${file}" || mk_fail "Failed to source component ${file}"
-	if mk_function_exists "init"
-	then
-	    init || mk_fail "Failed to initialize component ${name}"
-	    unset -f init
-	fi
-    ) || exit $?
+    if mk_function_exists_in_file "${file}" "init"
+    then
+	run_file="${file}"
+	run_func="init"
+    else
+	for module in `mk_reverse_list ${modules}`
+	do
+	    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "default_init"
+	    then
+		run_file="${MK_MODULE_DIR}/${module}"
+		run_func="default_init"
+		break;
+	    fi
+	done
+    fi
+
+    if [ -n "${run_file}" ]
+    then
+	for module in ${modules}
+	do
+	    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "pre_init"
+	    then
+		. "${MK_MODULE_DIR}/${module}" || mk_fail "Could not read module: ${module}"
+		pre_init
+	    fi
+	done
+	. "${run_file}" || mk_fail "Could not read component: ${MK_COMP}"
+	"${run_func}"
+	for module in ${modules}
+	do
+	    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "post_init"
+	    then
+		. "${MK_MODULE_DIR}/${module}" || mk_fail "Could not read module: ${module}"
+		post_init
+	    fi
+	done
+    fi
     mk_log_leave
 }
 
@@ -51,6 +82,7 @@ fi
 
 MK_PROJECT_NAME=""
 OPT_INIT=true
+OPT_INIT_COMPS=""
 OPT_INSTALL=false
 OPT_FORCE=false
 
@@ -59,6 +91,10 @@ do
     param="$1"
     shift
     case "$param" in
+	--init-components)
+	    OPT_INIT_COMPS="$1"
+	    shift
+	    ;;
 	--no-init)
 	    OPT_INIT=false
 	    ;;
@@ -114,7 +150,18 @@ if $OPT_INIT
 then
     # Run init functions for all components
     mk_log "Initializing components"
-    for file in "${MK_COMPONENT_DIR}/"*
+    files=""
+    if [ -n "${OPT_INIT_COMPS}" ]
+    then
+	for name in ${OPT_INIT_COMPS}
+	do
+	    files="${files} ${MK_COMPONENT_DIR}/${name}"
+	done
+    else
+	files="${MK_COMPONENT_DIR}/"*
+    fi
+    
+    for file in ${files}
     do
 	mk_init_component "`basename "$file"`"
     done

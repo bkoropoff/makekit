@@ -65,17 +65,7 @@
 ##      of (3.ii), it means the entirety of the Program.
 ##
 
-DEPENDS="installpath source"
-OPTIONS='
-cc        program       Set name or path of the preferred
-                        C compiler
-cflags    flags         Set default flags passed to the
-                        C compiler
-cppflags  flags         Set default flags passed to the
-                        C preprocessor
-ldflags   flags         Set default flags passed to the
-                        C compiler when linking
-'
+DEPENDS="installpath source compiler platform"
 
 load()
 {
@@ -132,10 +122,11 @@ load()
 
 	mk_show_args "${AUTO_CONFIGURE_FILE}" \
 	    CC="${CC}" \
-	    MAKE="${MAKE}" \
+	    MAKE="${MK_MAKE}" \
 	    CPPFLAGS="${CPPFLAGS}" \
 	    CFLAGS="${CFLAGS}" \
 	    LDFLAGS="${LDFLAGS}" \
+	    PATH="${PATH}" \
     	    --prefix="${MK_PREFIX}" \
 	    --libdir="${MK_LIBDIR}" \
 	    --bindir="${MK_BINDIR}" \
@@ -147,12 +138,12 @@ load()
 
     auto_make_build()
     {
-	mk_show_args ${MAKE} "$@" || mk_fail "make failed"
+	mk_show_args ${MK_MAKE} ${MFLAGS} "$@" || mk_fail "make failed"
     }
 
     auto_make_stage()
     {
-	mk_show_args ${MAKE} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
+	mk_show_args ${MK_MAKE} ${MFLAGS} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
     }
 
     auto_init()
@@ -160,17 +151,6 @@ load()
 	mk_log "Running autotools"
 	autoreconf -fi || mk_fail "autoreconf failed"
     }
-}
-
-configure()
-{
-    mk_check_program MK_CC "C compiler" gcc cc || mk_fail "could not find a C compiler"
-
-    mk_log "cflags:   ${MK_CFLAGS}"
-    mk_log "cppflags: ${MK_CPPFLAGS}"
-    mk_log "ldflags:  ${MK_LDFLAGS}"
-
-    mk_define MK_CC MK_MFLAGS MK_CFLAGS MK_CPPFLAGS MK_LDFLAGS
 }
 
 pre_prepare()
@@ -181,6 +161,7 @@ pre_prepare()
     CPPFLAGS="${MK_CPPFLAGS}"
     LDFLAGS="${MK_LDFLAGS}"
     MFLAGS="${MFLAGS} ${MK_MFLAGS}"
+    PATH="$PATH"
 
     for __dep in ${MK_COMP_DEPENDS}
     do
@@ -193,11 +174,19 @@ pre_prepare()
 	    if [ -d "${MK_STAGE_DIR}/${__dep}${MK_LIBDIR}" ]
 	    then
 		LDFLAGS="${LDFLAGS} -L${MK_STAGE_DIR}/${__dep}${MK_LIBDIR}"
+		if [ "${MK_OS}" = "linux" ]
+		then
+		    LDFLAGS="${LDFLAGS} -Wl,-rpath-link,${MK_STAGE_DIR}/${__dep}${MK_LIBDIR}"
+		fi
+	    fi
+	    if [ -d "${MK_STAGE_DIR}/${__dep}${MK_BINDIR}" ]
+	    then
+		PATH="${PATH}:${MK_STAGE_DIR}/${__dep}${MK_BINDIR}"
 	    fi
 	fi
     done
 
-    export SHELL CC CFLAGS CPPFLAGS LDFLAGS MAKE MFLAGS
+    export SHELL CC CFLAGS CPPFLAGS LDFLAGS MAKE MFLAGS PATH
 }
 
 post_stage()
@@ -253,4 +242,24 @@ post_install()
 	fi
     done
     mk_log_leave
+}
+
+default_init()
+{
+    auto_init
+}
+
+default_prepare()
+{
+    auto_configure
+}
+
+default_build()
+{
+    auto_make_build
+}
+
+default_stage()
+{
+    auto_make_stage
 }

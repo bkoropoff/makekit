@@ -17,6 +17,17 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ## 
 
+# Override these utility functions to look in files directly
+mk_get_component_var()
+{
+    mk_extract_var "${MK_COMPONENT_DIR}/${1}" "$2"
+}
+
+mk_get_module_var()
+{
+    mk_extract_var "${MK_MODULE_DIR}/${1}" "$2"
+}
+
 mk_load_modules()
 {
     __phases=""

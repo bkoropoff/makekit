@@ -65,10 +65,24 @@
 ##      of (3.ii), it means the entirety of the Program.
 ##
 
-DESTDIR="/"
+OPTIONS='
+cc        program       Set name or path of the preferred
+                        C compiler
+cflags    flags         Set default flags passed to the
+                        C compiler
+cppflags  flags         Set default flags passed to the
+                        C preprocessor
+ldflags   flags         Set default flags passed to the
+                        C compiler when linking
+'
 
-.POSIX:
+configure()
+{
+    mk_check_program MK_CC "C compiler" gcc cc || mk_fail "could not find a C compiler"
 
-default: all
+    mk_log "cflags:   ${MK_CFLAGS}"
+    mk_log "cppflags: ${MK_CPPFLAGS}"
+    mk_log "ldflags:  ${MK_LDFLAGS}"
 
-@mk_generate_makefile_rules@
+    mk_define MK_CC MK_MFLAGS MK_CFLAGS MK_CPPFLAGS MK_LDFLAGS
+}

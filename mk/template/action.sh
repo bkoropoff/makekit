@@ -84,10 +84,8 @@ do
     action="$1"
     shift
     case "$action" in
-	--make)
-	    MAKE="$1"
-	    shift;
-	    export MAKE
+	*=*)
+	    export "$action"
 	    ;;
 	--*)
 	    mk_fail "Unrecognized option: ${action}"
