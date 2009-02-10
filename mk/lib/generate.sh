@@ -18,15 +18,8 @@
 ## 
 
 # Override these utility functions to look in files directly
-mk_get_component_var()
-{
-    mk_extract_var "${MK_COMPONENT_DIR}/${1}" "$2"
-}
 
-mk_get_module_var()
-{
-    mk_extract_var "${MK_MODULE_DIR}/${1}" "$2"
-}
+MK_MANIFEST_OMIT_VARS=""
 
 mk_load_modules()
 {
@@ -50,47 +43,122 @@ mk_load_modules()
     mk_log_leave
 }
 
-mk_modules_for_component()
-{
-    __modules="`mk_extract_var "${MK_COMPONENT_DIR}/${1}" "MODULES"`" || mk_fail "could not read component $1"
-    mk_expand_depends "${MK_MODULE_DIR}" ${__modules} || exit 1
-}
-
-mk_phases_for_module()
-{
-    __modules="`mk_expand_depends "${MK_MODULE_DIR}" "${1}"`" || exit 1
-    __list="$(for __module in ${__modules}
-	do
-	    mk_extract_var "${MK_MODULE_DIR}/${__module}" "PHASES" || mk_fail "could not read module $__module"
-	done
-    )" || exit 1
-
-    mk_unique_list ${__list}
-}
-
-mk_phases_for_component()
-{
-    __modules="`mk_modules_for_component "$1"`"
-    __list="$(for __module in ${__modules}
-	do
-	    mk_extract_var "${MK_MODULE_DIR}/${__module}" "PHASES" || mk_fail "could not read module $__module"
-	done
-    )" || exit 1
-
-    mk_unique_list ${__list}
-}
-
 mk_components_for_module()
 {
-    # This reverse calculation is really hairy
-    for __file in "${MK_COMPONENT_DIR}/"*
+    (
+	for __comp in ${MK_COMPONENT_INVENTORY}
+	do
+	    __modules="`mk_get_component_var "$__comp" MODULE_CLOSURE`"
+	    if mk_contains "$__modules" "$1"
+	    then
+		echo "$__comp"
+	    fi
+	done
+    ) | xargs
+}
+
+mk_module_has_function()
+{
+    __funcs="`mk_get_module_var "${1}" "FUNCS"`"
+    mk_contains "${__funcs}" "$2"
+}
+
+mk_component_has_function()
+{
+    __funcs="`mk_get_component_var "${1}" "FUNCS"`"
+    mk_contains "${__funcs}" "$2"
+}
+
+mk_calc_unique()
+{
+    xargs | awk 'BEGIN {RS=" ";} { if (!seen[$1]) { print $1; seen[$1] = 1;} }' | xargs
+}
+
+__mk_calc_closure_item()
+{
+    __mk_calc_closure "$1" "$3"
+    echo "$2"
+}
+
+__mk_calc_closure()
+{
+    for __item in ${2}
     do
-	__comp="`basename "$__file"`"
-	__modules="`mk_modules_for_component "$__comp"`" || exit 1
-	if mk_contains "$__modules" "$1"
+	__var="MK_${1}_`mk_make_identifier "${__item}"`_DEPENDS"
+	__val="`mk_deref "$__var"`"
+	__mk_calc_closure_item "$1" "$__item" "$__val"
+    done
+}
+
+mk_calc_closure()
+{
+    __mk_calc_closure "$@" | mk_calc_unique
+}
+
+__mk_calc_module_closure()
+{
+    __modules="`mk_get_component_var "${1}" "MODULES"`"
+    for __module in ${__modules}
+    do
+	mk_get_module_var "${__module}" "CLOSURE"
+    done
+}
+
+mk_calc_module_closure()
+{
+    __mk_calc_module_closure "$@" | mk_calc_unique
+}
+
+__mk_calc_module_phases()
+{
+    __modules="`mk_get_module_var "${1}" "CLOSURE"`"
+    for __module in ${__modules}
+    do
+	mk_get_module_var "${__module}" "PHASES"
+    done
+}
+
+mk_calc_module_phases()
+{
+    __mk_calc_module_phases "$@" | mk_calc_unique
+}
+
+__mk_calc_component_phases()
+{
+    __modules="`mk_get_component_var "${1}" "MODULE_CLOSURE"`"
+    for __module in ${__modules}
+    do
+	mk_get_module_var "${__module}" "PHASES"
+    done
+}
+
+mk_calc_component_phases()
+{
+    __mk_calc_component_phases "$@" | mk_calc_unique
+}
+
+mk_function_list()
+{
+    grep '^[a-zA-Z0-9_]* *()$' "$1" | sed 's/()$//g' | xargs
+}
+
+mk_manifest_define()
+{
+    echo "${1}=`mk_quote "${2}"`"
+    mk_assign "${1}" "${2}"
+}
+
+mk_extract_defines()
+{
+    . "${1}"
+    for __var in `grep "^[a-zA-Z0-9_]*=.*$" "$1" | sed 's/=.*$//g'`
+    do
+	if mk_contains "$MK_MANIFEST_OMIT_VARS" "$__var"
 	then
-	    echo "$__comp"
-	    continue
+	    :
+	else
+	    __val="`mk_deref "$__var"`"
+	    mk_manifest_define "${2}${__var}" "$__val"
 	fi
     done
 }
@@ -108,32 +176,35 @@ mk_include()
 
 mk_generate_configure_body()
 {
-    modules="`mk_order_by_depends "${MK_MODULE_DIR}/"*`" || exit 1
-    components="`mk_order_by_depends "${MK_COMPONENT_DIR}/"*`" || exit 1
+    modules="${MK_MODULE_INVENTORY}"
+    components="${MK_COMPONENT_INVENTORY}"
 
+    mk_log "Extracting module loading functions"
     echo "mk_log 'Loading modules'"
-    for file in ${modules}
+    for module in ${modules}
     do
-	name="`basename "$file"`"
-	echo "mk_log_enter '${name}'"
+	file="${MK_MODULE_DIR}/${module}"
+	echo "mk_log_enter '${module}'"
 	mk_extract_function "${file}" "load"
 	echo "mk_log_leave"
     done
 
+    mk_log "Extracting module configuration functions"
     echo "mk_log 'Configuring modules'"
-    for file in ${modules}
+    for module in ${modules}
     do
-	name="`basename "$file"`"
-	echo "mk_log_enter '${name}'"
+	file="${MK_MODULE_DIR}/${module}"
+	echo "mk_log_enter '${module}'"
 	mk_extract_function "${file}" "configure"
 	echo "mk_log_leave"
     done
 
+    mk_log "Extracting component configuration functions"
     echo "mk_log 'Configuring components'"
-    for file in ${components}
+    for comp in ${components}
     do
-	name="`basename "$file"`"
-	echo "mk_log_enter '${name}'"
+	file="${MK_COMPONENT_DIR}/${comp}"
+	echo "mk_log_enter '${comp}'"
 	mk_extract_function "${file}" "configure"
 	echo "mk_log_leave"
     done
@@ -141,11 +212,14 @@ mk_generate_configure_body()
 
 mk_configure_options()
 {
-    for file in \
-	`mk_order_by_depends "${MK_MODULE_DIR}/"*` \
-	`mk_order_by_depends "${MK_COMPONENT_DIR}/"*`
+    for module in ${MK_MODULE_INVENTORY}
     do
-	mk_extract_var "${file}" OPTIONS
+	mk_get_module_var "${module}" "OPTIONS"
+    done
+
+    for comp in ${MK_COMPONENT_INVENTORY}
+    do
+	mk_get_component_var "${comp}" "OPTIONS"
     done
 }
 
@@ -240,11 +314,12 @@ mk_generate_configure_parse()
 mk_generate_action_rules()
 {
     basic_funcs="load"
+    mk_log "Extracting module phase functions"
     # Suck in all module bits
-    for file in "${MK_MODULE_DIR}/"*
+    for module in ${MK_MODULE_INVENTORY}
     do
-	module="`basename "${file}"`"
-	phases="`mk_phases_for_module "${module}"`"
+	file="${MK_MODULE_DIR}/${module}"
+	phases="`mk_get_module_var "${module}" "PHASE_CLOSURE"`"
 	funcs="${basic_funcs}"
 	for phase in ${phases}
 	do
@@ -253,10 +328,10 @@ mk_generate_action_rules()
 		funcs="${funcs} ${step}_${phase}"
 	    done
 	done
-
+	
 	for func in ${funcs}
 	do
-	    if mk_function_exists_in_file "${file}" "${func}"
+	    if mk_module_has_function "${module}" "${func}"
 	    then
 		echo "${module}_${func}()"
 		echo "{"
@@ -269,19 +344,25 @@ mk_generate_action_rules()
 	done
     done
 
-    for file in "${MK_COMPONENT_DIR}/"*
+    mk_log "Building component build phases"
+    mk_log_enter "component"
+    for comp in ${MK_COMPONENT_INVENTORY}
     do
-	comp="`basename "${file}"`"
-	depends="`mk_expand_depends "${MK_COMPONENT_DIR}" "${comp}"`" || exit 1
-	modules="`mk_modules_for_component "${comp}"`" || exit 1
-	phases="`mk_phases_for_component "${comp}"`" || exit 1
+	mk_log "${comp}"
+	mk_log_enter "${comp}"
+	file="${MK_COMPONENT_DIR}/${comp}"
+	depends="`mk_get_component_var "${comp}" CLOSURE`"
+	modules="`mk_get_component_var "${comp}" MODULE_CLOSURE`"
+	phases="`mk_get_component_var "${comp}" PHASE_CLOSURE`"
 
 	for phase in ${phases}
 	do
+	    mk_log "${phase}"
+	    mk_log_enter "${phase}"
 	    extract_file=""
 	    extract_func=""
 	    
-	    if mk_function_exists_in_file "${file}" "${phase}"
+	    if mk_component_has_function "${comp}" "${phase}"
 	    then
 		extract_file="${file}"
 		extract_func="${phase}"
@@ -290,7 +371,7 @@ mk_generate_action_rules()
 		# the list of modules for a default implementation
 		for module in `mk_reverse_list ${modules}`
 		do
-		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "default_${phase}"
+		    if mk_module_has_function "${module}" "default_${phase}"
 		    then
 			extract_file="${MK_MODULE_DIR}/${module}"
 			extract_func="default_${phase}"
@@ -307,7 +388,7 @@ mk_generate_action_rules()
 		echo "    MK_COMP_DEPENDS=\"${depends}\""
 		for module in ${modules}
 		do
-		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "load"
+		    if mk_module_has_function "${module}" "load"
 		    then
 			echo "    ${module}_load"
 		    fi
@@ -315,7 +396,7 @@ mk_generate_action_rules()
 		echo "    mk_log_enter '${comp}-${phase}'"
 		for module in ${modules}
 		do
-		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "pre_${phase}"
+		    if mk_module_has_function "${module}" "pre_${phase}"
 		    then
 			echo "    ${module}_pre_${phase} \"\$@\""
 		    fi
@@ -323,7 +404,7 @@ mk_generate_action_rules()
 		mk_extract_function "${extract_file}" "${extract_func}"
 		for module in `mk_reverse_list ${modules}`
 		do	
-		    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "post_${phase}"
+		    if mk_module_has_function "${module}" "post_${phase}"
 		    then
 			echo "    ${module}_post_${phase} \"\$@\""
 		    fi
@@ -331,8 +412,11 @@ mk_generate_action_rules()
 		echo "    mk_log_leave"
 		echo "}"
 	    fi
+	    mk_log_leave
 	done
+	mk_log_leave
     done
+    mk_log_leave
 }
 
 mk_generate_makefile_rules()
@@ -360,29 +444,26 @@ mk_generate_makefile_rules()
     for file in "${MK_COMPONENT_DIR}/"*
     do
 	comp="`basename "${file}"`"
-	modules="`mk_modules_for_component "${comp}"`" || exit 1
-	phases="`mk_phases_for_component "${comp}"`" || exit 1
-	deps="`mk_extract_var "${file}" "DEPENDS"`" || mk_fail "could not read component: $comp"
-
+	modules="`mk_get_component_var "${comp}" MODULE_CLOSURE`"
+	phases="`mk_get_component_var "${comp}" PHASE_CLOSURE`"
+	deps="`mk_get_component_var "${comp}" DEPENDS`"
+	
 	for phase in ${phases}
 	do
 	    makedeps=""
 	    for module in ${modules}
 	    do
-		if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "makerule_${phase}"
+		if mk_module_has_function "${module}" "makerule_${phase}"
 		then
 		    (
 			. "${MK_MODULE_DIR}/${module}" || mk_fail "could not read module: ${module}"
-			if mk_function_exists "makerule_${phase}"
-			then
-			    "makerule_${phase}" "${comp}" "${deps}"
-			fi
+			"makerule_${phase}" "${comp}" "${deps}"
 		    ) || exit 1
 		fi
 	    done
 	done
     done
-
+    
     # Emit custom rules for each module
     for file in "${MK_MODULE_DIR}/"*
     do
@@ -403,44 +484,44 @@ mk_generate_manifest()
     cat "${MK_MANIFEST_FILE}.in"
     echo ""
 
-    # Generate a list of modules and components
-    printf "MK_MODULE_INVENTORY='"
-    for file in `mk_order_by_depends "${MK_MODULE_DIR}/"*`
-    do
-	if [ -f "${file}" ]
-	then
-	    printf "`basename "${file}"` "
-	fi
-    done
-    printf "'\n"
+    modules=""
+    components=""
 
-    printf "MK_COMPONENT_INVENTORY='"
-    for file in `mk_order_by_depends "${MK_COMPONENT_DIR}/"*`
+    mk_log "Extracting basic information"
+    for file in "${MK_MODULE_DIR}"/*
     do
-	if [ -f "${file}" ]
-	then
-	    printf "`basename "${file}"` "
-	fi
+	name="`basename "${file}"`"
+	modules="${modules} ${name}"
+	mk_extract_defines "${file}" "`mk_make_identifier "MK_MODULE_${name}"`_"
+	mk_manifest_define "MK_MODULE_`mk_make_identifier "${name}"`_FUNCS" "`mk_function_list "${file}"`"
     done
-    printf "'\n"
+
+    for file in "${MK_COMPONENT_DIR}"/*
+    do
+	name="`basename "${file}"`"
+	components="${components} ${name}"
+	mk_extract_defines "${file}" "`mk_make_identifier "MK_COMPONENT_${name}"`_"
+	mk_manifest_define "MK_COMPONENT_`mk_make_identifier "${name}"`_FUNCS" "`mk_function_list "${file}"`"
+    done
     
-    for file in "${MK_MODULE_DIR}/"*
+    mk_log "Calculating module attributes"
+    for name in ${modules}
     do
-	if [ -f "${file}" ]
-	then
-	    name="`basename "${file}"`"
-	    mk_extract_defines "${file}" "`mk_make_identifier "MK_MODULE_${name}"`_"
-	fi
+	mk_manifest_define "MK_MODULE_`mk_make_identifier "${name}"`_CLOSURE" "`mk_calc_closure "MODULE" "${name}"`"
+	mk_manifest_define "MK_MODULE_`mk_make_identifier "${name}"`_PHASE_CLOSURE" "`mk_calc_module_phases "${name}"`"
     done
 
-    for file in "${MK_COMPONENT_DIR}/"*
+    mk_log "Calculating component attributes"
+    for name in ${components}
     do
-	if [ -f "${file}" ]
-	then
-	    name="`basename "${file}"`"
-	    mk_extract_defines "${file}" "`mk_make_identifier "MK_COMPONENT_${name}"`_"
-	fi
+	mk_manifest_define "MK_COMPONENT_`mk_make_identifier "${name}"`_CLOSURE" "`mk_calc_closure "COMPONENT" "${name}"`"
+	mk_manifest_define "MK_COMPONENT_`mk_make_identifier "${name}"`_MODULE_CLOSURE" "`mk_calc_module_closure "${name}"`"
+	mk_manifest_define "MK_COMPONENT_`mk_make_identifier "${name}"`_PHASE_CLOSURE" "`mk_calc_component_phases "${name}"`"
     done
+
+    mk_log "Calculating inventories"
+    mk_manifest_define "MK_MODULE_INVENTORY" "`mk_calc_closure "MODULE" "${modules}"`"
+    mk_manifest_define "MK_COMPONENT_INVENTORY" "`mk_calc_closure "COMPONENT" "${components}"`"
 }
 
 mk_process_template()

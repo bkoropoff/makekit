@@ -22,20 +22,20 @@ mk_init_component()
 {
     name="$1"
     file="${MK_COMPONENT_DIR}/${name}"
-    modules="`mk_modules_for_component "${name}"`"
+    modules="`mk_get_component_var "${name}" MODULE_CLOSURE`"
     MK_COMP="${name}"
     run_file=""
     run_func=""
 
     mk_log_enter "${name}"
-    if mk_function_exists_in_file "${file}" "init"
+    if mk_component_has_function "${name}" "init"
     then
 	run_file="${file}"
 	run_func="init"
     else
 	for module in `mk_reverse_list ${modules}`
 	do
-	    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "default_init"
+	    if mk_module_has_function "${module}" "default_init"
 	    then
 		run_file="${MK_MODULE_DIR}/${module}"
 		run_func="default_init"
@@ -48,7 +48,7 @@ mk_init_component()
     then
 	for module in ${modules}
 	do
-	    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "pre_init"
+	    if mk_module_has_function "${module}" "pre_init"
 	    then
 		. "${MK_MODULE_DIR}/${module}" || mk_fail "Could not read module: ${module}"
 		pre_init
@@ -58,7 +58,7 @@ mk_init_component()
 	"${run_func}"
 	for module in ${modules}
 	do
-	    if mk_function_exists_in_file "${MK_MODULE_DIR}/${module}" "post_init"
+	    if mk_module_has_function "${module}" "post_init"
 	    then
 		. "${MK_MODULE_DIR}/${module}" || mk_fail "Could not read module: ${module}"
 		post_init
@@ -146,9 +146,35 @@ fi
 mk_log "Loading modules"
 mk_load_modules
 
+mk_log "Generating ${MK_MANIFEST_FILENAME}"
+mk_log_enter "${MK_MANIFEST_FILENAME}"
+mk_generate_manifest > "${MK_MANIFEST_FILE}"
+mk_log_leave
+
+mk_log "Generating ${MK_CONFIGURE_FILENAME}"
+mk_log_enter "${MK_CONFIGURE_FILENAME}"
+mk_process_template \
+    < "${MK_HOME}/template/configure.sh" \
+    > "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
+chmod +x "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
+mk_log_leave
+
+mk_log "Generating ${MK_ACTION_FILENAME}.in"
+mk_log_enter "${MK_ACTION_FILENAME}.in"
+mk_process_template \
+    < "${MK_HOME}/template/action.sh" \
+    > "${MK_ROOT_DIR}/${MK_ACTION_FILENAME}.in"
+mk_log_leave
+
+mk_log "Generating ${MK_MAKEFILE_FILENAME}.in"
+mk_log_enter "${MK_MAKEFIlE_FILENAME}.in"
+mk_process_template \
+    < "${MK_HOME}/template/makefile" \
+    > "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in"
+mk_log_leave
+
 if $OPT_INIT
 then
-    # Run init functions for all components
     mk_log "Initializing components"
     files=""
     if [ -n "${OPT_INIT_COMPS}" ]
@@ -166,22 +192,3 @@ then
 	mk_init_component "`basename "$file"`"
     done
 fi
-
-mk_log "Generating ${MK_CONFIGURE_FILENAME}"
-mk_process_template \
-    < "${MK_HOME}/template/configure.sh" \
-    > "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
-chmod +x "${MK_ROOT_DIR}/${MK_CONFIGURE_FILENAME}"
-
-mk_log "Generating ${MK_ACTION_FILENAME}.in"
-mk_process_template \
-    < "${MK_HOME}/template/action.sh" \
-    > "${MK_ROOT_DIR}/${MK_ACTION_FILENAME}.in"
-
-mk_log "Generating ${MK_MAKEFILE_FILENAME}.in"
-mk_process_template \
-    < "${MK_HOME}/template/makefile" \
-    > "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in"
-
-mk_log "Generating ${MK_MANIFEST_FILENAME}"
-mk_generate_manifest > "${MK_MANIFEST_FILE}"

@@ -235,16 +235,6 @@ mk_extract_function()
     fi
 }
 
-mk_extract_defines()
-{
-    __vars="`grep "^[a-zA-Z0-9_]*=.*$" "$1" | sed 's/=.*$//g'`"
-    for __var in ${__vars}
-    do
-	__val="`mk_extract_var "$1" "${__var}"`"
-	echo "${2}${__var}=`mk_quote "${__val}"`"
-    done
-}
-
 mk_extract_var()
 {
     ( mk_assign "$2" ""; . "$1" >/dev/null 2>&1 && mk_deref "$2" )

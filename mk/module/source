@@ -112,6 +112,11 @@ load()
     {
 	printf '\t@$(ACTION) MAKE="$(MAKE)" MAKEFLAGS="$(MAKEFLAGS)" MFLAGS="$(MFLAGS)" MAKELEVEL="$(MAKELEVEL)" %s\n' "$*"
     }
+
+    mk_get_stage_dir()
+    {
+	echo "${MK_STAGE_DIR}/${1}"
+    }
 }
 
 pre_init()
@@ -197,7 +202,7 @@ makerule_prepare()
     printf "%s" "${MK_TARGET_DIRNAME}/prepare-${1}:"
     for __dep in ${2}
     do
-	printf "%s " "${MK_TARGET_DIRNAME}/stage-${__dep}"
+	printf " %s" "${MK_TARGET_DIRNAME}/stage-${__dep}"
     done
     printf "\n"
 
@@ -222,7 +227,7 @@ makerule_stage()
 makerule_install()
 {
     printf "install-${1}: ${MK_TARGET_DIRNAME}/stage-${1}\n"
-    mk_invoke_action stage "$1" "\$(DESTDIR)"
+    mk_invoke_action install "$1" "\$(DESTDIR)"
     printf "\n"
 }
 
