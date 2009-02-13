@@ -390,7 +390,7 @@ mk_generate_action_rules()
 			echo "    ${module}_load"
 		    fi
 		done
-		echo "    mk_log_enter '${comp}-${phase}'"
+		echo "    mk_log_enter '${phase}-${comp}'"
 		for module in ${modules}
 		do
 		    if mk_module_has_function "${module}" "pre_${phase}"
@@ -447,7 +447,7 @@ mk_expand_targets()
 
 mk_action_invocation()
 {
-    echo "\$(ACTION) MAKE=\"\$(MAKE)\" MAKEFLAGS=\"\$(MAKEFLAGS)\" MAKELEVEL=\"\$(MAKELEVEL)\" $*"
+    echo "\$(MK_ACTION) MAKE=\"\$(MAKE)\" $*"
 }
 
 mk_generate_makefile_rules()
@@ -455,23 +455,22 @@ mk_generate_makefile_rules()
     phony=""
     all_virtuals=""
 
-    # Emit definitions of depedencies within the resource directory
-    # These are preceeded with @MK_RESOURCE_YES@ and @MK_RESOURCE_NO@
-    # so that configure can turn them off if resources have been stripped
-    # from the source distribution
+    # Emit definitions of depedencies for regenerating the Makefile
+    # These are preceeded with @MK_INIT_YES@ and @MK_INIT_NO@
+    # so that they can be turned off when building on systems without
+    # metakit installed
 
-    # Dependencies for regenerating the makefile
     depstr=""
     for file in "${MK_COMPONENT_DIR}/"*  "${MK_MODULE_DIR}/"*
     do
 	depstr="$depstr ${file}"
     done
-    printf "@MK_RESOURCE_YES@makefile_resource_deps=${depstr}\n"
-    printf "@MK_RESOURCE_NO@makefile_resource_deps=\n\n"
+    printf "@MK_INIT_YES@makefile_resource_deps=${depstr}\n"
+    printf "@MK_INIT_NO@makefile_resource_deps=\n\n"
 
     # Rule for regenerating the makefile
     printf "${MK_MAKEFILE_FILENAME}: \$(makefile_resource_deps)\n"
-    printf "\t@mkinit --no-init\n"
+    printf "\t@\$(MK_INIT) --no-init\n"
     printf "\t@\$(MK_ROOT_DIR)/configure \$(MK_CONFIGURE_ARGS)\n\n"
 
     mk_log "Generating phase rules"
@@ -497,14 +496,15 @@ mk_generate_makefile_rules()
 	    done
 	    
 	    [ -z "$rule" ] && mk_fail "No dependency rule found for component $comp phase $phase"
-	    type="`echo "$rule" | cut -d: -f1`"
-	    deps="`echo "$rule" | cut -d: -f2`"
+	    type="`echo "${rule}:" | cut -d: -f1`"
+	    deps="`echo "${rule}:" | cut -d: -f2`"
+	    args="`echo "${rule}:" | cut -d: -f3`"
 	    deps="`mk_expand_targets "$deps"`"
 	    
 	    if [ "$type" = "once" ]
 	    then
 		printf "%s\n" "${MK_TARGET_DIRNAME}/${phase}-${comp}: ${deps}"
-		printf "\t@%s\n" "`mk_action_invocation ${phase} ${comp}`"
+		printf "\t@%s\n" "`mk_action_invocation ${phase} ${comp} "${args}"`"
 		printf "\t@%s\n" "touch \$@"
 		printf "\n"
 		printf "%s\n" "${phase}-${comp}: ${MK_TARGET_DIRNAME}/${phase}-${comp}"
@@ -513,7 +513,7 @@ mk_generate_makefile_rules()
 	    elif [ "$type" = "always" ]
 	    then
 		printf "%s\n" "${MK_TARGET_DIRNAME}/${phase}-${comp}: ${deps}"
-		printf "\t@%s\n" "`mk_action_invocation ${phase} ${comp}`"
+		printf "\t@%s\n" "`mk_action_invocation ${phase} ${comp} "${args}"`"
 		printf "\n"
 		printf "%s\n" "${phase}-${comp}: ${MK_TARGET_DIRNAME}/${phase}-${comp}"
 		printf "\n"

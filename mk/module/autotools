@@ -137,12 +137,12 @@ load()
 
     auto_make_build()
     {
-	mk_show_args ${MAKE} -${MAKEFLAGS} "$@" || mk_fail "make failed"
+	mk_show_args ${MAKE} "$@" || mk_fail "make failed"
     }
 
     auto_make_stage()
     {
-	mk_show_args ${MAKE} -${MAKEFLAGS} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
+	mk_show_args ${MAKE} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
     }
 
     auto_init()

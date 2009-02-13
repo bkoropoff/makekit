@@ -65,7 +65,7 @@
 ##      of (3.ii), it means the entirety of the Program.
 ##
 
-DESTDIR="/"
+DESTDIR=/
 
 .POSIX:
 

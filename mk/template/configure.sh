@@ -217,8 +217,7 @@ exec 4>${MK_CONFIG_FILE}
 
 for __var in ${MK_DEFINE_LIST}
 do
-    __stmt="echo \"\$${__var}\""
-    __val="`eval "$__stmt"`"
+    __val="`mk_deref "$__var"`"
     echo "$__var=`mk_quote "$__val"`" >&4
 done
 
@@ -231,29 +230,17 @@ mk_log "Creating ${MK_MAKEFILE_FILENAME}"
 # Open up Makefile
 exec 4>"${MK_MAKEFILE_FILE}"
 
-# Write basic Makefile variables
-mk_make_define MK_ROOT_DIR "${MK_ROOT_DIR}"
-mk_make_define MK_WORK_DIR "${MK_WORK_DIR}"
-mk_make_define ACTION      "./${MK_ACTION_FILENAME}"
-mk_make_define MK_CONFIGURE_ARGS "${MK_CONFIGURE_ARGS}"
+sedscript="sed"
 
-# Decide if resources are present
-if [ -d "${MK_RESOURCE_DIR}" ]
-then
-    MK_RESOURCE_YES=""
-    MK_RESOURCE_NO="#"
-else
-    MK_RESOURCE_YES="#"
-    MK_RESOURCE_NO=""
-fi
+for __var in ${MK_DEFINE_LIST}
+do
+    __val="`mk_deref "$__var"`"
+    sedscript="$sedscript -e `mk_quote "s|@$__var@|$__val|g"`"
+    echo "$__var=$__val" >&4
+done
 
-# FIXME: make this generic
 echo "" >&4
-sed \
-    -e "s:@MK_WORK_DIR@:${MK_WORK_DIR}:g" \
-    -e "s:@MK_RESOURCE_YES@:${MK_RESOURCE_YES}:g" \
-    -e "s:@MK_RESOURCE_NO@:${MK_RESOURCE_NO}:g" \
-    < "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in" >&4
+eval ${sedscript} < "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in" | grep -v '^##' >&4
 
 # Close Makefile
 exec 4>&-

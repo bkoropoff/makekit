@@ -75,8 +75,21 @@ suppress-command-output   -            Suppress output of build commands
 
 configure()
 {
+    mk_check_program_path MK_INIT "mkinit" mkinit
     mk_check_program_path MK_SHELL "shell" bash sh || mk_fail "could not find a usable shell"
     mk_check_program MK_MAKE "make" gmake make || mk_fail "could not find a usable make program"
 
-    mk_define MK_SHELL MK_MAKE MK_SUPPRESS_COMMAND_OUTPUT
+    if [ -n "$MK_INIT" ]
+    then
+	MK_INIT_YES=""
+	MK_INIT_NO="##"
+    else
+	MK_INIT_YES="##"
+	MK_INIT_NO=""
+    fi
+
+    MK_ACTION="${MK_WORK_DIR}/action"
+
+    mk_define MK_ROOT_DIR MK_WORK_DIR MK_ACTION
+    mk_define MK_SHELL MK_MAKE MK_SUPPRESS_COMMAND_OUTPUT MK_INIT MK_INIT_YES MK_INIT_NO
 }
