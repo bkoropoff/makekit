@@ -167,7 +167,7 @@ mk_process_template \
 mk_log_leave
 
 mk_log "Generating ${MK_MAKEFILE_FILENAME}.in"
-mk_log_enter "${MK_MAKEFIlE_FILENAME}.in"
+mk_log_enter "${MK_MAKEFILE_FILENAME}.in"
 mk_process_template \
     < "${MK_HOME}/template/makefile" \
     > "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in"

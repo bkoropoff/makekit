@@ -122,7 +122,6 @@ load()
 
 	mk_show_args "${AUTO_CONFIGURE_FILE}" \
 	    CC="${CC}" \
-	    MAKE="${MK_MAKE}" \
 	    CPPFLAGS="${CPPFLAGS}" \
 	    CFLAGS="${CFLAGS}" \
 	    LDFLAGS="${LDFLAGS}" \
@@ -138,12 +137,12 @@ load()
 
     auto_make_build()
     {
-	mk_show_args ${MK_MAKE} ${MFLAGS} "$@" || mk_fail "make failed"
+	mk_show_args ${MAKE} -${MAKEFLAGS} "$@" || mk_fail "make failed"
     }
 
     auto_make_stage()
     {
-	mk_show_args ${MK_MAKE} ${MFLAGS} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
+	mk_show_args ${MAKE} -${MAKEFLAGS} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
     }
 
     auto_init()
@@ -160,7 +159,6 @@ pre_prepare()
     CFLAGS="${MK_CFLAGS}"
     CPPFLAGS="${MK_CPPFLAGS}"
     LDFLAGS="${MK_LDFLAGS}"
-    MFLAGS="${MFLAGS} ${MK_MFLAGS}"
     PATH="$PATH"
 
     for __dep in ${MK_COMP_DEPENDS}
@@ -186,7 +184,7 @@ pre_prepare()
 	fi
     done
 
-    export SHELL CC CFLAGS CPPFLAGS LDFLAGS MAKE MFLAGS PATH
+    export SHELL CC CFLAGS CPPFLAGS LDFLAGS PATH
 }
 
 post_stage()

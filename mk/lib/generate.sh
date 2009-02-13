@@ -231,11 +231,11 @@ mk_generate_configure_help()
     print ""
     if ($2 == "-")
     {
-        form=sprintf("--%s", $1);
+        form=sprintf("  --%s", $1);
     }
     else
     {
-        form=sprintf("--%s=%s", $1, $2);
+        form=sprintf("  --%s=%s", $1, $2);
     }
     i=length(form);
     while (i < justify - 1)
@@ -275,7 +275,7 @@ mk_generate_configure_help()
     echo ""
     echo "Options:"
     echo ""
-    echo "--help 　 　　　     　　　　　         Display this help message"
+    echo "  --help 　 　　　     　　　         Display this help message"
 
     mk_configure_options | awk "${awk_prog}" justify=40
     
@@ -344,12 +344,11 @@ mk_generate_action_rules()
 	done
     done
 
-    mk_log "Building component build phases"
+    mk_log "Generating phase actions"
     mk_log_enter "component"
     for comp in ${MK_COMPONENT_INVENTORY}
     do
 	mk_log "${comp}"
-	mk_log_enter "${comp}"
 	file="${MK_COMPONENT_DIR}/${comp}"
 	depends="`mk_get_component_var "${comp}" CLOSURE`"
 	modules="`mk_get_component_var "${comp}" MODULE_CLOSURE`"
@@ -357,8 +356,6 @@ mk_generate_action_rules()
 
 	for phase in ${phases}
 	do
-	    mk_log "${phase}"
-	    mk_log_enter "${phase}"
 	    extract_file=""
 	    extract_func=""
 	    
@@ -412,15 +409,52 @@ mk_generate_action_rules()
 		echo "    mk_log_leave"
 		echo "}"
 	    fi
-	    mk_log_leave
 	done
-	mk_log_leave
     done
     mk_log_leave
 }
 
+mk_expand_targets()
+{
+    __frontier="$*"
+
+    while [ -n "$__frontier" ]
+    do
+	__work="$__frontier"
+	__frontier=""
+	__vars="`echo $__work | awk 'BEGIN { RS=\"[^%{}]*%{|}[^%{}]*|^[^%{}]*$\"; ORS=" "; } { print; }'`"
+	if [ -n "${__vars}" ]
+	then
+	    for __var in ${__vars}
+	    do
+		__val="`mk_deref ${__var}`"
+		for __each in ${__val}
+		do
+		    __sub="`echo $__work | sed "s:%{$__var}:$__each:g"`"
+		    __frontier="$__frontier $__sub"
+		done
+	    done
+	fi
+    done
+
+    (
+	for __each in ${__work}
+	do
+	    echo "${MK_TARGET_DIRNAME}/${__each}"
+	done
+    ) | grep -v '%' | xargs
+}
+
+mk_action_invocation()
+{
+    echo "\$(ACTION) MAKE=\"\$(MAKE)\" MAKEFLAGS=\"\$(MAKEFLAGS)\" MAKELEVEL=\"\$(MAKELEVEL)\" $*"
+}
+
 mk_generate_makefile_rules()
 {
+    phony=""
+    all_virtuals=""
+
     # Emit definitions of depedencies within the resource directory
     # These are preceeded with @MK_RESOURCE_YES@ and @MK_RESOURCE_NO@
     # so that configure can turn them off if resources have been stripped
@@ -440,43 +474,87 @@ mk_generate_makefile_rules()
     printf "\t@mkinit --no-init\n"
     printf "\t@\$(MK_ROOT_DIR)/configure \$(MK_CONFIGURE_ARGS)\n\n"
 
-    # Emit rules for each component
-    for file in "${MK_COMPONENT_DIR}/"*
+    mk_log "Generating phase rules"
+    mk_log_enter "component"
+    for comp in ${MK_COMPONENT_INVENTORY}
     do
-	comp="`basename "${file}"`"
-	modules="`mk_get_component_var "${comp}" MODULE_CLOSURE`"
-	phases="`mk_get_component_var "${comp}" PHASE_CLOSURE`"
-	deps="`mk_get_component_var "${comp}" DEPENDS`"
-	
+	mk_log "$comp"
+	phases="`mk_get_component_var "$comp" PHASE_CLOSURE`"
+	modules="`mk_get_component_var "$comp" MODULE_CLOSURE`"
+	DEPENDS="`mk_get_component_var "$comp" DEPENDS`"
+	COMPONENT="$comp"
+
 	for phase in ${phases}
 	do
-	    makedeps=""
+	    varname="`mk_make_identifier PHASE_${phase}`"
 	    for module in ${modules}
 	    do
-		if mk_module_has_function "${module}" "makerule_${phase}"
+		rule="`mk_get_module_var "$module" "$varname"`"
+		if [ -n "$rule" ]
 		then
-		    (
-			. "${MK_MODULE_DIR}/${module}" || mk_fail "could not read module: ${module}"
-			"makerule_${phase}" "${comp}" "${deps}"
-		    ) || exit 1
+		    break
 		fi
 	    done
+	    
+	    [ -z "$rule" ] && mk_fail "No dependency rule found for component $comp phase $phase"
+	    type="`echo "$rule" | cut -d: -f1`"
+	    deps="`echo "$rule" | cut -d: -f2`"
+	    deps="`mk_expand_targets "$deps"`"
+	    
+	    if [ "$type" = "once" ]
+	    then
+		printf "%s\n" "${MK_TARGET_DIRNAME}/${phase}-${comp}: ${deps}"
+		printf "\t@%s\n" "`mk_action_invocation ${phase} ${comp}`"
+		printf "\t@%s\n" "touch \$@"
+		printf "\n"
+		printf "%s\n" "${phase}-${comp}: ${MK_TARGET_DIRNAME}/${phase}-${comp}"
+		printf "\n"
+		phony="$phony ${phase}-${comp}"
+	    elif [ "$type" = "always" ]
+	    then
+		printf "%s\n" "${MK_TARGET_DIRNAME}/${phase}-${comp}: ${deps}"
+		printf "\t@%s\n" "`mk_action_invocation ${phase} ${comp}`"
+		printf "\n"
+		printf "%s\n" "${phase}-${comp}: ${MK_TARGET_DIRNAME}/${phase}-${comp}"
+		printf "\n"
+		phony="$phony ${MK_TARGET_DIRNAME}/${phase}-${comp} ${phase}-${comp}"
+	    else
+		mk_fail "unrecognized phase rule type: $type"
+	    fi
 	done
     done
-    
-    # Emit custom rules for each module
-    for file in "${MK_MODULE_DIR}/"*
+    mk_log_leave
+
+    mk_log "Generating virtual rules"
+    mk_log_enter "module"
+    for module in ${MK_MODULE_INVENTORY}
     do
-	if mk_function_exists_in_file "${file}" "makerule_all"
-	then
-	    module="`basename "${file}"`"
-	    comps="`mk_components_for_module "${module}"`" || exit 1
-	    (
-		. "${MK_MODULE_DIR}/${module}" || mk_fail "could not read module: ${module}"
-		makerule_all "$comps"
-	    ) || exit 1
-	fi
+	mk_log "$module"
+	virtuals="`mk_get_module_var "$module" VIRTUALS`"
+	COMPONENTS="`mk_components_for_module "$module"`"
+	all_virtuals="$all_virtuals $virtuals"
+	for virtual in ${virtuals}
+	do
+	    varname="`mk_make_identifier "VIRTUAL_$virtual"`"
+	    deps="`mk_get_module_var "$module" "$varname"`"
+	    deps="`mk_expand_targets "$deps"`"
+	    varname="virtual_deps_$virtual"
+	    value="`mk_deref "$varname"`"
+	    mk_assign "$varname" "$value $deps"
+	done
     done
+
+    for virtual in `mk_unique_list ${all_virtuals}`
+    do
+	varname="virtual_deps_$virtual"
+	value="`mk_deref "$varname"`"
+	value="`mk_unique_list ${value}`"
+	printf "%s\n\n" "${virtual}: ${value}"
+	phony="$phony $virtual"
+    done
+    mk_log_leave
+    
+    printf ".PHONY:%s\n\n" "$phony"
 }
 
 mk_generate_manifest()

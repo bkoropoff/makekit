@@ -68,6 +68,16 @@
 # This module defines the basic build strategy for source components
 DEPENDS="mk"
 PHASES="prepare build stage install clean"
+VIRTUALS="clean install all"
+
+PHASE_PREPARE='once: stage-%{DEPENDS}'
+PHASE_BUILD='once: prepare-%{COMPONENT}'
+PHASE_STAGE='once: build-%{COMPONENT}'
+PHASE_INSTALL='always: stage-%{COMPONENT}'
+PHASE_CLEAN='always:'
+VIRTUAL_CLEAN="clean-%{COMPONENTS}"
+VIRTUAL_INSTALL="install-%{COMPONENTS}"
+VIRTUAL_ALL="stage-%{COMPONENTS}"
 
 load()
 {
@@ -106,11 +116,6 @@ load()
     {
 	mk_log "Copying source"
 	mk_sync "${MK_COMP_SOURCE_DIR}/" "${MK_COMP_BUILD_DIR}/" || mk_fail "could not copy source code"
-    }
-
-    mk_invoke_action()
-    {
-	printf '\t@$(ACTION) MAKE="$(MAKE)" MAKEFLAGS="$(MAKEFLAGS)" MFLAGS="$(MFLAGS)" MAKELEVEL="$(MAKELEVEL)" %s\n' "$*"
     }
 
     mk_get_stage_dir()
@@ -195,92 +200,4 @@ default_clean()
 	fi
     done
     mk_log_leave
-}
-
-makerule_prepare()
-{
-    printf "%s" "${MK_TARGET_DIRNAME}/prepare-${1}:"
-    for __dep in ${2}
-    do
-	printf " %s" "${MK_TARGET_DIRNAME}/stage-${__dep}"
-    done
-    printf "\n"
-
-    mk_invoke_action prepare "$1"
-    printf "\t@touch ${MK_TARGET_DIRNAME}/prepare-${1}\n\n"
-}
-
-makerule_build()
-{
-    printf "${MK_TARGET_DIRNAME}/build-${1}: ${MK_TARGET_DIRNAME}/prepare-${1}\n"
-    mk_invoke_action build "$1"
-    printf "\t@touch ${MK_TARGET_DIRNAME}/build-${1}\n\n"
-}
-
-makerule_stage()
-{
-    printf "${MK_TARGET_DIRNAME}/stage-${1}: ${MK_TARGET_DIRNAME}/build-${1}\n"
-    mk_invoke_action stage "$1"
-    printf "\t@touch ${MK_TARGET_DIRNAME}/stage-${1}\n\n"
-}
-
-makerule_install()
-{
-    printf "install-${1}: ${MK_TARGET_DIRNAME}/stage-${1}\n"
-    mk_invoke_action install "$1" "\$(DESTDIR)"
-    printf "\n"
-}
-
-makerule_clean()
-{
-    printf "clean-${1}:\n"
-    mk_invoke_action clean "$1"
-    printf "\n"
-}
-
-makerule_all()
-{
-    printf ".PHONY: all prepare build stage clean install"
-    for __comp in ${1}
-    do
-	printf " clean-${__comp} install-${__comp}"
-    done
-    printf "\n\n"
-
-    printf "prepare:"
-    for __comp in ${1}
-    do
-	printf " ${MK_TARGET_DIRNAME}/prepare-${__comp}"
-    done
-    printf "\n\n"
-
-    printf "build:"
-    for __comp in ${1}
-    do
-	printf " ${MK_TARGET_DIRNAME}/build-${__comp}"
-    done
-    printf "\n\n"
-
-    printf "stage:"
-    for __comp in ${1}
-    do
-	printf " ${MK_TARGET_DIRNAME}/stage-${__comp}"
-    done
-    printf "\n\n"
-
-    printf "clean:"
-    for __comp in ${1}
-    do
-	printf " clean-${__comp}"
-    done
-    printf "\n\n"
-
-    printf "install:"
-    for __comp in ${1}
-    do
-	printf " install-${__comp}"
-    done
-    printf "\n\n"
-
-    printf "all: stage\n\n"
 }
