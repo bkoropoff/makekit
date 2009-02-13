@@ -234,7 +234,7 @@ exec 4>"${MK_MAKEFILE_FILE}"
 # Write basic Makefile variables
 mk_make_define MK_ROOT_DIR "${MK_ROOT_DIR}"
 mk_make_define MK_WORK_DIR "${MK_WORK_DIR}"
-mk_make_define ACTION      "\$(MK_WORK_DIR)/${MK_ACTION_FILENAME}"
+mk_make_define ACTION      "./${MK_ACTION_FILENAME}"
 mk_make_define MK_CONFIGURE_ARGS "${MK_CONFIGURE_ARGS}"
 
 # Decide if resources are present
