@@ -69,6 +69,11 @@
 @mk_include lib/paths.sh@
 @mk_include lib/util.sh@
 
+if mk_contains "${MFLAGS}" "-n"
+then
+    exit 0
+fi
+
 . "${MK_MANIFEST_FILE}" || mk_fail "could not read ${MK_MANIFEST_FILENAME}"
 . "${MK_CONFIG_FILE}" || mk_fail "coould not read ${MK_CONFIG_FILENAME}"
 
