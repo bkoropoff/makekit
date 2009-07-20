@@ -455,3 +455,16 @@ mk_safe_rm()
 	rm -rf "$1"
     fi
 }
+
+mk_substitute_vars()
+{
+    __sedscript="sed"
+
+    for __var in $@
+    do
+	__val="`mk_deref "$__var"`"
+	__sedscript="$__sedscript -e `mk_quote "s|@$__var@|$__val|g"`"
+    done
+
+    eval ${__sedscript}
+}

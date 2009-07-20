@@ -81,7 +81,7 @@ load()
 	    # Appears to be a dependency on another .la file in the
 	    # final install path -- prepend it with the staging path of
 	    # whatever module contains it
-	    for __comp in ${MK_COMP_DEPENDS}
+	    for __comp in ${MK_COMP_DEPENDS} ${MK_COMP}
 	    do
 		if [ -f "${MK_STAGE_DIR}/${__comp}$1" ]
 		then

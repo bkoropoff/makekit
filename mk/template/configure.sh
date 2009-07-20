@@ -230,17 +230,14 @@ mk_log "Creating ${MK_MAKEFILE_FILENAME}"
 # Open up Makefile
 exec 4>"${MK_MAKEFILE_FILE}"
 
-sedscript="sed"
-
-for __var in ${MK_DEFINE_LIST}
+for var in ${MK_DEFINE_LIST}
 do
-    __val="`mk_deref "$__var"`"
-    sedscript="$sedscript -e `mk_quote "s|@$__var@|$__val|g"`"
-    echo "$__var=$__val" >&4
+    val="`mk_deref "$var"`"
+    echo "$var=$val" >&4
 done
 
 echo "" >&4
-eval ${sedscript} < "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in" | grep -v '^##' >&4
+mk_substitute_vars ${MK_DEFINE_LIST} < "${MK_ROOT_DIR}/${MK_MAKEFILE_FILENAME}.in" | grep -v '^##' >&4
 
 # Close Makefile
 exec 4>&-
