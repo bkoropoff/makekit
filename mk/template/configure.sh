@@ -208,7 +208,7 @@ do
     esac
 done
 
-mk_log "Configuring ${PROJECT_NAME}"
+mk_log "Configuring ${MK_PROJECT_NAME}"
 @mk_generate_configure_body@
 
 mk_log "Creating ${MK_CONFIG_FILENAME}"

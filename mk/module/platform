@@ -68,8 +68,6 @@
 DEPENDS="mk"
 OPTIONS='
 arch            name    Specify machine architecture
-arch-variants   list    Specify set of machine architecture
-                        compatibility variants
 os              name    Specify operating system
 '
 
@@ -102,9 +100,9 @@ configure()
 		break
 	    fi
 	done
-	
-	[ -z "${MK_ARCH}" ] && mk_fail "could not identify machine architecture"
     fi
+
+    [ -z "${MK_ARCH}" ] && mk_fail "could not identify machine architecture"
 
     if [ -z "${MK_OS}" ]
     then
@@ -120,8 +118,7 @@ configure()
     [ -z "${MK_OS}" ] && mk_fail "could not identify operating system"
 
     mk_log "architecture: $MK_ARCH"
-    mk_log "architecture variants: $MK_ARCH_VARIANTS"
     mk_log "operating system: $MK_OS"
     
-    mk_define MK_ARCH MK_ARCH_VARIANTS MK_OS
+    mk_define MK_ARCH MK_OS
 }

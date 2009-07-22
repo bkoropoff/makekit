@@ -71,11 +71,11 @@ PHASES="prepare build stage install clean"
 VIRTUALS="clean install all"
 
 PHASE_PREPARE='once: stage-%{DEPENDS}'
-PHASE_BUILD='once: prepare-%{COMPONENT}'
-PHASE_STAGE='once: build-%{COMPONENT}'
-PHASE_INSTALL='always: stage-%{COMPONENT}: "$(DESTDIR)"'
+PHASE_BUILD='once: prepare-%{NAME}'
+PHASE_STAGE='once: build-%{NAME}'
+PHASE_INSTALL='always: stage-%{NAME}: "$(DESTDIR)"'
 PHASE_CLEAN='always'
-VIRTUAL_CLEAN="clean-%{COMPONENTS}"
+VIRTUAL_CLEAN="clean-%{NAMES}"
 VIRTUAL_INSTALL="install-%{COMPONENTS}"
 VIRTUAL_ALL="stage-%{COMPONENTS}"
 

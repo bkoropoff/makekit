@@ -22,10 +22,10 @@ def load_modules():
 
     return modules
 
-def load_manifest_in():
-    return ManifestIn(
-        Settings.manifest_filename,
-        os.path.join(Settings.root_dir, Settings.manifest_filename + ".in"))
+def load_project():
+    return Project(
+        Settings.project_filename,
+        os.path.join(Settings.root_dir, Settings.project_filename))
 
 def load_components(modules):
     components = {}
@@ -348,10 +348,10 @@ def init():
 def main():
     modules = load_modules()
     components = load_components(modules)
-    manifest_in = load_manifest_in()
+    project = load_project()
 
     with open(Settings.manifest_filename, "w") as dest:
-        emit_manifest(manifest_in, modules, components, dest)
+        emit_manifest(project, modules, components, dest)
 
     with open(os.path.join(Settings.mk_dir, 'template', 'makefile')) as source:
         with open(Settings.makefile_filename + '.in', "w") as dest:
@@ -369,4 +369,3 @@ def main():
 
 if __name__ == "__main__":  
     main()
-

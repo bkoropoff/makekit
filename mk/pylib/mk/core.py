@@ -28,7 +28,7 @@ __all__ = [
     "Script",
     "Module",
     "Component",
-    "ManifestIn",
+    "Project",
     "Settings",
     "order_depends",
     "manifest_name",
@@ -48,7 +48,7 @@ class Script:
     def __init__(self, name, filename):
         self.name = name
         self.filename = filename
-        self.variables = {'COMPONENT': name}
+        self.variables = {'NAME': name}
         self.functions = {}
         self.closure_set = None
         self.closure_order = None
@@ -223,9 +223,9 @@ class Component(Script):
         for module in self.module_set:
             self.phase_closure.update(module.phase_closure)
 
-class ManifestIn(Script):
+class Project(Script):
     def manifest_prefix(self):
-        return ""
+        return "MK_"
 
 class Settings:
     mk_dir = os.path.abspath(os.environ['MK_HOME'])
@@ -237,6 +237,7 @@ class Settings:
     action_filename = constants['MK_ACTION_FILENAME']
     makefile_filename = constants['MK_MAKEFILE_FILENAME']
     manifest_filename = constants['MK_MANIFEST_FILENAME']
+    project_filename = constants['MK_PROJECT_FILENAME']
 
 def manifest_name(name):
     return name.upper().replace('-', '_')

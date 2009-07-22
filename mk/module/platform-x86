@@ -74,7 +74,6 @@ load()
 	case "`${MK_UNAME} -m`" in
 	    i?86)
 		MK_ARCH="x86"
-		MK_ARCH_VARIANTS=""
 		return 0
 		;;
 	    *)
