@@ -65,9 +65,9 @@
 ##      of (3.ii), it means the entirety of the Program.
 ##
 
-@mk_include lib/constants.sh@
-@mk_include lib/paths.sh@
-@mk_include lib/util.sh@
+@mk_include constants.sh@
+@mk_include paths.sh@
+@mk_include util.sh@
 
 if mk_contains "${MFLAGS}" "-n"
 then

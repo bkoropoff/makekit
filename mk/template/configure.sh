@@ -66,8 +66,8 @@
 ##      of (3.ii), it means the entirety of the Program.
 ##
 
-@mk_include lib/constants.sh@
-@mk_include lib/util.sh@
+@mk_include constants.sh@
+@mk_include util.sh@
 
 DIRNAME="`dirname "$0"`"
 MK_ROOT_DIR="`mk_canonical_path "$DIRNAME"`"
@@ -76,7 +76,7 @@ MK_PREFIX="/usr/local"
 MK_DEFINE_LIST=""
 MK_EXPORT_LIST=""
 
-@mk_include lib/paths.sh@
+@mk_include paths.sh@
 
 mk_define()
 {
