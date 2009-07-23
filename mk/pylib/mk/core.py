@@ -83,7 +83,7 @@ class Script:
                 elif (mode == "func"):
                     if (line == "{\n"):
                         continue
-                    elif (line == "}\n"):
+                    elif (line == "}\n" or line == "}"):
                         self.functions[name] = body
                         mode="normal"
                         continue

@@ -63,39 +63,125 @@
 ##      distribute it.  In the case of (3.i), this means the offending file which
 ##      contains the inappropriately combined portions of the Program.  In the case
 ##      of (3.ii), it means the entirety of the Program.
-## 
+##
+
+# This module defines the build strategy for binary packages
+
+DEPENDS="platform installpath"
+PHASES="build package clean"
+VIRTUALS="all clean"
+
+PHASE_BUILD="once"
+PHASE_PACKAGE="once: build-%{NAME}"
+PHASE_CLEAN="always"
+
+VIRTUAL_CLEAN="clean-%{COMPONENTS}"
+VIRTUAL_ALL="package-%{COMPONENTS}"
 
 OPTIONS='
-shell                     program      Set the name or path of the default
-                                       Bourne-compatible shell
-make                      program      Set the name or path of the default
-                                       UNIX make utility
-suppress-command-output   -            Suppress output of build commands
+package-type           type       Specify desired package type
+platforms              list       Specify target platforms
 '
 
 load()
 {
-    MK_TARGET_DIRNAME="target"
-    MK_TARGET_DIR="${MK_WORK_DIR}/${MK_TARGET_DIRNAME}"
+    MK_BUILD_DIRNAME="build"
+    MK_BUILD_DIR="${MK_WORK_DIR}/${MK_BUILD_DIRNAME}"
+
+    MK_PACKAGE_TYPE_TESTS=""
+    MK_PACKAGE_TYPES=""
+
+    mk_package_add_type()
+    {
+	MK_PACKAGE_TYPES="$MK_PACKAGE_TYPES $1"
+	MK_PACKAGE_TYPE_TESTS="$MK_PACKAGE_TYPE_TESTS $2"
+    }
+
+    __mk_package_detect_type()
+    {
+	for __test in ${MK_PACKAGE_TYPE_TESTS}
+	do
+	    if ${__test}
+	    then
+		return 0
+	    fi
+	done
+
+	return 1
+    }
 }
 
 configure()
 {
-    mk_check_program_path MK_INIT "mkinit" mkinit
-    mk_check_program_path MK_SHELL "shell" bash sh || mk_fail "could not find a usable shell"
-    mk_check_program MK_MAKE "make" gmake make || mk_fail "could not find a usable make program"
-
-    if [ -n "$MK_INIT" ]
+    if [ -z "$MK_PACKAGE_TYPE" ]
     then
-	MK_INIT_YES=""
-	MK_INIT_NO="##"
-    else
-	MK_INIT_YES="##"
-	MK_INIT_NO=""
+	__mk_package_detect_type || mk_fail "Could not detect package type"
     fi
 
-    MK_ACTION="${MK_WORK_DIR}/action"
+    if ! mk_contains "${MK_PACKAGE_TYPES}" "${MK_PACKAGE_TYPE}"
+    then
+	mk_fail "Invalid package type: ${MK_PACKAGE_TYPE}.  Supported:${MK_PACKAGE_TYPES}"
+    fi
 
-    mk_define MK_ROOT_DIR MK_WORK_DIR MK_ACTION
-    mk_define MK_SHELL MK_MAKE MK_SUPPRESS_COMMAND_OUTPUT MK_INIT MK_INIT_YES MK_INIT_NO
+    if [ -z "$MK_PACKAGE_PLATFORMS" ]
+    then
+	MK_PACKAGE_PLATFORMS="${MK_ARCH}-${MK_OS}"
+    fi
+
+    mk_log "Package type: ${MK_PACKAGE_TYPE}"
+    mk_log "Package platforms: ${MK_PACKAGE_PLATFORMS}"
+
+    mk_export MK_PACKAGE_PLATFORMS MK_PACKAGE_TYPE
+}
+
+output()
+{
+    [ -n "$MK_PROJECT_SOURCE_PROJECT" ] || mk_fail "No source project specified"
+
+    for __plat in ${MK_PACKAGE_PLATFORMS}
+    do
+	__arch="`echo $__plat | cut -d'-' -f1`"
+	__os="`echo $__plat | cut -d'-' -f2`"
+	__dir="${__arch}/${__os}"
+	mk_log "Configuring source project for ${__plat}"
+	mkdir -p "${MK_BUILD_DIR}/${__dir}" || mk_fail "Could not create directory"
+	mk_configure_project "${MK_PROJECT_SOURCE_PROJECT}" "${MK_BUILD_DIR}/${__dir}"
+    done
+}
+
+default_build()
+{
+    mk_log "Building source components for ${MK_COMP}"
+
+    __targets=""
+
+    for __comp in `mk_get_component_var "${MK_COMP}" "SOURCE_COMPONENTS"`
+    do
+	__targets="${__targets} stage-${__comp}"
+    done
+
+    mk_log_enter "platform"
+
+    for __dir in "${MK_BUILD_DIR}"/*/*
+    do
+	if [ -d "${__dir}" ]
+	then
+	    ${MAKE} -C "${__dir}" ${__targets}
+	fi
+    done
+}
+
+default_clean()
+{
+    mk_log "Cleaning files"
+    mk_log_enter "file"
+    for _file in "${MK_TARGET_DIR}/"*"-${MK_COMP}"
+    do
+	if [ -f "${_file}" ]
+	then
+	    mk_log "${_file##$MK_WORK_DIR/}"
+	    mk_safe_rm "${_file}"
+	fi
+    done
+    mk_log_leave
 }

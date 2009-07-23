@@ -145,6 +145,19 @@ load()
 	mk_show_args ${MAKE} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
     }
 
+    auto_make_dist()
+    {
+	__srcdir="`mk_get_component_var "${MK_COMP}" "SOURCE_DIR"`"
+	
+	[ -z "${__srcdir}" ] && __srcdir="${MK_COMP}"
+
+	__distdir="${MK_DIST_DIR}/${__srcdir}"
+
+	mk_log "Generating source distribution in ${MK_DIST_DIRNAME}/${__srcdir}"
+
+	${MAKE} distdir="${__distdir}" distdir
+    }
+
     auto_init()
     {
 	mk_log "Running autotools"
@@ -260,4 +273,9 @@ default_build()
 default_stage()
 {
     auto_make_stage
+}
+
+default_dist()
+{
+    auto_make_dist
 }

@@ -67,28 +67,30 @@
 
 # This module defines the basic build strategy for source components
 DEPENDS="mk"
-PHASES="prepare build stage install clean"
-VIRTUALS="clean install all"
+PHASES="prepare build stage install clean dist"
+VIRTUALS="clean install all dist"
 
 PHASE_PREPARE='once: stage-%{DEPENDS}'
 PHASE_BUILD='once: prepare-%{NAME}'
 PHASE_STAGE='once: build-%{NAME}'
 PHASE_INSTALL='always: stage-%{NAME}: "$(DESTDIR)"'
 PHASE_CLEAN='always'
-VIRTUAL_CLEAN="clean-%{NAMES}"
+PHASE_DIST='always: prepare-%{NAME}'
+VIRTUAL_CLEAN="clean-%{COMPONENTS}"
 VIRTUAL_INSTALL="install-%{COMPONENTS}"
 VIRTUAL_ALL="stage-%{COMPONENTS}"
+VIRTUAL_DIST="dist-%{COMPONENTS}"
 
 load()
 {
     MK_SOURCE_DIRNAME="source"
     MK_BUILD_DIRNAME="build"
     MK_STAGE_DIRNAME="stage"
-    MK_TARGET_DIRNAME="target"
+    MK_DIST_DIRNAME="dist"
     MK_SOURCE_DIR="${MK_ROOT_DIR}/${MK_SOURCE_DIRNAME}"
     MK_STAGE_DIR="${MK_WORK_DIR}/${MK_STAGE_DIRNAME}"
     MK_BUILD_DIR="${MK_WORK_DIR}/${MK_BUILD_DIRNAME}"
-    MK_TARGET_DIR="${MK_WORK_DIR}/${MK_TARGET_DIRNAME}"
+    MK_DIST_DIR="${MK_WORK_DIR}/${MK_DIST_DIRNAME}"
 
     mk_set_comp_vars()
     {
@@ -124,6 +126,15 @@ load()
     }
 }
 
+output()
+{
+    for dir in ${MK_BUILD_DIRNAME} ${MK_STAGE_DIRNAME} ${MK_DIST_DIRNAME}
+    do
+	mk_log "Creating directory ${dir}"
+	mkdir -p "${MK_WORK_DIR}/${dir}"
+    done
+}
+
 pre_init()
 {
     mk_set_comp_vars "${MK_COMP}"
@@ -151,7 +162,13 @@ pre_stage()
 {
     mk_set_comp_vars "${MK_COMP}"
 
-    mk_recreate_dir "$MK_COMP_STAGE_DIR" || mk_fail mk_fail "could not create component build directory"
+    mk_recreate_dir "$MK_COMP_STAGE_DIR" || mk_fail "could not create component build directory"
+    cd "$MK_COMP_BUILD_DIR" || mk_fail "could not change to component build directory"
+}
+
+pre_dist()
+{
+    mk_set_comp_vars "${MK_COMP}"
     cd "$MK_COMP_BUILD_DIR" || mk_fail "could not change to component build directory"
 }
 

@@ -175,6 +175,16 @@ mk_check_program_path()
     return 1
 }
 
+mk_configure_project()
+{
+    __projdir="$1"
+    __workdir="$2"
+
+    [ -x "${__projdir}/configure" ] || mk_fail "Could not find configure script in $__projdir"
+
+    ( cd "${__workdir}" && "${__projdir}/configure" ) || mk_fail "Could not configure subproject in $__projdir"
+}
+
 mk_configure_help()
 {
     @mk_generate_configure_help@
@@ -259,9 +269,10 @@ exec 4>&-
 chmod +x "${MK_ACTION_FILE}"
 
 # Set up basic directory structure
-# FIXME: move this into modules
-for dir in ${MK_TARGET_DIRNAME} ${MK_BUILD_DIRNAME} ${MK_STAGE_DIRNAME}
+for dir in ${MK_TARGET_DIRNAME}
 do
     mk_log "Creating directory ${dir}"
     mkdir -p "${MK_WORK_DIR}/${dir}"
 done
+
+@mk_generate_output_body@

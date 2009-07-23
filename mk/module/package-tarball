@@ -63,39 +63,18 @@
 ##      distribute it.  In the case of (3.i), this means the offending file which
 ##      contains the inappropriately combined portions of the Program.  In the case
 ##      of (3.ii), it means the entirety of the Program.
-## 
+##
 
-OPTIONS='
-shell                     program      Set the name or path of the default
-                                       Bourne-compatible shell
-make                      program      Set the name or path of the default
-                                       UNIX make utility
-suppress-command-output   -            Suppress output of build commands
-'
+DEPENDS="package"
 
 load()
 {
-    MK_TARGET_DIRNAME="target"
-    MK_TARGET_DIR="${MK_WORK_DIR}/${MK_TARGET_DIRNAME}"
+    __test_tarball()
+    {
+	# Never autodetect tarball
+	return 1
+    }
+    
+    mk_package_add_type tarball __test_tarball
 }
 
-configure()
-{
-    mk_check_program_path MK_INIT "mkinit" mkinit
-    mk_check_program_path MK_SHELL "shell" bash sh || mk_fail "could not find a usable shell"
-    mk_check_program MK_MAKE "make" gmake make || mk_fail "could not find a usable make program"
-
-    if [ -n "$MK_INIT" ]
-    then
-	MK_INIT_YES=""
-	MK_INIT_NO="##"
-    else
-	MK_INIT_YES="##"
-	MK_INIT_NO=""
-    fi
-
-    MK_ACTION="${MK_WORK_DIR}/action"
-
-    mk_define MK_ROOT_DIR MK_WORK_DIR MK_ACTION
-    mk_define MK_SHELL MK_MAKE MK_SUPPRESS_COMMAND_OUTPUT MK_INIT MK_INIT_YES MK_INIT_NO
-}

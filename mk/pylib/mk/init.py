@@ -49,6 +49,21 @@ def load_components(modules):
 
     return components
 
+def calc_used_modules(modules, components):
+    used = {}
+    
+    for component in components.itervalues():
+        for module in component.module_set:
+            used[module.name] = module
+
+    for module in modules.itervalues():
+        if 'STANDARD' in module.variables:
+            for dep in module.closure_set:
+                used[dep.name] = dep
+
+    return used
+        
+
 def emit_manifest(manifest, modules, components, out):
     manifest.emit_manifest(out)
 
@@ -90,8 +105,8 @@ def assign_vars(rule, table):
 def expand_targets(component, rule):
     varnames = [x[2:-1] for x in re.findall(r'%{[^}]*}', rule)]
     
-    template = [[(var, val) for val in component[var].split(' ')] for var in varnames if var in component.variables]
-    
+    template = [[(var, val) for val in re.split(r"\s+", component[var]) if val != ''] for var in varnames if var in component.variables]
+
     return [x for x in [assign_vars(rule, table) for table in cart(template)] if not '%' in x]
 
 def emit_makefile_in(source, dest, all_modules, components):
@@ -293,6 +308,13 @@ def emit_configure(source, dest, modules, components):
                 dest.write(component.functions['configure'])
                 dest.write('mk_log_leave\n')
 
+    def mk_generate_output_body():
+        for script in order_depends(modules) + order_depends(components):
+            if 'output' in script.functions:
+                dest.write('mk_log_enter "%s"\n' % (script.name))
+                dest.write(script.functions['output'])
+                dest.write('mk_log_leave\n')
+
     def mk_generate_configure_help():
         dest.write('    cat <<EOF\n')
         dest.write('Usage: %s [ options ...]\n' % (Settings.constants['MK_CONFIGURE_FILENAME']))
@@ -335,7 +357,8 @@ def emit_configure(source, dest, modules, components):
         'mk_include': mk_include,
         'mk_generate_configure_help' : mk_generate_configure_help,
         'mk_generate_configure_parse' : mk_generate_configure_parse,
-        'mk_generate_configure_body' : mk_generate_configure_body
+        'mk_generate_configure_body' : mk_generate_configure_body,
+        'mk_generate_output_body' : mk_generate_output_body
         }
 
     process_template(source, dest, callbacks)
@@ -349,21 +372,22 @@ def main():
     modules = load_modules()
     components = load_components(modules)
     project = load_project()
+    used_modules = calc_used_modules(modules, components)
 
     with open(Settings.manifest_filename, "w") as dest:
         emit_manifest(project, modules, components, dest)
 
     with open(os.path.join(Settings.mk_dir, 'template', 'makefile')) as source:
         with open(Settings.makefile_filename + '.in', "w") as dest:
-            emit_makefile_in(source, dest, modules, components)
+            emit_makefile_in(source, dest, used_modules, components)
 
     with open(os.path.join(Settings.mk_dir, 'template', 'action.sh')) as source:
         with open(Settings.action_filename + '.in', "w") as dest:
-            emit_action_in(source, dest, modules, components)
+            emit_action_in(source, dest, used_modules, components)
 
     with open(os.path.join(Settings.mk_dir, 'template', 'configure.sh')) as source:
         with open(Settings.configure_filename, "w") as dest:
-            emit_configure(source, dest, modules, components)
+            emit_configure(source, dest, used_modules, components)
 
     os.chmod(Settings.configure_filename, 0755)
 
