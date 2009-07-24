@@ -120,19 +120,24 @@ load()
 	    AUTO_CONFIGURE_FILE="${MK_COMP_SOURCE_DIR}/configure"
 	fi
 
-	mk_show_args "${AUTO_CONFIGURE_FILE}" \
-	    CC="${CC}" \
-	    CPPFLAGS="${CPPFLAGS}" \
-	    CFLAGS="${CFLAGS}" \
-	    LDFLAGS="${LDFLAGS}" \
-	    PATH="${PATH}" \
-    	    --prefix="${MK_PREFIX}" \
-	    --libdir="${MK_LIBDIR}" \
-	    --bindir="${MK_BINDIR}" \
-	    --sbindir="${MK_SBINDIR}" \
-	    --localstatedir="${MK_LOCALSTATEDIR}" \
-	    --sysconfdir="${MK_SYSCONFDIR}" \
-	    "$@" || mk_fail "configure failed"
+	if [ -f Makefile ]
+	then
+	    mk_show_args "${MAKE}" Makefile || mk_fail "could not regenerate configure"
+	else
+	    mk_show_args "${AUTO_CONFIGURE_FILE}" \
+		CC="${CC}" \
+		CPPFLAGS="${CPPFLAGS}" \
+		CFLAGS="${CFLAGS}" \
+		LDFLAGS="${LDFLAGS}" \
+		PATH="${PATH}" \
+    		--prefix="${MK_PREFIX}" \
+		--libdir="${MK_LIBDIR}" \
+		--bindir="${MK_BINDIR}" \
+		--sbindir="${MK_SBINDIR}" \
+		--localstatedir="${MK_LOCALSTATEDIR}" \
+		--sysconfdir="${MK_SYSCONFDIR}" \
+		"$@" || mk_fail "configure failed"
+	fi
     }
 
     auto_make_build()
@@ -156,6 +161,15 @@ load()
 	mk_log "Generating source distribution in ${MK_DIST_DIRNAME}/${__srcdir}"
 
 	${MAKE} distdir="${__distdir}" distdir
+    }
+
+    auto_generate_deps()
+    {
+	(
+	    echo "MK_DEPS_${MK_COMP} = \\"
+	    ${MAKE} -q --debug=v,m | grep "Considering target file \`/" | sed -e "s/.*\`\([^']*\)'.*/    \1 \\\\/g" | sort | uniq
+	    echo '    $(__DUMMY__)'
+	) > "${MK_TARGET_DIR}/deps-${MK_COMP}" || mk_fail "Could not generate dependencies"
     }
 
     auto_init()
@@ -198,6 +212,11 @@ pre_prepare()
     done
 
     export SHELL CC CFLAGS CPPFLAGS LDFLAGS PATH
+}
+
+post_build()
+{
+    auto_generate_deps
 }
 
 post_stage()

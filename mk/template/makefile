@@ -71,4 +71,6 @@ DESTDIR=/
 
 default: all
 
+sinclude $(MK_TARGET_DIR)/deps-*
+
 @mk_generate_makefile_rules@

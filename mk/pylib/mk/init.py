@@ -171,6 +171,7 @@ def emit_makefile_in(source, dest, all_modules, components):
                 dest.write("\n")
 
         virtual_deps = {}
+        virtual_mods = {}
 
         for module in all_modules.itervalues():
             if 'VIRTUALS' in module.variables:
@@ -186,8 +187,17 @@ def emit_makefile_in(source, dest, all_modules, components):
                     else:
                         virtual_deps[virtual] = targets
 
+                    if virtual in virtual_mods:
+                        virtual_mods[virtual].append(module)
+                    else:
+                        virtual_mods[virtual] = [module]
+
         for virtual in virtual_deps:
-            dest.write("%s: %s\n\n" % (virtual, " ".join(virtual_deps[virtual])))
+            dest.write("%s: %s\n" % (virtual, " ".join(virtual_deps[virtual])))
+            for module in virtual_mods[virtual]:
+                if 'virtual_' + virtual in module.functions:
+                    dest.write('\t@$(MK_ACTION) MAKE="$(MAKE)" virtual_%s %s\n' % (virtual, module.name))
+            dest.write("\n")
             phony.add(virtual)
 
         dest.write(".PHONY: %s\n\n" % " ".join(phony))
@@ -206,12 +216,17 @@ def emit_action_in(source, dest, modules, components):
         basic_funcs = ['load']
 
         # Emit pre/post phase actions from all modules
+        # Emit virtual actions from all modules
         for module in modules.itervalues():
             funcs = basic_funcs
 
             for phase in module.phase_closure:
                 for step in ['pre', 'post']:
                     funcs.append('%s_%s' % (step, phase))
+
+            if 'VIRTUALS' in module.variables:
+                for virtual in re.split(r"\s+", module['VIRTUALS']):
+                    funcs.append('virtual_' + virtual)
 
             for func in funcs:
                 if func in module.functions:

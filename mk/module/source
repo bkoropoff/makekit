@@ -71,7 +71,7 @@ PHASES="prepare build stage install clean dist"
 VIRTUALS="clean install all dist"
 
 PHASE_PREPARE='once: stage-%{DEPENDS}'
-PHASE_BUILD='once: prepare-%{NAME}'
+PHASE_BUILD='once: prepare-%{NAME} $(MK_DEPS_%{NAME})'
 PHASE_STAGE='once: build-%{NAME}'
 PHASE_INSTALL='always: stage-%{NAME}: "$(DESTDIR)"'
 PHASE_CLEAN='always'
@@ -124,6 +124,45 @@ load()
     {
 	echo "${MK_STAGE_DIR}/${1}"
     }
+
+    __mk_backup_includes()
+    {
+	if [ -d "${MK_COMP_STAGE_DIR}/${MK_PREFIX}/.include" ]
+	then
+	    mk_safe_rm "${MK_COMP_STAGE_DIR}/${MK_PREFIX}/.include"
+	fi
+
+	if [ -d "${MK_COMP_STAGE_DIR}/${MK_PREFIX}/include" ]
+	then
+	    mv "${MK_COMP_STAGE_DIR}/${MK_PREFIX}/include" "${MK_COMP_STAGE_DIR}/${MK_PREFIX}/.include"
+	fi
+    }
+
+    __mk_merge_includes()
+    {
+	__include="${MK_COMP_STAGE_DIR}/${MK_PREFIX}/include"
+	__dot_include="${MK_COMP_STAGE_DIR}/${MK_PREFIX}/.include"
+
+	if [ -d "$__dot_include" ]
+	then
+	    mk_log "Preserving timestamps"
+	    mk_log_enter "file"
+	    (
+		cd "$__include"
+		for __file in `find *`
+		do
+		    if [ -f "${__include}/${__file}" -a -f "${__dot_include}/${__file}" ] && \
+			diff -q "${__include}/${__file}" "${__dot_include}/${__file}" >/dev/null 2>&1
+		    then
+			mk_log "${__file}"
+			mv "${__dot_include}/${__file}" "${__include}/${__file}"
+		    fi
+		done
+	    )
+	    mk_log_leave
+	    mk_safe_rm "${__dot_include}"
+	fi
+    }
 }
 
 output()
@@ -148,7 +187,7 @@ pre_prepare()
 {
     mk_set_comp_vars "${MK_COMP}"
 
-    mk_recreate_dir "$MK_COMP_BUILD_DIR" || mk_fail "could not create component build directory"
+    mkdir -p "$MK_COMP_BUILD_DIR" || mk_fail "could not create component build directory"
     cd "$MK_COMP_BUILD_DIR" || mk_fail "could not change to component build directory"
 }
 
@@ -162,8 +201,16 @@ pre_stage()
 {
     mk_set_comp_vars "${MK_COMP}"
 
-    mk_recreate_dir "$MK_COMP_STAGE_DIR" || mk_fail "could not create component build directory"
+    mkdir -p "$MK_COMP_STAGE_DIR" || mk_fail "could not create component build directory"
+
+    __mk_backup_includes
+
     cd "$MK_COMP_BUILD_DIR" || mk_fail "could not change to component build directory"
+}
+
+post_stage()
+{
+    __mk_merge_includes
 }
 
 pre_dist()
@@ -217,4 +264,9 @@ default_clean()
 	fi
     done
     mk_log_leave
+}
+
+virtual_dist()
+{
+    mk_log "Completed dist"
 }
