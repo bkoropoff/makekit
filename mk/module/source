@@ -143,7 +143,7 @@ load()
 	__include="${MK_COMP_STAGE_DIR}/${MK_PREFIX}/include"
 	__dot_include="${MK_COMP_STAGE_DIR}/${MK_PREFIX}/.include"
 
-	if [ -d "$__dot_include" ]
+	if [ -d "$__dot_include" -a -d "$__include" ]
 	then
 	    mk_log "Preserving timestamps"
 	    mk_log_enter "file"
@@ -161,6 +161,9 @@ load()
 	    )
 	    mk_log_leave
 	    mk_safe_rm "${__dot_include}"
+	elif [ -d "$__dot_include" ]
+	then
+	    mv "$__dot_include" "$__include"
 	fi
     }
 }
