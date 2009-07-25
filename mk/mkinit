@@ -5,7 +5,7 @@ then
     dir="`dirname "$0"`"
     if [ -d "${dir}" -a -d "${dir}/pylib" ]
     then
-	MK_HOME="$dir"
+	MK_HOME="`(cd "$dir" && pwd)`"
     else
 	echo "Could not determine MetaKit home directory."
 	echo "Please set MK_HOME to the location of MetaKit."
