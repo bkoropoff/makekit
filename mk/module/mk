@@ -65,6 +65,9 @@
 ##      of (3.ii), it means the entirety of the Program.
 ## 
 
+PHASES="init"
+PHASE_INIT="always"
+
 OPTIONS='
 shell                     program      Set the name or path of the default
                                        Bourne-compatible shell
@@ -76,7 +79,70 @@ suppress-command-output   -            Suppress output of build commands
 load()
 {
     MK_TARGET_DIRNAME="target"
+    MK_LOG_DIRNAME="log"
     MK_TARGET_DIR="${MK_WORK_DIR}/${MK_TARGET_DIRNAME}"
+    MK_LOG_DIR="${MK_WORK_DIR}/${MK_LOG_DIRNAME}"
+
+    mk_skip()
+    {
+	mk_log "Skipping rest of phase"
+	MK_COMP_SKIP="true"
+    }
+
+    mk_skipped()
+    {
+	[ -n "${MK_COMP_SKIP}" ]
+    }
+
+    mk_disable_parallel()
+    {
+	__makeflags=""
+
+	for __flag in ${MAKEFLAGS}
+	do
+	    case "${__flag}" in
+		"--jobserver-fds="*|"-j")
+		    : # Strip flag
+		    ;;
+		*)
+		    __makeflags="$__makeflags $__flag"
+		    ;;
+	    esac
+	done
+
+	MK_ORIG_MAKEFLAGS="${MAKEFLAGS}"
+	MAKEFLAGS="${__makeflags}"
+	MFLAGS="- ${__makeflags}"
+    }
+
+    mk_is_parallel_make()
+    {
+	mk_contains "${MAKEFLAGS} ${MK_ORIG_MAKEFLAGS}" "-j"
+    }
+
+    mk_build_command()
+    {
+	if [ -n "${MK_SUPPRESS_BUILD_OUTPUT}" ]
+	then
+	    mk_show_args "$@" > /dev/null 2>&1
+	else
+	    mk_show_args "$@"
+	fi
+    }
+
+    if mk_is_parallel_make
+    then
+	mk_log "${MK_PHASE} ${MK_COMP}"
+	exec 1>"${MK_LOG_DIR}/${MK_PHASE}-${MK_COMP}.log"
+	exec 2>&1
+	exec 9>&1
+    fi
+
+    if [ -n "`mk_get_component_var ${MK_COMP} DISABLE_PARALLEL`" ]
+    then
+	mk_log "Disabling parallel make"
+	mk_disable_parallel
+    fi
 }
 
 configure()
@@ -99,4 +165,14 @@ configure()
     mk_define MK_ROOT_DIR MK_WORK_DIR MK_ACTION
     mk_define MK_SHELL MK_MAKE MK_SUPPRESS_COMMAND_OUTPUT MK_INIT MK_INIT_YES MK_INIT_NO
     mk_define MK_TARGET_DIR
+    mk_define MK_LOG_DIR
+}
+
+output()
+{
+    for dir in "${MK_TARGET_DIRNAME}" "${MK_LOG_DIRNAME}"
+    do
+	mk_log "Creating directory ${dir}"
+	mkdir -p "${MK_WORK_DIR}/${dir}"
+    done
 }

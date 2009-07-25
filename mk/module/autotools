@@ -122,9 +122,9 @@ load()
 
 	if [ -f Makefile ]
 	then
-	    mk_show_args "${MAKE}" Makefile || mk_fail "could not regenerate configure"
+	    mk_build_command "${MAKE}" Makefile || mk_fail "could not regenerate configure"
 	else
-	    mk_show_args "${AUTO_CONFIGURE_FILE}" \
+	    mk_build_command "${AUTO_CONFIGURE_FILE}" \
 		CC="${CC}" \
 		CPPFLAGS="${CPPFLAGS}" \
 		CFLAGS="${CFLAGS}" \
@@ -142,12 +142,26 @@ load()
 
     auto_make_build()
     {
-	mk_show_args ${MAKE} "$@" || mk_fail "make failed"
+	if ${MAKE} -q >/dev/null 2>&1
+	then
+	    mk_log "Build is up to date"
+	    mk_skip
+	else
+	    mk_build_command ${MAKE} "$@" || mk_fail "make failed"
+	    touch "${MK_TARGET_DIR}/built-${MK_COMP}"
+	fi
     }
 
     auto_make_stage()
     {
-	mk_show_args ${MAKE} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
+	if [ -f "${MK_TARGET_DIR}/built-${MK_COMP}" ]
+	then
+	    mk_safe_rm "${MK_TARGET_DIR}/built-${MK_COMP}"
+	    mk_build_command ${MAKE} "$@" DESTDIR=${MK_COMP_STAGE_DIR} install || mk_fail "make install failed"
+	else
+	    mk_log "Staging is up to date"
+	    mk_skip
+	fi
     }
 
     auto_make_dist()
@@ -165,11 +179,15 @@ load()
 
     auto_generate_deps()
     {
-	(
-	    echo "MK_DEPS_${MK_COMP} = \\"
-	    ${MAKE} -q --debug=v,m | grep "Considering target file \`/" | sed -e "s/.*\`\([^']*\)'.*/    \1 \\\\/g" | sort | uniq
-	    echo '    $(__DUMMY__)'
-	) > "${MK_TARGET_DIR}/deps-${MK_COMP}" || mk_fail "Could not generate dependencies"
+	if ! mk_skipped
+	then
+	    mk_log "Updating component dependencies"
+	    (
+		echo "MK_DEPS_${MK_COMP} = \\"
+		${MAKE} -q --debug=v,m 2>/dev/null | grep "Considering target file \`/" | sed -e "s/.*\`\([^']*\)'.*/    \1 \\\\/g" | sort | uniq
+		echo '    $(__DUMMY__)'
+	    ) > "${MK_TARGET_DIR}/deps-${MK_COMP}" || mk_fail "Could not generate dependencies"
+	fi
     }
 
     auto_init()
@@ -221,27 +239,30 @@ post_build()
 
 post_stage()
 {
-    mk_log "Updating libtool archives"
-    mk_log_enter "file"
-    for __la in "${MK_COMP_STAGE_DIR}/${MK_LIBDIR}"/*.la
-    do
-	if [ -f "${__la}" ]
-	then
-	    mk_log "`basename "${__la}"`"
-	    __deps="`(. "${__la}" && echo "${dependency_libs}")`"
-	    __newdeps=""
-	    for __dep in ${__deps}
-	    do
-		__newdep="`__libtool_rewrite_stage "$__dep"`"
-		__newdeps="$__newdeps $__newdep"
-	    done
-	    
-	    mk_sed_file "$__la" \
-		-e "s:^dependency_libs=.*$:dependency_libs=`mk_quote "$__newdeps"`:" \
-		-e "s:^installed=.*$:installed=no:"
-	fi
-    done
-    mk_log_leave
+    if ! mk_skipped
+    then
+	mk_log "Updating libtool archives"
+	mk_log_enter "file"
+	for __la in "${MK_COMP_STAGE_DIR}/${MK_LIBDIR}"/*.la
+	do
+	    if [ -f "${__la}" ]
+	    then
+		mk_log "`basename "${__la}"`"
+		__deps="`(. "${__la}" && echo "${dependency_libs}")`"
+		__newdeps=""
+		for __dep in ${__deps}
+		do
+		    __newdep="`__libtool_rewrite_stage "$__dep"`"
+		    __newdeps="$__newdeps $__newdep"
+		done
+		
+		mk_sed_file "$__la" \
+		    -e "s:^dependency_libs=.*$:dependency_libs=`mk_quote "$__newdeps"`:" \
+		    -e "s:^installed=.*$:installed=no:"
+	    fi
+	done
+	mk_log_leave
+    fi
 }
 
 post_install()
@@ -286,7 +307,7 @@ default_prepare()
 
 default_build()
 {
-    auto_make_build
+    auto_make_build  
 }
 
 default_stage()

@@ -268,11 +268,4 @@ exec 4>&-
 # Set action file executable
 chmod +x "${MK_ACTION_FILE}"
 
-# Set up basic directory structure
-for dir in ${MK_TARGET_DIRNAME}
-do
-    mk_log "Creating directory ${dir}"
-    mkdir -p "${MK_WORK_DIR}/${dir}"
-done
-
 @mk_generate_output_body@

@@ -96,6 +96,7 @@ do
 	    mk_fail "Unrecognized option: ${action}"
 	    ;;
 	*)
+	    MK_PHASE="$action"
 	    MK_COMP="$1"
 	    shift
 	    if mk_function_exists "${MK_COMP}_${action}"

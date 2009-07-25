@@ -213,12 +213,7 @@ mk_show_args()
 	done
     ) | mk_log_pipe
 
-    if [ "${MK_SUPPRESS_COMMAND_OUTPUT}" = "true" ]
-    then
-	"$__first" "$@" >/dev/null 2>&1
-    else
-	"$__first" "$@"
-    fi
+    "$__first" "$@"
 }
 
 mk_extract_function()
