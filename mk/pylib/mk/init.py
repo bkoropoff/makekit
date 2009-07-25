@@ -1,6 +1,8 @@
 from mk.core import *
 import os
 import re
+import subprocess
+from optparse import OptionParser
 
 __all__ = ['main']
 
@@ -383,7 +385,7 @@ def init():
     proc = subprocess.Popen(args)
     proc.wait()
 
-def main():
+def main(options, args):
     modules = load_modules()
     components = load_components(modules)
     project = load_project()
@@ -406,5 +408,14 @@ def main():
 
     os.chmod(Settings.configure_filename, 0755)
 
-if __name__ == "__main__":  
-    main()
+    if (options.init_components):
+        init()
+
+if __name__ == "__main__":
+    parser = OptionParser()
+    parser.add_option("--no-init-components", dest="init_components",
+                      help="Don't initialize components", action="store_false",
+                      default=True)
+    (options, args) = parser.parse_args()
+    
+    main(options, args)
