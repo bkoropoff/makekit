@@ -69,6 +69,8 @@
 DEPENDS="mk"
 PHASES="prepare build stage install clean dist"
 VIRTUALS="clean install all dist"
+# Always run post_stage(), even when phase is skipped or fails
+POST_STAGE_ALWAYS="true"
 
 PHASE_PREPARE='once: stage-%{DEPENDS}'
 PHASE_BUILD='once: prepare-%{NAME} $(MK_DEPS_%{NAME})'

@@ -177,17 +177,46 @@ load()
 	${MAKE} distdir="${__distdir}" distdir
     }
 
+    __auto_extract_deps()
+    {
+	__script='
+/Entering directory/ {
+    i1 = index($0, "`")
+    i2 = index($0, "'\''")
+    dir=substr($0, i1+1, i2-i1-1)
+ }
+
+/Considering target file/ {
+    i1 = index($0, "`")
+    i2 = index($0, "'\''")
+    file=substr($0, i1+1, i2-i1-1)
+    if (substr(file, 1, 1) == "/")
+    {
+        print file
+    }
+    else
+    {
+        printf ("%s/%s\n", dir, file)
+    }
+ }'
+	(
+	    IFS='
+'
+	    for __file in `${MAKE} -n --debug=v,m 2>&1 | awk "$__script" | sort | uniq`
+	    do
+		[ -f "$__file" ] && echo "${__file} \\"
+	    done
+	)
+    }
+
     auto_generate_deps()
     {
-	if ! mk_skipped
-	then
-	    mk_log "Updating component dependencies"
-	    (
-		echo "MK_DEPS_${MK_COMP} = \\"
-		${MAKE} -q --debug=v,m 2>/dev/null | grep "Considering target file \`/" | sed -e "s/.*\`\([^']*\)'.*/    \1 \\\\/g" | sort | uniq
-		echo '    $(__DUMMY__)'
-	    ) > "${MK_TARGET_DIR}/deps-${MK_COMP}" || mk_fail "Could not generate dependencies"
-	fi
+	mk_log "Updating component dependencies"
+	(
+	    echo "MK_DEPS_${MK_COMP} = \\"
+	    __auto_extract_deps
+	    echo ''
+	) > "${MK_TARGET_DIR}/deps-${MK_COMP}" || mk_fail "Could not generate dependencies"
     }
 
     auto_init()
@@ -239,30 +268,27 @@ post_build()
 
 post_stage()
 {
-    if ! mk_skipped
-    then
-	mk_log "Updating libtool archives"
-	mk_log_enter "file"
-	for __la in "${MK_COMP_STAGE_DIR}/${MK_LIBDIR}"/*.la
-	do
-	    if [ -f "${__la}" ]
-	    then
-		mk_log "`basename "${__la}"`"
-		__deps="`(. "${__la}" && echo "${dependency_libs}")`"
-		__newdeps=""
-		for __dep in ${__deps}
-		do
-		    __newdep="`__libtool_rewrite_stage "$__dep"`"
-		    __newdeps="$__newdeps $__newdep"
-		done
-		
-		mk_sed_file "$__la" \
-		    -e "s:^dependency_libs=.*$:dependency_libs=`mk_quote "$__newdeps"`:" \
-		    -e "s:^installed=.*$:installed=no:"
-	    fi
-	done
-	mk_log_leave
-    fi
+    mk_log "Updating libtool archives"
+    mk_log_enter "file"
+    for __la in "${MK_COMP_STAGE_DIR}/${MK_LIBDIR}"/*.la
+    do
+	if [ -f "${__la}" ]
+	then
+	    mk_log "`basename "${__la}"`"
+	    __deps="`(. "${__la}" && echo "${dependency_libs}")`"
+	    __newdeps=""
+	    for __dep in ${__deps}
+	    do
+		__newdep="`__libtool_rewrite_stage "$__dep"`"
+		__newdeps="$__newdeps $__newdep"
+	    done
+	    
+	    mk_sed_file "$__la" \
+		-e "s:^dependency_libs=.*$:dependency_libs=`mk_quote "$__newdeps"`:" \
+		-e "s:^installed=.*$:installed=no:"
+	fi
+    done
+    mk_log_leave
 }
 
 post_install()

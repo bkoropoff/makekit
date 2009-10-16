@@ -193,12 +193,7 @@ mk_log_domain()
 mk_show()
 {
     mk_log "$@"
-    if [ "${MK_SUPPRESS_COMMAND_OUTPUT}" = "true" ]
-    then
-	"$@" >/dev/null 2>&1
-    else
-	"$@"
-    fi
+    "$@"
 }
 
 mk_show_args()
@@ -214,20 +209,6 @@ mk_show_args()
     ) | mk_log_pipe
 
     "$__first" "$@"
-}
-
-mk_extract_function()
-{
-    if grep "^$2 *\(\)" "$1" >/dev/null
-    then
-	echo ""
-	echo "### Included function: $2() from `basename "$1"`"
-	echo ""
-	awk 'BEGIN { found=0; } /^}/ { found = 0; } { if (found == 2) print; } /^'"$2"' *\(\)/ { found=1; } /^{/ { if (found == 1) found = 2; }' < "$1"
-	echo ""
-	echo "### End included function"
-	echo ""
-    fi
 }
 
 mk_extract_var()
@@ -247,87 +228,6 @@ mk_canonical_path()
 	    -e 's:/\.::g' \
 	    -e 's://*:/:g'
     fi
-}
-
-mk_order_by_depends()
-{
-    __pending="$*"
-    __list=""
-
-    while [ -n "$__pending" ]
-    do
-	__waiting=""
-	for __candidate in ${__pending}
-	do
-	    __dirname="`dirname "$__candidate"`"
-	    __typename="`basename "$__dirname"`"
-	    __good=true
-	    __base="`basename "$__candidate"`"
-	    __deps="`mk_extract_var "$__candidate" DEPENDS`" || mk_fail "file not found: $__candidate"
-	    for __dep in ${__deps}
-	    do
-		if echo "$__pending $__list" | grep "/$__dep " >/dev/null
-		then
-		    if echo "$__list" | grep "/$__dep " >/dev/null
-		    then
-			:
-		    else
-			__good=false
-			break
-		    fi
-		else
-		    # Uh-oh
-		    mk_fail "$__typename `basename "$__candidate"`: dependency '$__dep' not found"
-		fi
-	    done
-
-	    if $__good
-	    then
-		__list="$__list $__candidate "
-	    else
-		__waiting="$__waiting $__candidate "
-	    fi
-	done
-	__pending="$__waiting"
-    done
-
-    echo "$__list"
-}
-
-mk_unique_list()
-{
-    echo "$@" | awk 'BEGIN { RS=" "; } { print; }' | sort | uniq | xargs
-}
-
-mk_expand_depends()
-{
-    __dir="$1"
-    __typename="`basename "$__dir"`"
-    shift;
-
-    __list=""
-    __pending=" $* "
-    __working=""
-
-    while [ -n "$__pending" ]
-    do
-	__working="$__pending"
-	__pending=""
-
-	for __guy in ${__working}
-	do
-	    if echo "$__list" | grep " $__guy " >/dev/null
-	    then
-		:
-	    else
-		__list=" $__guy $__list"
-		__deps="`mk_extract_var "$__dir/$__guy" DEPENDS`" || mk_fail "$__typename not found: $__guy"
-		__pending="`mk_extract_var "$__dir/$__guy" DEPENDS` $__pending"
-	    fi
-	done
-    done
-
-    echo "${__list}"
 }
 
 mk_function_exists()
@@ -443,7 +343,7 @@ mk_get_module_var()
 
 mk_safe_rm()
 {
-    if [ "${1##$MK_WORK_DIR/}" = "$1" ]
+    if [ -z "${MK_WORK_DIR}" -o "${1##$MK_WORK_DIR/}" = "$1" ]
     then
 	mk_fail "attempted unsafe removal of $1"
     else

@@ -184,6 +184,10 @@ class Module(Script):
 
         self.variables['COMPONENTS'] = " ".join([x.name for x in self.component_order])
 
+    def phase_is_always(self, phase, timing):
+        name = manifest_name(timing + "_" + phase + "_ALWAYS")
+        return name in self.variables
+
 class Component(Script):
     """Represents a component"""
     def __init__(self, name, filename):

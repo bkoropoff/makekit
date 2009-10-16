@@ -258,6 +258,14 @@ def emit_action_in(source, dest, modules, components):
                             break
 
                 if extract_script:
+                    # Emit inner function
+                    dest.write('\n')
+                    dest.write('%s_%s_inner()\n' % (function_name(component.name), phase))
+                    dest.write('{\n')
+                    dest.write(extract_script.functions[extract_func])
+                    dest.write('}\n')
+                    
+                    # Emit main function, including load and pre/post logic
                     dest.write('\n')
                     dest.write('%s_%s()\n' % (function_name(component.name), phase))
                     dest.write('{\n')
@@ -270,11 +278,17 @@ def emit_action_in(source, dest, modules, components):
                     dest.write('    mk_log_enter "%s-%s"\n' % (phase, component.name))
                     for module in component.module_order:
                         if 'pre_' + phase in module.functions:
-                            dest.write('    %s_pre_%s\n' % (function_name(module.name), phase))
-                    dest.write(extract_script.functions[extract_func])
+                            if module.phase_is_always(phase, 'pre'):
+                                dest.write('    %s_pre_%s "$@"\n' % (function_name(module.name), phase))
+                            else:
+                                dest.write('    mk_skipped || %s_pre_%s "$@"\n' % (function_name(module.name), phase))
+                    dest.write('    mk_skipped || %s_%s_inner "$@"\n' % (function_name(component.name), phase))
                     for module in reversed(component.module_order):
                         if 'post_' + phase in module.functions:
-                            dest.write('    %s_post_%s\n' % (function_name(module.name), phase))
+                            if module.phase_is_always(phase, 'post'):
+                                dest.write('    %s_post_%s "$@"\n' % (function_name(module.name), phase))
+                            else:
+                                dest.write('    mk_skipped || %s_post_%s "$@"\n' % (function_name(module.name), phase))
                     dest.write('    mk_log_leave\n')
                     dest.write('}\n')
 
