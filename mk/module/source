@@ -228,7 +228,7 @@ pre_install()
 {
     mk_set_comp_vars "${MK_COMP}"
 
-    MK_COMP_INSTALL_DIR="$1"
+    MK_COMP_INSTALL_DIR="`mk_canonical_path "$1"`"
 
     mkdir -p "${MK_COMP_INSTALL_DIR}" || mk_fail "could not create install directory"
 
