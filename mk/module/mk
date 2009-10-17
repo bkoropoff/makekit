@@ -130,12 +130,39 @@ load()
 	fi
     }
 
-    if mk_is_parallel_make
+    mk_on_phase_exit()
+    {
+	_status="$?"
+	if [ -n "${MK_PHASE}" ] && mk_is_parallel_make
+	then
+	    # Restore old stdout and log end message
+	    exec 1>&9
+	    exec 9>&-
+	    mk_log_reset
+	    mk_log_enter "mk"
+	    if [ "$_status" -eq 0 ]
+	    then
+		mk_log "<-- ${MK_PHASE} ${MK_COMP}"
+	    else
+		mk_log "!!! ${MK_PHASE} ${MK_COMP}"
+		echo "[ Begin log: ${MK_PHASE} ${MK_COMP} ]"
+		cat "${MK_LOG_DIR}/${MK_PHASE}-${MK_COMP}.log"
+		echo "[ End log: ${MK_PHASE} ${MK_COMP} ]"
+	    fi
+	    mk_log_leave "mk"
+	fi
+	return "$_status"
+    }
+
+    if [ -n "${MK_PHASE}" ] && mk_is_parallel_make
     then
-	mk_log "${MK_PHASE} ${MK_COMP}"
+	mk_log "--> ${MK_PHASE} ${MK_COMP}"
+	# Save our current stdout and redirect
+	# stdout and stderr to a dedicated log file
+	exec 9>&1
 	exec 1>"${MK_LOG_DIR}/${MK_PHASE}-${MK_COMP}.log"
 	exec 2>&1
-	exec 9>&1
+	trap mk_on_phase_exit 0
     fi
 
     if [ -n "`mk_get_component_var ${MK_COMP} DISABLE_PARALLEL`" ]

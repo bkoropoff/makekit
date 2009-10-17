@@ -67,9 +67,7 @@
 
 MK_LOG_DEPTH="0"
 MK_LOG_DOMAIN=""
-MK_LOG_FD="9"
-
-exec 9>&1
+MK_LOG_FD="1"
 
 mk_head()
 {
@@ -98,6 +96,12 @@ mk_fail()
 {
     mk_log "Error: $@"
     exit 1
+}
+
+mk_log_reset()
+{
+    MK_LOG_DEPTH="0"
+    MK_LOG_DOMAIN=""
 }
 
 mk_log_pipe()
