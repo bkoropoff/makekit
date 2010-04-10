@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ "${0#/}" = "${0}" ]
+then
+    MK_HOME="`pwd`/`dirname "${0}"`"
+else
+    MK_HOME="`dirname "${0}"`"
+fi
+
+export MK_HOME
+
+"${MK_HOME}/configure.sh" "$@"
