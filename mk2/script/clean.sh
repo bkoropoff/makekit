@@ -6,12 +6,13 @@ _mk_args
 
 for _target in "$@"
 do
-    echo "[clean] $_target"
     if [ -d "$_target" ]
     then
-	_mk_try rm -rf "$_target"
+	echo "[clean] $_target"
+    	_mk_try rm -rf "$_target"
     elif [ -f "$_target" ]
     then
+	echo "[clean] $_target"
 	_mk_try rm -f "$_target"
     fi
 done
