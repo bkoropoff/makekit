@@ -72,7 +72,7 @@ _mk_process_build()
     for _module in `_mk_modules`
     do
 	MK_LOG_DOMAIN="$_module"
-	_mk_process_build_file "${MK_HOME}/modules/${_module}.sh"
+	_mk_process_build_file "${MK_HOME}/module/${_module}.sh"
     done
 
     # Run build functions for project
@@ -197,15 +197,15 @@ mk_config_header()
 _mk_emit_make_header()
 {
     _mk_emit "MK_HOME='${MK_HOME}'"
+    _mk_emit "MK_SCRIPT_DIR='${MK_SCRIPT_DIR}'"
     _mk_emit "MK_ROOT_DIR='${MK_ROOT_DIR}'"
     _mk_emit "MK_SHELL=/bin/sh"
-    _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR=\$\${MK_SUBDIR} \$(MK_SHELL)"
-    _mk_emit "COMPILE=\$(SCRIPT) \$(MK_HOME)/compile.sh"
-    _mk_emit "LINK=\$(SCRIPT) \$(MK_HOME)/link.sh"
-    _mk_emit "CLEAN=\$(SCRIPT) \$(MK_HOME)/clean.sh"
-    _mk_emit "INSTALL=\$(SCRIPT) \$(MK_HOME)/install.sh"
-    _mk_emit "REGEN=\$(SCRIPT) \$(MK_HOME)/regen.sh"
-    _mk_emit "LOG=echo"
+    _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR=\$\${MK_SUBDIR} \$(MK_SHELL) \$(MK_SCRIPT_DIR)"
+    _mk_emit "COMPILE=\$(SCRIPT)/compile.sh"
+    _mk_emit "LINK=\$(SCRIPT)/link.sh"
+    _mk_emit "CLEAN=\$(SCRIPT)/clean.sh"
+    _mk_emit "INSTALL=\$(SCRIPT)/install.sh"
+    _mk_emit "REGEN=\$(SCRIPT)/regen.sh"
     _mk_emit ""
     _mk_emit "default: all"
     _mk_emit ""
@@ -219,7 +219,7 @@ _mk_emit_make_footer()
 	MK_LOG_DOMAIN="$_module"
 	unset postmake
 
-	. "${MK_HOME}/modules/${_module}.sh"
+	. "${MK_HOME}/module/${_module}.sh"
 
 	case "`type postmake 2>&1`" in
 	    *"function"*)
@@ -241,7 +241,7 @@ _mk_emit_make_footer()
     _mk_emit "regen:"
     _mk_emitf "\t@\$(REGEN)\n\n"
 
-    _mk_emit "Makefile:${MK_BUILD_FILES}" "${MK_HOME}/modules/"*
+    _mk_emit "Makefile:${MK_BUILD_FILES}" "${MK_HOME}/module/"*
     _mk_emitf "\t@\$(REGEN)\n\n"
 
     _mk_emit "sinclude .MetaKitDeps/*.dep"

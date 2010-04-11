@@ -2,6 +2,9 @@ DEPENDS="core"
 
 load()
 {
+    #
+    # Helper functions for make() stage
+    #
     mk_compile()
     {
 	unset SOURCE COMMAND HEADERS INCLUDEDIRS CPPFLAGS CFLAGS _headers_abs
@@ -158,6 +161,10 @@ load()
 	done
     }
 
+    #
+    # Helper functions for configure() stage
+    # 
+
     mk_check_cache()
     {
 	_cached="`_mk_deref "${1}__CACHED"`"
@@ -177,6 +184,51 @@ load()
 	mk_export "$1=$2"
 	_mk_set "${1}__CACHED" "$2"
     }
+
+    _mk_build_test()
+    {
+	__test=".test_`echo "$2" | tr './-' '___'`"
+	cat > "${__test}.c"
+	
+	case "${1}" in
+	    compile)
+		"${MK_SCRIPT_DIR}/compile.sh" \
+		    DISABLE_DEPGEN=yes \
+		    CPPFLAGS="$CPPFLAGS" \
+		    CFLAGS="$CFLAGS" \
+		    "${__test}.o" "${__test}.c" >&4 2>&1	    
+		 _ret="$?"
+		 rm -f "${__test}.o"
+		 ;;
+	    link-program)
+		"${MK_SCRIPT_DIR}/link.sh" \
+		    MODE=program \
+		    LIBS="$LIBS" \
+		    LDFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" \
+		    "${__test}" "${__test}.c" >&4 2>&2
+		 _ret="$?"
+		 rm -f "${__test}"
+		 ;;
+	    *)
+		mk_fail "Unsupported build type: ${1}"
+		;;
+	esac
+
+	if [ "$_ret" -ne 0 ]
+	then
+	    {
+		echo ""
+		echo "Failed code:"
+		echo ""
+		cat "${__test}.c" | awk 'BEGIN { no = 1; } { printf("%3i  %s\n", no, $0); no++; }'
+		echo ""
+	    } >&4
+	fi
+
+	rm -f "${__test}.c"
+
+	return "$_ret"
+    }
     
     mk_try_compile()
     {
@@ -184,47 +236,30 @@ load()
 	
 	_mk_args
 	
-    (
-	for _include in ${HEADERS}
-	do
-	    echo "#include <${_include}>"
-	done
-	
-	cat <<EOF
+	{
+	    for _include in ${HEADERS}
+	    do
+		echo "#include <${_include}>"
+	    done
+	    
+	    cat <<EOF
 int main(int argc, char** argv)
 {
 ${CODE}
 }
 EOF
-    ) > "${MK_OBJECT_DIR}/.configure.c"
+	} | _mk_build_test 'compile' 'try-compile'
     
-    "${MK_HOME}/compile.sh" \
-	CPPFLAGS="$CPPFLAGS" \
-	CFLAGS="$CFLAGS" \
-	"${MK_OBJECT_DIR}/.configure.o" \
-	"${MK_OBJECT_DIR}/.configure.c" >&4 2>&1
-	_ret=$?
-	
-	if [ "$_ret" -ne 0 ]
-	then
-	    echo "" >&4
-	    echo "Failed program:" >&4
-	    cat "${MK_OBJECT_DIR}/.configure.c" | awk 'BEGIN { no = 1; } { printf("%.4i %s\n", no, $0); no++; }' >&4
-	    echo "" >&4
-	fi
-	
-	rm -f "${MK_OBJECT_DIR}/.configure.o"
-	rm -f "${MK_OBJECT_DIR}/.configure.c"
-	
-	return "$_ret"
-    }
-    
+	return "$?"
+    }   
     
     mk_check_header()
     {
 	unset HEADER FAIL CPPFLAGS CFLAGS
 	
 	_mk_args
+
+	CFLAGS="$CFLAGS -Wall -Werror"
 	
 	_def="HAVE_`_mk_def_name "$HEADER"`"
 	
@@ -236,7 +271,7 @@ EOF
 	    _result="internal"
 	    mk_cache_export "$_def" "$_result"
 	else
-	    (
+	    if {
 		echo "#include <${HEADER}>"
 		echo ""
 		
@@ -246,26 +281,14 @@ int main(int argc, char** argv)
     return 0;
 }
 EOF
-	    ) > "${MK_OBJECT_DIR}/.configure.c"
-	    
-	    if "${MK_HOME}/compile.sh" MODE=program \
-		CPPFLAGS="$CPPFLAGS" CFLAGS="$CFLAGS -Wall -Werror" \
-		"${MK_OBJECT_DIR}/.configure.o" \
-		"${MK_OBJECT_DIR}/.configure.c" >&4 2>&1
+		} | _mk_build_test compile "$HEADER"
 	    then
 		_result="external"
-		mk_cache_export "$_def" "$_result"
 	    else
-		echo "" >&4
-		echo "Failed program:" >&4
-		cat "${MK_OBJECT_DIR}/.configure.c" | awk 'BEGIN { no = 1; } { printf("%.4i %s\n", no, $0); no++; }' >&4
-		echo "" >&4
 		_result="no"
-		mk_cache_export "$_def" "$_result"
 	    fi
 	    
-	    rm -f "${MK_OBJECT_DIR}/.configure.o"
-	    rm -f "${MK_OBJECT_DIR}/.configure.c"
+	    mk_cache_export "$_def" "$_result"
 	fi
 	
 	if [ -n "$CACHED" ]
@@ -302,43 +325,29 @@ EOF
 	then
 	    _result="$CACHED"
 	else
-	    (
-		for _include in ${HEADERS}
-		do
-		    echo "#include <${_include}>"
-		done
-		
-		echo ""
-		
-		cat <<EOF
+	    if {
+		    for _include in ${HEADERS}
+		    do
+			echo "#include <${_include}>"
+		    done
+		    
+		    echo ""
+		    
+		    cat <<EOF
 int main(int argc, char** argv)
 {
     void* __func = $FUNCTION;
     return __func ? 0 : 1;
 }
 EOF
-	    ) > "${MK_OBJECT_DIR}/.configure.c"
-	    
-	    if "${MK_HOME}/link.sh" \
-		MODE=program \
-		LIBS="$LIBS" \
-		LDFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" \
-		"${MK_OBJECT_DIR}/.configure" \
-		"${MK_OBJECT_DIR}/.configure.c" >&4 2>&1
+		} | _mk_build_test 'link-program' "$FUNCTION"
 	    then
 		_result="yes"
 	    else
-		echo "" >&4
-		echo "Failed program:" >&4
-		cat "${MK_OBJECT_DIR}/.configure.c" | awk 'BEGIN { no = 1; } { printf("%.4i %s\n", no, $0); no++; }' >&4
-		echo "" >&4
 		_result="no"
 	    fi
 
 	    mk_cache_export "$_def" "$_result"
-	    
-	    rm -f "${MK_OBJECT_DIR}/.configure"
-	    rm -f "${MK_OBJECT_DIR}/.configure.c"
 	fi
 	
 	if [ -n "$CACHED" ]

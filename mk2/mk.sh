@@ -1,3 +1,6 @@
+MK_SCRIPT_DIR="${MK_HOME}/script"
+MK_MODULE_DIR="${MK_HOME}/module"
+
 _mk_try()
 {
     if [ -n "$MK_VERBOSE" ]
@@ -29,7 +32,7 @@ mk_safe_source()
 mk_import()
 {
     mk_safe_source "${MK_ROOT_DIR}/.MetaKitExports" || mk_fail "Could not read configuration"
-    [ "$MK_SUBDIR" != ":" ] &&  mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/.MetaKitExports"
+    [ "$MK_SUBDIR" != ":" ] && mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/.MetaKitExports"
 }
 
 mk_fail()
@@ -90,7 +93,7 @@ _mk_modules_rec()
 	for _dep in ${2}
 	do
 	    unset DEPENDS
-	    . "${MK_HOME}/modules/${_dep}.sh"
+	    . "${MK_HOME}/module/${_dep}.sh"
 	    _mk_modules_rec "$_dep" "$DEPENDS"
 	done
 	_list="$_list $1"
@@ -101,7 +104,7 @@ _mk_modules()
 {
     _list=""
 
-    for _file in "${MK_HOME}/modules/"*.sh
+    for _file in "${MK_HOME}/module/"*.sh
     do
 	_module="`basename "$_file"`"
 	_module="${_module%.sh}"
@@ -121,7 +124,7 @@ _mk_load_modules()
 	mk_log "loading module: ${_module}"
 
 	unset load
-	. "${MK_HOME}/modules/${_module}.sh"
+	. "${MK_HOME}/module/${_module}.sh"
 	case "`type load 2>&1`" in
 	    *"function"*)
 		MK_LOG_DOMAIN="${_module}"

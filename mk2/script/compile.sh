@@ -17,11 +17,16 @@ done
 
 MK_LOG_DOMAIN="compile"
 
+if [ -z "DISABLE_DEPGEN" ]
+then
+    DEP_FLAGS="-MMD -MP -MF ${MK_ROOT_DIR}/.MetaKitDeps/`echo ${_object%.o} | tr / _`.dep"
+fi
+
 mk_log "${_source#${MK_SOURCE_DIR}/}"
 _mk_try mkdir -p "`dirname "$_object"`" "${MK_ROOT_DIR}/.MetaKitDeps"
-_mk_try gcc \
+_mk_try ${MK_CC} \
     ${MK_CPPFLAGS} ${CPPFLAGS} ${EXTRA_CPPFLAGS} \
     ${MK_CFLAGS} ${CFLAGS} \
-    -MMD -MP -MF "${MK_ROOT_DIR}/.MetaKitDeps/`echo ${_object%.o} | tr / _`.dep" \
+    ${DEP_FLAGS} \
     -o "$_object" \
     -c "$_source"
