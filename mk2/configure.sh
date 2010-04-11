@@ -47,11 +47,14 @@ _mk_process_build_recursive()
 
     mkdir -p "${OBJECTDIR}" || mk_fail "Could not create directory: ${OBJECTDIR}"
 
-    # Begin saving exports
+    # Begin exports file
     _mk_begin_exports "${MK_OBJECT_DIR}${MK_SUBDIR}/.MetaKitExports"
 
     # Process build file
     _mk_process_build_file "${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild"
+
+    # Finish exports files
+    _mk_end_exports
 
     for _dir in ${SUBDIRS}
     do
@@ -120,6 +123,12 @@ _mk_begin_exports()
 	_val="`_mk_deref "$_export"`"
 	echo "$_export=`_mk_quote_shell "$_val"`" >&3	
     done
+}
+
+_mk_end_exports()
+{
+    echo "MK_EXPORTS='$MK_EXPORTS'" >&3	
+    exec 3>&-
 }
 
 _mk_restore_exports()
@@ -245,6 +254,7 @@ _mk_emit_make_footer()
     _mk_emitf "\t@\$(REGEN)\n\n"
 
     _mk_emit "sinclude .MetaKitDeps/*.dep"
+    _mk_emit ""
 
     _mk_emit ".PHONY: default all clean scrub regen"
 }
