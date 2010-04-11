@@ -42,7 +42,7 @@ load()
     
     mk_library()
     {
-	unset INSTALL LIBRARY SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
+	unset LIBS INSTALL LIBRARY SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
 	
 	_mk_args
 	
