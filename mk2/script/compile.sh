@@ -22,11 +22,16 @@ then
     DEP_FLAGS="-MMD -MP -MF ${MK_ROOT_DIR}/.MetaKitDeps/`echo ${_object%.o} | tr / _`.dep"
 fi
 
+if [ "$PIC" = "yes" ]
+then
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -fPIC"
+fi
+
 mk_log "${_source#${MK_SOURCE_DIR}/}"
 _mk_try mkdir -p "`dirname "$_object"`" "${MK_ROOT_DIR}/.MetaKitDeps"
 _mk_try ${MK_CC} \
     ${MK_CPPFLAGS} ${CPPFLAGS} ${EXTRA_CPPFLAGS} \
-    ${MK_CFLAGS} ${CFLAGS} \
+    ${MK_CFLAGS} ${CFLAGS} ${EXTRA_CFLAGS} \
     ${DEP_FLAGS} \
     -o "$_object" \
     -c "$_source"

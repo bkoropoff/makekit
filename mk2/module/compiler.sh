@@ -7,7 +7,7 @@ load()
     #
     mk_compile()
     {
-	unset SOURCE COMMAND HEADERS INCLUDEDIRS CPPFLAGS CFLAGS _headers_abs
+	unset SOURCE COMMAND HEADERS INCLUDEDIRS CPPFLAGS CFLAGS PIC _headers_abs
 		
 	_mk_args
 	
@@ -28,7 +28,7 @@ load()
 	
 	for _header in ${HEADERS}
 	do
-	    if _mk_contains "$_header" ${MK_GENERATED_HEADERS}
+	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
 		_header_abs="$header_abs ${MK_INCLUDE_DIR}/${_header}"
 	    fi
@@ -36,7 +36,7 @@ load()
 	
 	mk_object \
 	    OUTPUT="$_object" \
-	    COMMAND="\$(COMPILE) INCLUDEDIRS='$INCLUDEDIRS' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' \$@ '`_mk_resolve_input "${SOURCE}"`'" \
+	    COMMAND="\$(COMPILE) INCLUDEDIRS='$INCLUDEDIRS' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' PIC='$PIC' \$@ '`_mk_resolve_input "${SOURCE}"`'" \
 	    "${SOURCE}" ${_header_abs}
     }
     
@@ -71,7 +71,8 @@ load()
 		HEADERS="$HEADERS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
-		CFLAGS="$CFLAGS"
+		CFLAGS="$CFLAGS" \
+		PIC="yes"
 	    
 	    _objects="$_objects $OUTPUT"
 	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
@@ -79,7 +80,10 @@ load()
 	
 	for _lib in ${LIBS}
 	do
-	    _libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+	    then
+		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    fi
 	done
 	
 	"$_cmd" \
@@ -87,7 +91,7 @@ load()
 	    COMMAND="\$(LINK) MODE=library LIBS='$LIBS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
-	MK_GENERATED_LIBS="$MK_GENERATED_LIBS $LIBRARY"
+	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIBRARY"
     }
     
     mk_program()
@@ -118,7 +122,10 @@ load()
 	
 	for _lib in ${LIBS}
 	do
-	    _libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+	    then
+		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    fi
 	done
 	
 	mk_stage \
@@ -145,7 +152,7 @@ load()
 		COMMAND="\$(INSTALL) \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
 		"${_header}"
 	    
-	    MK_GENERATED_HEADERS="$MK_GENERATED_HEADERS $_header"
+	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 
 	    _all_headers="$_all_headers $OUTPUT"
 	done
@@ -157,7 +164,7 @@ load()
 		COMMAND="\$(INSTALL) \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
 		"${_header}" ${_all_headers}
 	    
-	    MK_GENERATED_HEADERS="$MK_GENERATED_HEADERS $_header"
+	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 	done
     }
 
@@ -266,7 +273,7 @@ EOF
 	if mk_check_cache "$_def"
 	then
 	    _result="$CACHED"
-	elif _mk_contains "$HEADER" ${MK_GENERATED_HEADERS}
+	elif _mk_contains "$HEADER" ${MK_INTERNAL_HEADERS}
 	then
 	    _result="internal"
 	    mk_cache_export "$_def" "$_result"
@@ -315,7 +322,7 @@ EOF
     
     mk_check_function()
     {
-	unset LIBS FUNCTION HEADERS CPPFLAGS LDFLAGS CFLAGS
+	unset LIBS FUNCTION HEADERS CPPFLAGS LDFLAGS CFLAGS FAIL
 	
 	_mk_args
 	
@@ -365,8 +372,66 @@ EOF
 	    no)
 		if [ "$FAIL" = "yes" ]
 		then
-		    mk_fail "missing header: $HEADER"
+		    mk_fail "missing function: $FUNCTION"
 		fi
+		return 1
+		;;
+	esac
+    }
+
+    mk_check_library()
+    {
+	unset LIBS LIBRARY CPPFLAGS LDFLAGS CFLAGS FAIL
+	
+	_mk_args
+
+	LIBS="$LIBS $LIBRARY"
+	
+	_def="HAVE_LIB_`_mk_def_name "$LIBRARY"`"
+	
+	if mk_check_cache "$_def"
+	then
+	    _result="$CACHED"
+	elif _mk_contains "$LIBRARY" ${MK_INTERNAL_LIBS}
+	then
+	    _result="internal"
+	    mk_cache_export "$_def" "$_result"
+	else
+	    if {
+		    cat <<EOF
+int main(int argc, char** argv)
+{
+    return 0;
+}
+EOF
+		} | _mk_build_test 'link-program' "$FUNCTION"
+	    then
+		_result="external"
+	    else
+		_result="no"
+	    fi
+
+	    mk_cache_export "$_def" "$_result"
+	fi
+	
+	if [ -n "$CACHED" ]
+	then
+	    mk_log "library $LIBRARY: $_result (cached)"
+	else
+	    mk_log "library $LIBRARY: $_result"
+	fi
+	
+	case "$_result" in
+	    external|internal)
+		mk_export "LIB_`_mk_def_name "$LIBRARY"`=$LIBRARY"
+		return 0
+		;;
+	    no)
+		if [ "$FAIL" = "yes" ]
+		then
+		    mk_fail "missing library: $LIBRARY"
+		fi
+		mk_export "LIB_`_mk_def_name "$LIBRARY"`="
 		return 1
 		;;
 	esac
@@ -374,15 +439,35 @@ EOF
     
     mk_check_functions()
     {
-	unset LIBS FUNCTION HEADERS CPPFLAGS LDFLAGS CFLAGS
+	unset LIBS FUNCTION HEADERS CPPFLAGS LDFLAGS CFLAGS FAIL
 	
 	_mk_args
 	
 	for _name in ${FUNCTIONS} "$@"
 	do
 	    mk_check_function \
+		FAIL="$FAIL" \
 		FUNCTION="$_name" \
 		HEADERS="$HEADERS" \
+		CPPFLAGS="$CPPFLAGS" \
+		LDFLAGS="$LDFLAGS" \
+		CFLAGS="$CFLAGS" \
+		LIBS="$LIBS" \
+		"$@"
+	done
+    }
+
+    mk_check_libraries()
+    {
+	unset LIBS LIBRARIES CPPFLAGS LDFLAGS CFLAGS FAIL
+	
+	_mk_args
+	
+	for _name in ${LIBRARIES} "$@"
+	do
+	    mk_check_library \
+		FAIL="$FAIL" \
+		LIBRARY="$_name" \
 		CPPFLAGS="$CPPFLAGS" \
 		LDFLAGS="$LDFLAGS" \
 		CFLAGS="$CFLAGS" \
@@ -400,6 +485,7 @@ EOF
 	for _name in ${HEADERS} "$@"
 	do
 	    mk_check_header \
+		FAIL="$FAIL" \
 		HEADER="$_name" \
 		FAIL="$FAIL" \
 		CPPFLAGS="$CPPFLAGS" \

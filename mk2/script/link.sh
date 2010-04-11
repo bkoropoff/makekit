@@ -8,12 +8,12 @@ _mk_args
 object="$1"
 shift 1
 
-STAGE_LIB_DIR="`pwd`/${MK_STAGE_DIR}${MK_LIB_DIR}"
-EXTRA_LD_FLAGS="-L${STAGE_LIB_DIR}"
+STAGE_LIB_DIR="${MK_STAGE_DIR}${MK_LIB_DIR}"
+EXTRA_LDFLAGS="-fPIC -L${STAGE_LIB_DIR}"
 
 case "${MK_OS}" in
     linux)
-	EXTRA_LDFLAGS="$EXTRA_LD_FLAGS -Wl,-rpath,${MK_LIB_DIR} -Wl,-rpath-link,${STAGE_LIB_DIR}"
+	EXTRA_LDFLAGS="$EXTRA_LDFLAGS -Wl,-rpath,${MK_LIB_DIR} -Wl,-rpath-link,${STAGE_LIB_DIR}"
 	;;
 esac
 
@@ -28,9 +28,9 @@ mk_log "${object#${MK_STAGE_DIR}}"
 _mk_try mkdir -p "`dirname "$object"`"
 case "$MODE" in
     library)
-	_mk_try gcc -shared -o "$object" "$@" ${MK_LDFLAGS} ${LDFLAGS} ${LIB_LDFLAGS} ${EXTRA_LDFLAGS}
+	_mk_try ${MK_CC} -shared -o "$object" "$@" ${MK_LDFLAGS} ${LDFLAGS} ${LIB_LDFLAGS} ${EXTRA_LDFLAGS}
 	;;
     program)
-	_mk_try gcc  -o "$object" "$@" ${MK_LDFLAGS} ${LDFLAGS} ${LIB_LDFLAGS} ${EXTRA_LDFLAGS}
+	_mk_try ${MK_CC} -o "$object" "$@" ${MK_LDFLAGS} ${LDFLAGS} ${LIB_LDFLAGS} ${EXTRA_LDFLAGS}
 	;;
 esac
