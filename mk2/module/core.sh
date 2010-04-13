@@ -16,7 +16,15 @@ load()
 		    echo "${_source_file}"
 		else
 		    # Input is an object file
-		    echo "${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
+		    _object="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
+		    case "$_object" in
+			*'/../'*|*'/./'*)
+			    echo "$_object" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'
+			    ;;
+			*)
+			    echo "$_object"
+			    ;;
+		    esac
 		fi
 		;;
 	esac

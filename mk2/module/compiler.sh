@@ -42,7 +42,7 @@ load()
     
     mk_library()
     {
-	unset INSTALL LIB SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
+	unset INSTALL LIB SOURCES BUNDLES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
 	
 	_mk_args
 	
@@ -78,6 +78,8 @@ load()
 	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
 	done
 	
+	_objects="$_objects ${BUNDLES}"
+	
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
@@ -88,15 +90,54 @@ load()
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(LINK) MODE=library LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    COMMAND="\$(LINK) MODE=library BUNDLES='$BUNDLES' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     }
+
+    mk_bundle()
+    {
+	unset BUNDLE SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS BUNDLEDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
+	
+	_mk_args
+	
+	_mk_emit "#"
+	_mk_emit "# bundle ${BUNDLE} from ${MK_SUBDIR#/}"
+	_mk_emit "#"
+	_mk_emit ""
+	
+	for _source in ${SOURCES}
+	do
+	    mk_compile \
+		SOURCE="$_source" \
+		HEADERDEPS="$HEADERDEPS" \
+		INCLUDEDIRS="$INCLUDEDIRS" \
+		CPPFLAGS="$CPPFLAGS" \
+		CFLAGS="$CFLAGS" \
+		PIC="yes"
+	    
+	    _objects="$_objects $OUTPUT"
+	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
+	done
+	
+	for _lib in ${LIBDEPS}
+	do
+	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+	    then
+		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    fi
+	done
+	
+	mk_object \
+	    OUTPUT="$BUNDLE" \
+	    COMMAND="\$(SCRIPT)/bundle.sh BUNDLEDEPS='$BUNDLEDEPS' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    ${_libs_abs} ${_objects}
+    }
     
     mk_program()
     {
-	unset PROGRAM SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _libs_abs _objects _resolved_objects
+	unset PROGRAM SOURCES BUNDLES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _libs_abs _objects _resolved_objects
 	
 	_mk_args
 	
@@ -120,6 +161,8 @@ load()
 	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
 	done
 	
+	_objects="$_objects ${BUNDLES}"
+
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
@@ -130,7 +173,7 @@ load()
 	
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(LINK) MODE=program LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(LINK) MODE=program BUNDLES='$BUNDLES' LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
     }
     
