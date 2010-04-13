@@ -1,4 +1,4 @@
-DEPENDS="core"
+DEPENDS="core platform"
 
 load()
 {
@@ -7,7 +7,7 @@ load()
     #
     mk_compile()
     {
-	unset SOURCE COMMAND HEADERS INCLUDEDIRS CPPFLAGS CFLAGS PIC _headers_abs
+	unset SOURCE COMMAND HEADERDEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC _headers_abs
 		
 	_mk_args
 	
@@ -26,7 +26,7 @@ load()
 		;;
 	esac
 	
-	for _header in ${HEADERS}
+	for _header in ${HEADERDEPS}
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
@@ -42,23 +42,23 @@ load()
     
     mk_library()
     {
-	unset LIBS INSTALL LIBRARY SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
+	unset INSTALL LIB SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
 	
 	_mk_args
 	
 	_mk_emit "#"
-	_mk_emit "# library ${LIBRARY} from ${MK_SUBDIR#/}"
+	_mk_emit "# library ${LIB} from ${MK_SUBDIR#/}"
 	_mk_emit "#"
 	_mk_emit ""
 
 	case "$INSTALL" in
 	    no)
 		_cmd="mk_object"
-		_library="lib${LIBRARY}${MK_LIB_EXT}"
+		_library="lib${LIB}${MK_LIB_EXT}"
 		;;
 	    *)
 		_cmd="mk_stage"
-		_library="${MK_LIB_DIR}/lib${LIBRARY}${MK_LIB_EXT}"
+		_library="${MK_LIB_DIR}/lib${LIB}${MK_LIB_EXT}"
 		;;
 	esac
 
@@ -68,7 +68,7 @@ load()
 	do
 	    mk_compile \
 		SOURCE="$_source" \
-		HEADERS="$HEADERS" \
+		HEADERDEPS="$HEADERDEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS" \
@@ -78,7 +78,7 @@ load()
 	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
 	done
 	
-	for _lib in ${LIBS}
+	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
@@ -88,15 +88,15 @@ load()
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(LINK) MODE=library LIBS='$LIBS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    COMMAND="\$(LINK) MODE=library LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
-	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIBRARY"
+	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     }
     
     mk_program()
     {
-	unset PROGRAM SOURCES CPPFLAGS CFLAGS LDFLAGS _libs_abs _objects _resolved_objects
+	unset PROGRAM SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _libs_abs _objects _resolved_objects
 	
 	_mk_args
 	
@@ -111,7 +111,7 @@ load()
 	do
 	    mk_compile \
 		SOURCE="$_source" \
-		HEADERS="$HEADERS" \
+		HEADERDEPSS="$HEADERDEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS"
@@ -120,7 +120,7 @@ load()
 	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
 	done
 	
-	for _lib in ${LIBS}
+	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
@@ -130,7 +130,7 @@ load()
 	
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(LINK) MODE=program LIBS='${LIBS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(LINK) MODE=program LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
     }
     
@@ -210,7 +210,7 @@ load()
 	    link-program)
 		"${MK_SCRIPT_DIR}/link.sh" \
 		    MODE=program \
-		    LIBS="$LIBS" \
+		    LIBDEPS="$LIBDEPS" \
 		    LDFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" \
 		    "${__test}" "${__test}.c" >&4 2>&2
 		 _ret="$?"
@@ -239,12 +239,12 @@ load()
     
     mk_try_compile()
     {
-	unset HEADERS
+	unset HEADERDEPS
 	
 	_mk_args
 	
 	{
-	    for _include in ${HEADERS}
+	    for _include in ${HEADERDEPS}
 	    do
 		echo "#include <${_include}>"
 	    done
@@ -322,7 +322,7 @@ EOF
     
     mk_check_function()
     {
-	unset LIBS FUNCTION HEADERS CPPFLAGS LDFLAGS CFLAGS FAIL
+	unset LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
 	
 	_mk_args
 	
@@ -333,7 +333,7 @@ EOF
 	    _result="$CACHED"
 	else
 	    if {
-		    for _include in ${HEADERS}
+		    for _include in ${HEADERDEPS}
 		    do
 			echo "#include <${_include}>"
 		    done
@@ -381,18 +381,18 @@ EOF
 
     mk_check_library()
     {
-	unset LIBS LIBRARY CPPFLAGS LDFLAGS CFLAGS FAIL
+	unset LIBDEPS LIB CPPFLAGS LDFLAGS CFLAGS FAIL
 	
 	_mk_args
 
-	LIBS="$LIBS $LIBRARY"
+	LIBDEPS="$LIBDEPS $LIB"
 	
-	_def="HAVE_LIB_`_mk_def_name "$LIBRARY"`"
+	_def="HAVE_LIB_`_mk_def_name "$LIB"`"
 	
 	if mk_check_cache "$_def"
 	then
 	    _result="$CACHED"
-	elif _mk_contains "$LIBRARY" ${MK_INTERNAL_LIBS}
+	elif _mk_contains "$LIB" ${MK_INTERNAL_LIBS}
 	then
 	    _result="internal"
 	    mk_cache_export "$_def" "$_result"
@@ -416,22 +416,22 @@ EOF
 	
 	if [ -n "$CACHED" ]
 	then
-	    mk_log "library $LIBRARY: $_result (cached)"
+	    mk_log "library $LIB: $_result (cached)"
 	else
-	    mk_log "library $LIBRARY: $_result"
+	    mk_log "library $LIB: $_result"
 	fi
 	
 	case "$_result" in
 	    external|internal)
-		mk_export "LIB_`_mk_def_name "$LIBRARY"`=$LIBRARY"
+		mk_export "LIB_`_mk_def_name "$LIB"`=$LIB"
 		return 0
 		;;
 	    no)
 		if [ "$FAIL" = "yes" ]
 		then
-		    mk_fail "missing library: $LIBRARY"
+		    mk_fail "missing library: $LIB"
 		fi
-		mk_export "LIB_`_mk_def_name "$LIBRARY"`="
+		mk_export "LIB_`_mk_def_name "$LIB"`="
 		return 1
 		;;
 	esac
@@ -439,7 +439,7 @@ EOF
     
     mk_check_functions()
     {
-	unset LIBS FUNCTION HEADERS CPPFLAGS LDFLAGS CFLAGS FAIL
+	unset LIBDEPS FUNCTIONS HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
 	
 	_mk_args
 	
@@ -448,11 +448,11 @@ EOF
 	    mk_check_function \
 		FAIL="$FAIL" \
 		FUNCTION="$_name" \
-		HEADERS="$HEADERS" \
+		HEADERDEPS="$HEADERDEPS" \
 		CPPFLAGS="$CPPFLAGS" \
 		LDFLAGS="$LDFLAGS" \
 		CFLAGS="$CFLAGS" \
-		LIBS="$LIBS" \
+		LIBDEPS="$LIBDEPS" \
 		"$@"
 	done
     }
@@ -463,15 +463,15 @@ EOF
 	
 	_mk_args
 	
-	for _name in ${LIBRARIES} "$@"
+	for _name in ${LIBS} "$@"
 	do
 	    mk_check_library \
 		FAIL="$FAIL" \
-		LIBRARY="$_name" \
+		LIB="$_name" \
 		CPPFLAGS="$CPPFLAGS" \
 		LDFLAGS="$LDFLAGS" \
 		CFLAGS="$CFLAGS" \
-		LIBS="$LIBS" \
+		LIBDEPS="$LIBDEPS" \
 		"$@"
 	done
     }
@@ -485,7 +485,6 @@ EOF
 	for _name in ${HEADERS} "$@"
 	do
 	    mk_check_header \
-		FAIL="$FAIL" \
 		HEADER="$_name" \
 		FAIL="$FAIL" \
 		CPPFLAGS="$CPPFLAGS" \

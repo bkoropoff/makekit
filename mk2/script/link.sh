@@ -17,7 +17,7 @@ case "${MK_OS}" in
 	;;
 esac
 
-for lib in ${LIBS}
+for lib in ${LIBDEPS}
 do
     LIB_LDFLAGS="$LIB_LDFLAGS -l${lib}"
 done
