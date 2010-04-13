@@ -250,7 +250,7 @@ _mk_emit_make_footer()
     _mk_emit "regen:"
     _mk_emitf "\t@\$(REGEN)\n\n"
 
-    _mk_emit "Makefile:${MK_BUILD_FILES}" "${MK_HOME}/module/"*
+    _mk_emit "Makefile:${MK_BUILD_FILES}" "${MK_HOME}/module/"*.sh
     _mk_emitf "\t@\$(REGEN)\n\n"
 
     _mk_emit "sinclude .MetaKitDeps/*.dep"
