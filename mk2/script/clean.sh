@@ -2,6 +2,8 @@
 
 . "${MK_HOME}/mk.sh" || exit 1
 
+MK_MSG_DOMAIN="clean"
+
 _mk_args
 
 for _target in "$@"
