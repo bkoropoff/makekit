@@ -20,7 +20,7 @@ mk_log "${object#${MK_OBJECT_DIR}/}"
 for _group in ${GROUPDEPS}
 do
     _dirname="`dirname "$_group"`"
-    mk_safe_source "$_group" || mk_fail "Could not read group: $_group"
+    mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/${_group}" || mk_fail "Could not read group: $_group"
     for _object in "$OBJECTS"
     do
 	_ALL_OBJECTS="$_ALL_OBJECTS $_dirname/$_object"
@@ -38,4 +38,4 @@ _mk_try mkdir -p "`dirname "$object"`"
     echo "LIBDEPS=`_mk_quote_shell "${_ALL_LIBDEPS# }"`"
     echo "LIBDIRS=`_mk_quote_shell "${_ALL_LIBDIRS# }"`"
     echo "LDFLAGS=`_mk_quote_shell "${_ALL_LDFLAGS# }"`"
-} > ${object} || mk_fail "Could not write bndle: ${object}"
+} > ${object} || mk_fail "Could not write group: ${object}"

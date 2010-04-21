@@ -128,11 +128,11 @@ load()
 		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
-	
+
 	mk_object \
 	    OUTPUT="$GROUP" \
 	    COMMAND="\$(SCRIPT)/group.sh `mk_command_params GROUPDEPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
-	    ${_libs_abs} ${_objects}
+	    ${_libs_abs} ${_objects} ${GROUPDEPS}
     }
     
     mk_program()
