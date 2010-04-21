@@ -19,13 +19,8 @@ mk_msg "${object#${MK_OBJECT_DIR}/}"
 
 for _group in ${GROUPDEPS}
 do
-    _dirname="`dirname "$_group"`"
     mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/${_group}" || mk_fail "Could not read group: $_group"
-    for _object in "$OBJECTS"
-    do
-	_ALL_OBJECTS="$_ALL_OBJECTS $_dirname/$_object"
-    done
-
+    _ALL_OBJECTS="$_ALL_OBJECTS $OBJECTS"
     _ALL_LIBDEPS="$_ALL_LIBDEPS $LIBDEPS"
     _ALL_LIBDIRS="$_ALL_LIBDIRS $LIBDIRS"
     _ALL_LDFLAGS="$_ALL_LDFLAGS $LDFLAGS"
