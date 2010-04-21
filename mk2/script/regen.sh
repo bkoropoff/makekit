@@ -10,6 +10,6 @@ IFS='
 
 MK_LOG_DOMAIN="regen"
 
-mk_log "Regenerating Makefile"
+mk_log "mkconfigure"
 
 _mk_try "${MK_HOME}/mkconfigure" ${MK_OPTIONS}
