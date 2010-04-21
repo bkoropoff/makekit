@@ -66,4 +66,33 @@ load()
 	
 	mk_add_clean_target "$OUTPUT"
     }
+
+    mk_output_file()
+    {
+	unset INPUT OUTPUT _script
+
+	_mk_args
+	
+	[ -z "$OUTPUT" ] && OUTPUT="$1"
+	[ -z "$INPUT" ] && INPUT="${OUTPUT}.in"
+
+	for _export in ${MK_EXPORTS}
+	do
+	    _val="`_mk_deref "$_export"`"
+	    case "$_val" in
+		*'|'*)
+		    _val="`echo "$_val" | sed 's/|/\\\\|/g'`"
+		    ;;
+	    esac
+	    _script="$_script;s|@$_export@|$_val|g"
+	done
+
+	_input="`_mk_resolve_input "${INPUT}"`"
+	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
+
+	sed "${_script#;}" < "$_input" > "$_output" || mk_fail "Could not invoke sed"
+
+	mk_add_configure_output "${_output}"
+	mk_add_configure_input "${_input}"
+    }
 }

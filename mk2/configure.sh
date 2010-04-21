@@ -191,6 +191,14 @@ mk_config_header()
     if [ -n "${MK_CONFIG_HEADER}" ]
     then
 	exec 5>&-
+
+	if [ -f "${MK_CONFIG_HEADER}" ] && diff "${MK_CONFIG_HEADER}" "${MK_CONFIG_HEADER}.new" >/dev/null 2>&1
+	then
+	    # The config header has not changed, so don't touch the timestamp on the file */
+	    rm -f "${MK_CONFIG_HEADER}.new"
+	else
+	    mv "${MK_CONFIG_HEADER}.new" "${MK_CONFIG_HEADER}"
+	fi
     fi
 
     MK_CONFIG_HEADER="${MK_OBJECT_DIR}${MK_SUBDIR}/${HEADER}"
@@ -200,7 +208,7 @@ mk_config_header()
 
     mk_log "creating config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
 
-    exec 5>"${MK_CONFIG_HEADER}"
+    exec 5>"${MK_CONFIG_HEADER}.new"
 }
 
 _mk_emit_make_header()
@@ -210,11 +218,6 @@ _mk_emit_make_header()
     _mk_emit "MK_ROOT_DIR='${MK_ROOT_DIR}'"
     _mk_emit "MK_SHELL=/bin/sh"
     _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR=\$\${MK_SUBDIR} \$(MK_SHELL) \$(MK_SCRIPT_DIR)"
-    _mk_emit "COMPILE=\$(SCRIPT)/compile.sh"
-    _mk_emit "LINK=\$(SCRIPT)/link.sh"
-    _mk_emit "CLEAN=\$(SCRIPT)/clean.sh"
-    _mk_emit "INSTALL=\$(SCRIPT)/install.sh"
-    _mk_emit "REGEN=\$(SCRIPT)/regen.sh"
     _mk_emit ""
     _mk_emit "default: all"
     _mk_emit ""
@@ -239,19 +242,25 @@ _mk_emit_make_footer()
     _mk_emit "all:${MK_ALL_TARGETS}"
     _mk_emit ""
     _mk_emit "clean:"
-    _mk_emitf "\t@\$(CLEAN) %s\n\n" "'.MetaKitDeps'${MK_CLEAN_TARGETS} "
+    _mk_emitf "\t@\$(SCRIPT)/clean.sh %s\n\n" "'.MetaKitDeps'${MK_CLEAN_TARGETS} "
 
     _mk_emit "scrub: clean"
-    _mk_emitf "\t@\$(CLEAN)%s\n\n" "${MK_SCRUB_TARGETS}"
+    _mk_emitf "\t@\$(SCRIPT)/clean.sh%s\n\n" "${MK_SCRUB_TARGETS}"
 
     _mk_emit "nuke: scrub"
-    _mk_emitf "\t@\$(CLEAN) 'Makefile'%s\n\n" "${MK_EXPORT_FILES}${MK_CONFIG_HEADERS}"
+    _mk_emitf "\t@\$(SCRIPT)/clean.sh 'Makefile'%s\n\n" "${MK_EXPORT_FILES}${MK_CONFIG_HEADERS}${MK_CONFIGURE_OUTPUTS}"
 
     _mk_emit "regen:"
-    _mk_emitf "\t@\$(REGEN)\n\n"
+    _mk_emitf "\t@\$(SCRIPT)/regen.sh\n\n"
 
-    _mk_emit "Makefile:${MK_BUILD_FILES}" "${MK_HOME}/module/"*.sh
-    _mk_emitf "\t@\$(REGEN)\n\n"
+    _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}" "${MK_HOME}/module/"*.sh
+    _mk_emitf "\t@\$(SCRIPT)/regen.sh\n\n"
+
+    for _target in ${MK_CONFIGURE_OUTPUTS}
+    do
+	_mk_emit "${_target}: Makefile"
+	_mk_emit ""
+    done
 
     _mk_emit "sinclude .MetaKitDeps/*.dep"
     _mk_emit ""
@@ -272,6 +281,16 @@ mk_add_clean_target()
 mk_add_scrub_target()
 {
     MK_SCRUB_TARGETS="$MK_SCRUB_TARGETS '${MK_STAGE_DIR}$1'"
+}
+
+mk_add_configure_output()
+{
+    MK_CONFIGURE_OUTPUTS="$MK_CONFIGURE_OUTPUTS $1"
+}
+
+mk_add_configure_input()
+{
+    MK_CONFIGURE_INPUTS="$MK_CONFIGURE_INPUTS $1"
 }
 
 # Save our parameters for later use

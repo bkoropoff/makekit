@@ -36,7 +36,7 @@ load()
 	
 	mk_object \
 	    OUTPUT="$_object" \
-	    COMMAND="\$(COMPILE) INCLUDEDIRS='$INCLUDEDIRS' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' PIC='$PIC' \$@ '`_mk_resolve_input "${SOURCE}"`'" \
+	    COMMAND="\$(SCRIPT)/compile.sh INCLUDEDIRS='$INCLUDEDIRS' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' PIC='$PIC' \$@ '`_mk_resolve_input "${SOURCE}"`'" \
 	    "${SOURCE}" ${_header_abs}
     }
     
@@ -90,7 +90,7 @@ load()
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(LINK) MODE=library BUNDLES='$BUNDLES' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=library BUNDLES='$BUNDLES' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -173,7 +173,7 @@ load()
 	
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(LINK) MODE=program BUNDLES='$BUNDLES' LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=program BUNDLES='$BUNDLES' LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
     }
     
@@ -192,7 +192,7 @@ load()
 	do
 	    mk_stage \
 	        OUTPUT="${MK_INCLUDE_DIR}/${_header}" \
-		COMMAND="\$(INSTALL) \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
+		COMMAND="\$(SCRIPT)/install.sh \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
 		"${_header}"
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
@@ -204,7 +204,7 @@ load()
 	do
 	    mk_stage \
 		OUTPUT="${MK_INCLUDE_DIR}/${_header}" \
-		COMMAND="\$(INSTALL) \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
+		COMMAND="\$(SCRIPT)/install.sh \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
 		"${_header}" ${_all_headers}
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
@@ -237,7 +237,7 @@ load()
 
     _mk_build_test()
     {
-	__test=".test_`echo "$2" | tr './-' '___'`"
+	__test=".check_`echo "$2" | tr './-' '___'`"
 	cat > "${__test}.c"
 	
 	case "${1}" in
@@ -331,7 +331,7 @@ int main(int argc, char** argv)
     return 0;
 }
 EOF
-		} | _mk_build_test compile "$HEADER"
+		} | _mk_build_test compile "header_$HEADER"
 	    then
 		_result="external"
 	    else
@@ -390,7 +390,7 @@ int main(int argc, char** argv)
     return __func ? 0 : 1;
 }
 EOF
-		} | _mk_build_test 'link-program' "$FUNCTION"
+		} | _mk_build_test 'link-program' "func_$FUNCTION"
 	    then
 		_result="yes"
 	    else
@@ -447,7 +447,7 @@ int main(int argc, char** argv)
     return 0;
 }
 EOF
-		} | _mk_build_test 'link-program' "$FUNCTION"
+		} | _mk_build_test 'link-program' "lib_$LIB"
 	    then
 		_result="external"
 	    else
