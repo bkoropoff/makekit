@@ -180,14 +180,8 @@ mk_define()
     fi
 }
 
-mk_config_header()
+_mk_close_config_header()
 {
-    unset HEADER
-
-    _mk_args
-
-    [ -z "$HEADER" ] && HEADER="$1"
-
     if [ -n "${MK_CONFIG_HEADER}" ]
     then
 	exec 5>&-
@@ -199,7 +193,20 @@ mk_config_header()
 	else
 	    mv "${MK_CONFIG_HEADER}.new" "${MK_CONFIG_HEADER}"
 	fi
+
+	MK_CONFIG_HEADER=""
     fi
+}
+
+mk_config_header()
+{
+    unset HEADER
+
+    _mk_args
+
+    _mk_close_config_header
+
+    [ -z "$HEADER" ] && HEADER="$1"
 
     MK_CONFIG_HEADER="${MK_OBJECT_DIR}${MK_SUBDIR}/${HEADER}"
     MK_CONFIG_HEADERS="$MK_CONFIG_HEADERS '$MK_CONFIG_HEADER'"
@@ -336,10 +343,7 @@ _mk_emit_make_footer
 exec 6>&-
 
 # Close config header file if one was open
-if [ -n "$MK_CONFIG_HEADER" ]
-then
-    exec 5>&-
-fi
+_mk_close_config_header
 
 # Dispense wisdom
 _fortunes="${MK_HOME}/fortunes"

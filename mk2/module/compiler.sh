@@ -96,6 +96,58 @@ load()
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     }
 
+    mk_dso()
+    {
+	unset INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
+	
+	_mk_args
+	
+	_mk_emit "#"
+	_mk_emit "# dso ${DSO} from ${MK_SUBDIR#/}"
+	_mk_emit "#"
+	_mk_emit ""
+
+	case "$INSTALL" in
+	    no)
+		_cmd="mk_object"
+		_library="${DSO}${MK_DSO_EXT}"
+		;;
+	    *)
+		_cmd="mk_stage"
+		_library="${MK_LIB_DIR}/${DSO}${MK_DSO_EXT}"
+		;;
+	esac
+	
+	for _source in ${SOURCES}
+	do
+	    mk_compile \
+		SOURCE="$_source" \
+		HEADERDEPS="$HEADERDEPS" \
+		INCLUDEDIRS="$INCLUDEDIRS" \
+		CPPFLAGS="$CPPFLAGS" \
+		CFLAGS="$CFLAGS" \
+		PIC="yes"
+	    
+	    _objects="$_objects $OUTPUT"
+	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
+	done
+	
+	_objects="$_objects ${GROUPS}"
+	
+	for _lib in ${LIBDEPS}
+	do
+	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+	    then
+		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    fi
+	done
+	
+	"$_cmd" \
+	    OUTPUT="$_library" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=dso `mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
+	    ${_libs_abs} ${_objects}
+    }
+
     mk_group()
     {
 	unset GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects

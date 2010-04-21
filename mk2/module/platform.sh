@@ -4,6 +4,7 @@ configure()
 	Linux)
 	    MK_OS='linux'
 	    MK_LIB_EXT=".so"
+	    MK_DSO_EXT=".so"
 	    ;;
 	*)
 	    mk_fail "unknown OS: `uname`"
@@ -21,5 +22,5 @@ configure()
     mk_msg "detected OS: $MK_OS"
     mk_msg "detected architecture: $MK_ARCH"
 
-    mk_export MK_OS MK_ARCH MK_LIB_EXT
+    mk_export MK_OS MK_ARCH MK_LIB_EXT MK_DSO_EXT
 }

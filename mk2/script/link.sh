@@ -22,6 +22,7 @@ esac
 
 for _group in ${GROUPS}
 do
+    unset OBJECTS LIBDEPS LIBDIRS LDFLAGS
     _dirname="`dirname "$_group"`"
     mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/$_group" || mk_fail "Could not read group $_group"
 
@@ -43,6 +44,9 @@ mk_msg "${object#${MK_STAGE_DIR}}"
 _mk_try mkdir -p "`dirname "$object"`"
 case "$MODE" in
     library)
+	_mk_try ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
+	;;
+    dso)
 	_mk_try ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
 	;;
     program)
