@@ -36,13 +36,13 @@ _mk_process_build_recursive()
     MK_SUBDIR="$1"
     SOURCEDIR="${MK_SOURCE_DIR}${MK_SUBDIR}"
     OBJECTDIR="${MK_OBJECT_DIR}${MK_SUBDIR}"
-    MK_LOG_DOMAIN="${MK_SUBDIR#/}"
+    MK_MSG_DOMAIN="${MK_SUBDIR#/}"
 
     export MK_SUBDIR
 
-    if [ -z "$MK_LOG_DOMAIN" ]
+    if [ -z "$MK_MSG_DOMAIN" ]
     then
-	MK_LOG_DOMAIN="`(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")`"
+	MK_MSG_DOMAIN="`(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")`"
     fi
 
     mkdir -p "${OBJECTDIR}" || mk_fail "Could not create directory: ${OBJECTDIR}"
@@ -74,7 +74,7 @@ _mk_process_build()
     # Run build functions for all modules
     for _module in `_mk_modules`
     do
-	MK_LOG_DOMAIN="$_module"
+	MK_MSG_DOMAIN="$_module"
 	_mk_process_build_file "${MK_HOME}/module/${_module}.sh"
     done
 
@@ -206,7 +206,7 @@ mk_config_header()
 
     mkdir -p "`dirname "${MK_CONFIG_HEADER}"`"
 
-    mk_log "creating config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
+    mk_msg "creating config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
 
     exec 5>"${MK_CONFIG_HEADER}.new"
 }
@@ -217,7 +217,7 @@ _mk_emit_make_header()
     _mk_emit "MK_SCRIPT_DIR='${MK_SCRIPT_DIR}'"
     _mk_emit "MK_ROOT_DIR='${MK_ROOT_DIR}'"
     _mk_emit "MK_SHELL=/bin/sh"
-    _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR=\$\${MK_SUBDIR} \$(MK_SHELL) \$(MK_SCRIPT_DIR)"
+    _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR=\$\${MK_SUBDIR} MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_SCRIPT_DIR)"
     _mk_emit ""
     _mk_emit "default: all"
     _mk_emit ""
@@ -228,7 +228,7 @@ _mk_emit_make_footer()
     # Run postmake functions for all modules
     for _module in `_mk_modules`
     do
-	MK_LOG_DOMAIN="$_module"
+	MK_MSG_DOMAIN="$_module"
 	unset postmake
 
 	. "${MK_HOME}/module/${_module}.sh"
@@ -296,9 +296,13 @@ mk_add_configure_input()
 # Save our parameters for later use
 MK_OPTIONS="`( for i in "$@"; do echo "$i"; done )`"
 
-MK_LOG_DOMAIN="metakit"
+MK_MSG_DOMAIN="metakit"
 
-mk_log "initializing"
+# Open log file
+exec 4>config.log
+MK_LOG_FD=4
+
+mk_msg "initializing"
 
 # Load all modules
 _mk_load_modules
@@ -312,11 +316,9 @@ MK_STAGE_DIR="`mk_option stagedir 'stage'`"
 # Begin saving exports
 _mk_begin_exports ".MetaKitExports"
 
-# Open verbose log file
-exec 4>config.log
-
 # Open Makefile for writing
 exec 6>Makefile
+MK_MAKEFILE_FD=6
 
 # Export basic variables
 mk_export MK_HOME MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_OPTIONS

@@ -246,7 +246,7 @@ load()
 		    DISABLE_DEPGEN=yes \
 		    CPPFLAGS="$CPPFLAGS" \
 		    CFLAGS="$CFLAGS" \
-		    "${__test}.o" "${__test}.c" >&4 2>&1	    
+		    "${__test}.o" "${__test}.c" >&${MK_LOG_FD} 2>&1	    
 		 _ret="$?"
 		 rm -f "${__test}.o"
 		 ;;
@@ -255,7 +255,7 @@ load()
 		    MODE=program \
 		    LIBDEPS="$LIBDEPS" \
 		    LDFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" \
-		    "${__test}" "${__test}.c" >&4 2>&2
+		    "${__test}" "${__test}.c" >&${MK_LOG_FD} 2>&1
 		 _ret="$?"
 		 rm -f "${__test}"
 		 ;;
@@ -343,9 +343,9 @@ EOF
 	
 	if [ -n "$CACHED" ]
 	then
-	    mk_log "header $HEADER: $_result (cached)"
+	    mk_msg "header $HEADER: $_result (cached)"
 	else
-	    mk_log "header $HEADER: $_result"
+	    mk_msg "header $HEADER: $_result"
 	fi
 	
 	case "$_result" in
@@ -402,9 +402,9 @@ EOF
 	
 	if [ -n "$CACHED" ]
 	then
-	    mk_log "function $FUNCTION(): $_result (cached)"
+	    mk_msg "function $FUNCTION(): $_result (cached)"
 	else
-	    mk_log "function $FUNCTION(): $_result"
+	    mk_msg "function $FUNCTION(): $_result"
 	fi
 	
 	case "$_result" in
@@ -459,9 +459,9 @@ EOF
 	
 	if [ -n "$CACHED" ]
 	then
-	    mk_log "library $LIB: $_result (cached)"
+	    mk_msg "library $LIB: $_result (cached)"
 	else
-	    mk_log "library $LIB: $_result"
+	    mk_msg "library $LIB: $_result"
 	fi
 	
 	case "$_result" in
@@ -544,10 +544,10 @@ configure()
     MK_CFLAGS="`mk_option cflags ''`"
     MK_LDFLAGS="`mk_option ldflags ''`"
 
-    mk_log "C compiler: $MK_CC"
-    mk_log "C preprocessor flags: $MK_CPPFLAGS"
-    mk_log "C compiler flags: $MK_CFLAGS"
-    mk_log "linker flags: $MK_LDFLAGS"
+    mk_msg "C compiler: $MK_CC"
+    mk_msg "C preprocessor flags: $MK_CPPFLAGS"
+    mk_msg "C compiler flags: $MK_CFLAGS"
+    mk_msg "linker flags: $MK_LDFLAGS"
 
     mk_export MK_CC MK_CPPFLAGS MK_CFLAGS MK_LDFLAGS
 }

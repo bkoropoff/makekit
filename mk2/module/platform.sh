@@ -18,8 +18,8 @@ configure()
 	    ;;
     esac
 
-    mk_log "detected OS: $MK_OS"
-    mk_log "detected architecture: $MK_ARCH"
+    mk_msg "detected OS: $MK_OS"
+    mk_msg "detected architecture: $MK_ARCH"
 
     mk_export MK_OS MK_ARCH MK_LIB_EXT
 }

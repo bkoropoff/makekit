@@ -59,7 +59,7 @@ load()
 	then
 	    if [ -f "${MK_SOURCE_DIR}${SUBDIR}/${SOURCEDIR}/autogen.sh" ]
 	    then
-		mk_log "running autogen.sh for ${SOURCEDIR}"
+		mk_msg "running autogen.sh for ${SOURCEDIR}"
 		cd "${MK_SOURCE_DIR}${SUBDIR}/${SOURCEDIR}" && _mk_try "./autogen.sh"
 		cd "${MK_ROOT_DIR}"
 	    fi

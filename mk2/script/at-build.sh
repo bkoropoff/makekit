@@ -5,9 +5,9 @@ mk_import
 
 _mk_args
 
-MK_LOG_DOMAIN="build"
+MK_MSG_DOMAIN="build"
 
-mk_log "$SOURCEDIR"
+mk_msg "$SOURCEDIR"
 
 _mk_try mkdir -p "${MK_STAGE_DIR}"
 _stage_dir="`cd "${MK_STAGE_DIR}" && pwd`"

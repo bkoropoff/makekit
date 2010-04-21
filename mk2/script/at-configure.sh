@@ -8,9 +8,9 @@ _mk_args
 _stamp="$1"
 shift
 
-MK_LOG_DOMAIN="configure"
+MK_MSG_DOMAIN="configure"
 
-mk_log "$SOURCEDIR"
+mk_msg "$SOURCEDIR"
 
 _mk_try mkdir -p "${MK_OBJECT_DIR}${MK_SUBDIR}/${SOURCEDIR}"
 _mk_try mkdir -p "${MK_STAGE_DIR}"

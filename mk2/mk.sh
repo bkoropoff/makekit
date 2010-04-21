@@ -3,17 +3,14 @@ MK_MODULE_DIR="${MK_HOME}/module"
 
 _mk_try()
 {
-    if [ -n "$MK_VERBOSE" ]
-    then
-	mk_log "run: $@"
-    fi
+    mk_msg_verbose "run: $@"
 
     _output=`"$@" 2>&1`
     _ret=$?
 
     if [ $_ret -ne 0 ]
     then
-	mk_log "FAILED: $@"
+	mk_msg "FAILED: $@"
 	echo "$_output"
 	exit 1
     fi
@@ -37,7 +34,7 @@ mk_import()
 
 mk_fail()
 {
-    mk_log "ERROR: $@" >&2
+    mk_msg "ERROR: $@" >&2
     exit 1
 }
 
@@ -58,7 +55,23 @@ _mk_def_name()
 
 mk_log()
 {
-    echo "[$MK_LOG_DOMAIN] $@"
+    [ -n "${MK_LOG_FD}" ] && echo "[$MK_MSG_DOMAIN] $*" >&${MK_LOG_FD}
+}
+
+mk_log_verbose()
+{
+    [ -n "${MK_VERBOSE}" ] && mk_log "$@"
+}
+
+mk_msg()
+{
+    mk_log "$@"
+    echo "[$MK_MSG_DOMAIN] $*"
+}
+
+mk_msg_verbose()
+{
+    [ -n "${MK_VERBOSE}" ] && mk_msg "$@"
 }
 
 _mk_set_arg()
@@ -120,14 +133,14 @@ _mk_load_modules()
 {
     for _module in `_mk_modules`
     do
-	MK_LOG_DOMAIN="metakit"
-	mk_log "loading module: ${_module}"
+	MK_MSG_DOMAIN="metakit"
+	mk_msg "loading module: ${_module}"
 
 	unset load
 	. "${MK_HOME}/module/${_module}.sh"
 	case "`type load 2>&1`" in
 	    *"function"*)
-		MK_LOG_DOMAIN="${_module}"
+		MK_MSG_DOMAIN="${_module}"
 		load
 		;;
 	esac

@@ -8,8 +8,8 @@ _mk_args
 IFS='
 '
 
-MK_LOG_DOMAIN="regen"
+MK_MSG_DOMAIN="regen"
 
-mk_log "mkconfigure"
+mk_msg "mkconfigure"
 
 _mk_try "${MK_HOME}/mkconfigure" ${MK_OPTIONS}

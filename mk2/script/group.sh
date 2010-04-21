@@ -13,9 +13,9 @@ _ALL_LIBDEPS="$LIBDEPS"
 _ALL_LIBDIRS="$LIBDIRS"
 _ALL_LDFLAGS="$LDFLAGS"
 
-MK_LOG_DOMAIN="group"
+MK_MSG_DOMAIN="group"
 
-mk_log "${object#${MK_OBJECT_DIR}/}"
+mk_msg "${object#${MK_OBJECT_DIR}/}"
 
 for _group in ${GROUPDEPS}
 do

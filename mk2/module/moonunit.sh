@@ -59,7 +59,7 @@ configure()
     else
 	HAVE_MOONUNIT_PROGRAM=no
     fi
-    mk_log "program moonunit: $HAVE_MOONUNIT_PROGRAM"
+    mk_msg "program moonunit: $HAVE_MOONUNIT_PROGRAM"
     
     mk_check_headers HEADERS="moonunit/moonunit.h"
 
@@ -70,7 +70,7 @@ configure()
 	HAVE_MOONUNIT=no
     fi
 
-    mk_log "moonunit available: $HAVE_MOONUNIT"
+    mk_msg "moonunit available: $HAVE_MOONUNIT"
 
     mk_export HAVE_MOONUNIT
 }

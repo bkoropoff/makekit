@@ -37,9 +37,9 @@ do
     COMBINED_LDFLAGS="$COMBINED_LDFLAGS -l${lib}"
 done
 
-MK_LOG_DOMAIN="link"
+MK_MSG_DOMAIN="link"
 
-mk_log "${object#${MK_STAGE_DIR}}"
+mk_msg "${object#${MK_STAGE_DIR}}"
 _mk_try mkdir -p "`dirname "$object"`"
 case "$MODE" in
     library)
