@@ -17,7 +17,7 @@ done
 
 MK_LOG_DOMAIN="compile"
 
-if [ -z "DISABLE_DEPGEN" ]
+if [ -z "$DISABLE_DEPGEN" ]
 then
     DEP_FLAGS="-MMD -MP -MF ${MK_ROOT_DIR}/.MetaKitDeps/`echo ${_object%.o} | tr / _`.dep"
 fi
