@@ -42,7 +42,7 @@ load()
     
     mk_library()
     {
-	unset INSTALL LIB SOURCES BUNDLES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
+	unset INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
 	
 	_mk_args
 	
@@ -78,7 +78,7 @@ load()
 	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
 	done
 	
-	_objects="$_objects ${BUNDLES}"
+	_objects="$_objects ${GROUPS}"
 	
 	for _lib in ${LIBDEPS}
 	do
@@ -90,20 +90,20 @@ load()
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=library BUNDLES='$BUNDLES' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=library GROUPS='$GROUPS' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     }
 
-    mk_bundle()
+    mk_group()
     {
-	unset BUNDLE SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS BUNDLEDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
+	unset GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
 	
 	_mk_args
 	
 	_mk_emit "#"
-	_mk_emit "# bundle ${BUNDLE} from ${MK_SUBDIR#/}"
+	_mk_emit "# group ${GROUP} from ${MK_SUBDIR#/}"
 	_mk_emit "#"
 	_mk_emit ""
 	
@@ -130,14 +130,14 @@ load()
 	done
 	
 	mk_object \
-	    OUTPUT="$BUNDLE" \
-	    COMMAND="\$(SCRIPT)/bundle.sh BUNDLEDEPS='$BUNDLEDEPS' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    OUTPUT="$GROUP" \
+	    COMMAND="\$(SCRIPT)/group.sh GROUPDEPS='$GROUPDEPS' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
     }
     
     mk_program()
     {
-	unset PROGRAM SOURCES BUNDLES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _libs_abs _objects _resolved_objects
+	unset PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _libs_abs _objects _resolved_objects
 	
 	_mk_args
 	
@@ -161,7 +161,7 @@ load()
 	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
 	done
 	
-	_objects="$_objects ${BUNDLES}"
+	_objects="$_objects ${GROUPS}"
 
 	for _lib in ${LIBDEPS}
 	do
@@ -173,7 +173,7 @@ load()
 	
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=program BUNDLES='$BUNDLES' LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=program GROUPS='$GROUPS' LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
     }
     

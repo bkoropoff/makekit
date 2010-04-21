@@ -13,14 +13,14 @@ _ALL_LIBDEPS="$LIBDEPS"
 _ALL_LIBDIRS="$LIBDIRS"
 _ALL_LDFLAGS="$LDFLAGS"
 
-MK_LOG_DOMAIN="bundle"
+MK_LOG_DOMAIN="group"
 
 mk_log "${object#${MK_OBJECT_DIR}/}"
 
-for _bundle in ${BUNDLEDEPS}
+for _group in ${GROUPDEPS}
 do
-    _dirname="`dirname "$_bundle"`"
-    mk_safe_source "$_bundle" || mk_fail "Could not read bundle: $_bundle"
+    _dirname="`dirname "$_group"`"
+    mk_safe_source "$_group" || mk_fail "Could not read group: $_group"
     for _object in "$OBJECTS"
     do
 	_ALL_OBJECTS="$_ALL_OBJECTS $_dirname/$_object"
