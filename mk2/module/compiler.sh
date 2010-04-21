@@ -36,7 +36,7 @@ load()
 	
 	mk_object \
 	    OUTPUT="$_object" \
-	    COMMAND="\$(SCRIPT)/compile.sh INCLUDEDIRS='$INCLUDEDIRS' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' PIC='$PIC' \$@ '`_mk_resolve_input "${SOURCE}"`'" \
+	    COMMAND="\$(SCRIPT)/compile.sh `mk_command_params INCLUDEDIRS CPPFLAGS CFLAGS PIC` \$@ '`_mk_resolve_input "${SOURCE}"`'" \
 	    "${SOURCE}" ${_header_abs}
     }
     
@@ -90,7 +90,7 @@ load()
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=library GROUPS='$GROUPS' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=library `mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -131,7 +131,7 @@ load()
 	
 	mk_object \
 	    OUTPUT="$GROUP" \
-	    COMMAND="\$(SCRIPT)/group.sh GROUPDEPS='$GROUPDEPS' LIBDEPS='$LIBDEPS' LIBDIRS='$LIBDIRS' LDFLAGS='$LDFLAGS' \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT)/group.sh `mk_command_params GROUPDEPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
     }
     
@@ -173,7 +173,7 @@ load()
 	
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=program GROUPS='$GROUPS' LIBDEPS='${LIBDEPS}' LDFLAGS='${LDFLAGS}' \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=program `mk_command_params GROUPS LIBDEPS LDFLAGS` \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
     }
     

@@ -184,3 +184,20 @@ do
     ;;
   esac
 done'
+
+mk_command_params()
+{
+    _params=""
+
+    for _param in "$@"
+    do
+	_val="`_mk_deref "$_param"`"
+	
+	if [ -n "$_val" ]
+	then
+	    _params="$_params $_param=`_mk_quote_shell "$_val"`"
+	fi
+    done
+
+    echo "${_params# }"
+}
