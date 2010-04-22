@@ -39,28 +39,34 @@ load()
 	# Add dummy rules for headers or libraries built by this component
 	for _header in ${HEADERS}
 	do
-	    _mk_emit "${MK_STAGE_DIR}${MK_INCLUDE_DIR}/${_header}: ${MK_OBJECT_DIR}/$OUTPUT"
+	    _mk_emit "${MK_STAGE_DIR}${MK_INCLUDE_DIR}/${_header}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
 	    _mk_emit ""
 
 	    mk_add_all_target "${MK_INCLUDE_DIR}/${_header}"
+	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 	done
 
 	for _lib in ${LIBS}
 	do
-	    _mk_emit "${MK_STAGE_DIR}${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}: ${MK_OBJECT_DIR}/$OUTPUT"
+	    _mk_emit "${MK_STAGE_DIR}${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
 	    _mk_emit ""
 
-	    mk_add_all_target "${MK_INCLUDE_DIR}/${_header}"
+	    mk_add_all_target "${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $_lib"
 	done
 
 	mk_add_clean_target "${MK_SUBDIR}${SOURCEDIR}"
 
-	if ! [ -f "${MK_SOURCE_DIR}${SUBDIR}/${SOURCEDIR}/configure" ]
+	if ! [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/configure" ]
 	then
-	    if [ -f "${MK_SOURCE_DIR}${SUBDIR}/${SOURCEDIR}/autogen.sh" ]
+	    if [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/autogen.sh" ]
 	    then
 		mk_msg "running autogen.sh for ${SOURCEDIR}"
-		cd "${MK_SOURCE_DIR}${SUBDIR}/${SOURCEDIR}" && _mk_try "./autogen.sh"
+		cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && _mk_try "./autogen.sh"
+		cd "${MK_ROOT_DIR}"
+	    else
+		mk_msg "running autoreconf for ${SOURCEDIR}"
+		cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && _mk_try autoreconf -fi
 		cd "${MK_ROOT_DIR}"
 	    fi
 	fi
