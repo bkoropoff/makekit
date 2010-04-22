@@ -189,11 +189,16 @@ load()
     
     mk_program()
     {
-	unset PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _libs_abs _objects _resolved_objects
+	unset PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS
+	unset HEADERDEPS LIBDIRS INCLUDEDIRS
+	unset _libs_abs _objects _resolved_objects
 	
+	# Default to installing programs in bin dir
+	INSTALLDIR="${MK_BIN_DIR}"
+
 	_mk_args
 	
-	_executable="${MK_BIN_DIR}/${PROGRAM}"
+	_executable="${INSTALLDIR}/${PROGRAM}"
 	
 	_mk_emit "#"
 	_mk_emit "# program ${PROGRAM} from ${MK_SUBDIR#/}"
