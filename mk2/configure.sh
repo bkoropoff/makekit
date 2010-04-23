@@ -345,6 +345,9 @@ exec 6>&-
 # Close config header file if one was open
 _mk_close_config_header
 
+# Close log file
+exec 4>&-
+
 # Dispense wisdom
 _fortunes="${MK_HOME}/fortunes"
 if [ -f "$_fortunes" ]
