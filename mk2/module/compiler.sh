@@ -586,8 +586,11 @@ EOF
 		"$@"
 	done
 
-	for _proto in ${PROTOTYPES} "$@"
+	_ifs="$IFS"
+	IFS=";"
+	for _proto in ${PROTOTYPES}
 	do
+	    IFS="$_ifs"
 	    mk_check_function \
 		FAIL="$FAIL" \
 		PROTOTYPE="$_proto" \
@@ -597,7 +600,9 @@ EOF
 		CFLAGS="$CFLAGS" \
 		LIBDEPS="$LIBDEPS" \
 		"$@"
+	    IFS=";"
 	done
+	IFS="$_ifs"
     }
 
     mk_check_libraries()
