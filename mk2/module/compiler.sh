@@ -422,13 +422,27 @@ EOF
     
     mk_check_function()
     {
-	unset LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
+	unset LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL PROTOTYPE
 	
 	_mk_args
+
+	CFLAGS="$CFLAGS -Wall -Werror"
+	
+	if [ -n "$PROTOTYPE" ]
+	then
+	    _parts="`echo "$PROTOTYPE" | sed 's/^\(.*[^a-zA-Z_]\)\([a-zA-Z_][a-zA-Z0-9_]*\) *(\([^)]*\)).*$/\1|\2|\3/g'`"
+	    _ret="${_parts%%|*}"
+	    _parts="${_parts#*|}"
+	    FUNCTION="${_parts%%|*}"
+	    _args="${_parts#*|}"
+	    _checkname="$PROTOTYPE"
+	else
+	    _checkname="$FUNCTION()"
+	fi
 	
 	_def="HAVE_`_mk_def_name "$FUNCTION"`"
 	
-	if mk_check_cache "$_def"
+	if [ -z "$PROTOTYPE" ] && mk_check_cache "$_def"
 	then
 	    _result="$CACHED"
 	else
@@ -440,13 +454,24 @@ EOF
 		    
 		    echo ""
 		    
-		    cat <<EOF
+		    if [ -n "$PROTOTYPE" ]
+		    then
+			cat <<EOF
 int main(int argc, char** argv)
 {
-    void* __func = $FUNCTION;
+    $_ret (*__func)($_args) = &$FUNCTION;
     return __func ? 0 : 1;
 }
 EOF
+		    else
+			cat <<EOF
+int main(int argc, char** argv)
+{
+    void* __func = &$FUNCTION;
+    return __func ? 0 : 1;
+}
+EOF
+		    fi
 		} | _mk_build_test 'link-program' "func_$FUNCTION"
 	    then
 		_result="yes"
@@ -454,14 +479,19 @@ EOF
 		_result="no"
 	    fi
 
-	    mk_cache_export "$_def" "$_result"
+	    if [ -z "$PROTOTYPE" ]
+	    then
+		mk_cache_export "$_def" "$_result"
+	    else
+		mk_export "$_def"="$_result"
+	    fi
 	fi
 	
 	if [ -n "$CACHED" ]
 	then
-	    mk_msg "function $FUNCTION(): $_result (cached)"
+	    mk_msg "function $_checkname: $_result (cached)"
 	else
-	    mk_msg "function $FUNCTION(): $_result"
+	    mk_msg "function $_checkname: $_result"
 	fi
 	
 	case "$_result" in
@@ -539,7 +569,7 @@ EOF
     
     mk_check_functions()
     {
-	unset LIBDEPS FUNCTIONS HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
+	unset LIBDEPS FUNCTIONS PROTOTYPES HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
 	
 	_mk_args
 	
@@ -548,6 +578,19 @@ EOF
 	    mk_check_function \
 		FAIL="$FAIL" \
 		FUNCTION="$_name" \
+		HEADERDEPS="$HEADERDEPS" \
+		CPPFLAGS="$CPPFLAGS" \
+		LDFLAGS="$LDFLAGS" \
+		CFLAGS="$CFLAGS" \
+		LIBDEPS="$LIBDEPS" \
+		"$@"
+	done
+
+	for _proto in ${PROTOTYPES} "$@"
+	do
+	    mk_check_function \
+		FAIL="$FAIL" \
+		PROTOTYPE="$_proto" \
 		HEADERDEPS="$HEADERDEPS" \
 		CPPFLAGS="$CPPFLAGS" \
 		LDFLAGS="$LDFLAGS" \
