@@ -90,6 +90,7 @@ load()
 	_input="`_mk_resolve_input "${INPUT}"`"
 	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
 
+	mkdir -p "`dirname "$_output"`" || mk_fail "Could not create directory `dirname "$_output"`"
 	sed "${_script#;}" < "$_input" > "$_output" || mk_fail "Could not invoke sed"
 
 	mk_add_configure_output "${_output}"
