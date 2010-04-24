@@ -366,6 +366,8 @@ EOF
 	
 	_mk_args
 
+	_saved_cflags="$CFLAGS"
+
 	CFLAGS="$CFLAGS -Wall -Werror"
 	
 	_def="HAVE_`_mk_def_name "$HEADER"`"
@@ -397,6 +399,8 @@ EOF
 	    
 	    mk_cache_export "$_def" "$_result"
 	fi
+
+	CFLAGS="$_saved_cflags"
 	
 	if [ -n "$CACHED" ]
 	then
@@ -425,6 +429,8 @@ EOF
 	unset LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL PROTOTYPE
 	
 	_mk_args
+
+	_saved_CFLAGS="$CFLAGS"
 
 	CFLAGS="$CFLAGS -Wall -Werror"
 	
@@ -486,6 +492,8 @@ EOF
 		mk_export "$_def"="$_result"
 	    fi
 	fi
+
+	CFLAGS="$_saved_CFLAGS"
 	
 	if [ -n "$CACHED" ]
 	then
@@ -515,6 +523,8 @@ EOF
 	
 	_mk_args
 
+	_saved_LIBDEPS="$LIBDEPS"
+
 	LIBDEPS="$LIBDEPS $LIB"
 	
 	_def="HAVE_LIB_`_mk_def_name "$LIB"`"
@@ -543,6 +553,8 @@ EOF
 
 	    mk_cache_export "$_def" "$_result"
 	fi
+
+	LIBDEPS="$_saved_LIBDEPS"
 	
 	if [ -n "$CACHED" ]
 	then
@@ -607,7 +619,7 @@ EOF
 
     mk_check_libraries()
     {
-	unset LIBS LIBRARIES CPPFLAGS LDFLAGS CFLAGS FAIL
+	unset LIBS LIBDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
 	
 	_mk_args
 	
