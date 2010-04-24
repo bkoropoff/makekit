@@ -36,7 +36,9 @@ _mk_process_build_recursive()
     MK_SUBDIR="$1"
     SOURCEDIR="${MK_SOURCE_DIR}${MK_SUBDIR}"
     OBJECTDIR="${MK_OBJECT_DIR}${MK_SUBDIR}"
-    MK_MSG_DOMAIN="${MK_SUBDIR#/}"
+    MK_MSG_DOMAIN="${1#/}"
+
+    mk_msg_verbose "entering"
 
     export MK_SUBDIR
 
@@ -63,6 +65,10 @@ _mk_process_build_recursive()
         # Restore exports
 	_mk_restore_exports "${MK_OBJECT_DIR}${1}/.MetaKitExports"
     done
+
+    MK_MSG_DOMAIN="${1#/}"
+
+    mk_msg_verbose "leaving"
 }
 
 _mk_process_build()
@@ -121,7 +127,7 @@ _mk_begin_exports()
     for _export in ${MK_EXPORTS}
     do
 	_val="`_mk_deref "$_export"`"
-	echo "$_export=`_mk_quote_shell "$_val"`" >&3	
+	echo "$_export=`mk_quote "$_val"`" >&3	
     done
 }
 
@@ -151,13 +157,13 @@ mk_export()
 		_mk_set "$_name" "$_val"
 		export "$_name"
 		MK_EXPORTS="$MK_EXPORTS $_name"
-		echo "$_name=`_mk_quote_shell "$_val"`" >&3
+		echo "$_name=`mk_quote "$_val"`" >&3
 		;;
 	    *)
 		_val="`_mk_deref $_export`"
 		export "$_export"
 		MK_EXPORTS="$MK_EXPORTS $_export"
-		echo "$_export=`_mk_quote_shell "$_val"`" >&3
+		echo "$_export=`mk_quote "$_val"`" >&3
 		;;
 	esac
     done
@@ -200,9 +206,8 @@ _mk_close_config_header()
 
 mk_config_header()
 {
-    unset HEADER
-
-    _mk_args
+    mk_push_vars HEADER
+    mk_parse_params
 
     _mk_close_config_header
 
@@ -216,6 +221,8 @@ mk_config_header()
     mk_msg "creating config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
 
     exec 5>"${MK_CONFIG_HEADER}.new"
+
+    mk_pop_vars
 }
 
 _mk_emit_make_header()

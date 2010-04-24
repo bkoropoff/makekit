@@ -1,3 +1,9 @@
+# Make bash process aliases in non-interactive mode
+if [ -n "$BASH_VERSION" ]
+then
+    shopt -s expand_aliases
+fi
+
 MK_SCRIPT_DIR="${MK_HOME}/script"
 MK_MODULE_DIR="${MK_HOME}/module"
 
@@ -45,7 +51,7 @@ _mk_deref()
 
 _mk_set()
 {
-    eval "${1}=`_mk_quote_shell "${2}"`"
+    eval "${1}=\${2}"
 }
 
 _mk_def_name()
@@ -74,29 +80,24 @@ mk_msg_verbose()
     [ -n "${MK_VERBOSE}" ] && mk_msg "$@"
 }
 
-_mk_set_arg()
+mk_quote()
 {
-    _val="${1#*=}"
-    _name="${1%%=*}"
-    eval "${_name}='${_val}'"
-}
+    __quote=""
+    __rem="$1"
+    while true
+    do
+	__prefix="${__rem%%\'*}"
 
-_mk_quote_shell()
-{
-    case "$1" in
-	*\'*)
-	    # Calling sed is orders of magnitude
-	    # slower than using shell functions and
-	    # builtins, and this function is called
-	    # frequently, so only do it when necessary
-	    printf "'"
-	    printf "%s" "$1" | sed "s:':'\\\'':g"
-	    printf "'\n"
-	    ;;
-	*)
-	    echo "'$1'"
-	    ;;
-    esac
+	if [ "$__prefix" != "$__rem" ]
+	then
+	    __quote="${__quote}${__prefix}'\\''"
+	    __rem="${__rem#*\'}"
+	else
+	    __quote="${__quote}${__rem}"
+	    break
+	fi
+    done
+    echo "'${__quote}'"
 }
 
 _mk_modules_rec()
@@ -149,12 +150,12 @@ _mk_load_modules()
 
 _mk_contains()
 {
-    _needle="$1"
+    ___needle="$1"
     shift
     
-    for _hay in "$@"
+    for ___hay in "$@"
     do
-	if [ "$_hay" = "$_needle" ]
+	if [ "$___hay" = "$___needle" ]
 	then
 	    return 0
 	fi
@@ -163,40 +164,29 @@ _mk_contains()
     return 1
 }
 
-MK_RANDOM_SEED=`date '+%s'`
-
 _mk_random()
 {
+    if [ -z "$MK_RANDOM_SEED" ]
+    then
+	MK_RANDOM_SEED=`date '+%s'`
+	_mk_random
+	_mk_random
+	_mk_random
+	_mk_random
+	_mk_random
+	_mk_random
+	_mk_random
+	_mk_random
+	_mk_random
+    fi
+
     if [ -n "$*" ]
     then
 	echo $(( $MK_RANDOM_SEED % ($2 - $1 + 1) + $1 ))
     fi
+
     MK_RANDOM_SEED=$(( ($MK_RANDOM_SEED * 9301 + 4929) % 233280 ))
 }
-
-_mk_random
-_mk_random
-_mk_random
-_mk_random
-_mk_random
-_mk_random
-_mk_random
-_mk_random
-_mk_random
-
-alias _mk_args='
-while true 
-do
-  case "$1" in
-    *"="*)
-      eval "${1%%=*}=`_mk_quote_shell "${1#*=}"`"
-      shift
-    ;;
-    *)
-      break
-    ;;
-  esac
-done'
 
 mk_command_params()
 {
@@ -208,9 +198,93 @@ mk_command_params()
 	
 	if [ -n "$_val" ]
 	then
-	    _params="$_params $_param=`_mk_quote_shell "$_val"`"
+	    _params="$_params $_param=`mk_quote "$_val"`"
 	fi
     done
 
     echo "${_params# }"
 }
+
+#
+# Extended parameter support
+#
+# The following functions/aliases implement keyword parameters and
+# local variables on top of basic POSIX sh:
+#
+# mk_push_vars var1 [ var2 ... ]
+#
+#   Saves the given list of variables to a safe location and unsets them
+#
+# mk_pop_vars
+#
+#   Restores the variables saved by the last mk_push_vars
+#
+# mk_parse_params
+#
+#   Parses all keyword parameters in $@ and sets them to variables.
+#   Leaves the first non-keyword parameter at $1
+#
+
+if [ -n "$BASH_VERSION" ]
+then
+    # If we are running in bash, implement these features in terms
+    # of the 'local' builtin.  This is much faster than the POSIX sh
+    # versions below.
+    alias mk_parse_params='
+while true 
+do
+  case "$1" in
+    *"="*)
+      local "$1"
+      shift
+    ;;
+    *)
+      break
+    ;;
+  esac
+done'
+    # Simply declare variables we wish to save as local to avoid overwriting them
+    alias mk_push_vars=local
+    # Pop becomes a no-op since local variables go out of scope automatically
+    alias mk_pop_vars=:
+else
+    # These versions work on any POSIX-compliant sh implementation
+    alias mk_parse_params='
+while true 
+do
+  case "$1" in
+    *"="*)
+      eval "${1%%=*}=`mk_quote "${1#*=}"`"
+      shift
+    ;;
+    *)
+      break
+    ;;
+  esac
+done'
+
+    _MK_VAR_SP="0"
+    
+    mk_push_vars()
+    {
+	for ___var in "$@" _MK_VARS
+	do
+	    eval "_MK_VAR_${_MK_VAR_SP}_${___var}=\"\$${___var}\""
+	    unset "$___var"
+	done
+	
+	_MK_VARS="$*"
+	_MK_VAR_SP=$(( $_MK_VAR_SP + 1 ))
+    }
+    
+    mk_pop_vars()
+    {
+	_MK_VAR_SP=$(( $_MK_VAR_SP - 1 ))
+	
+	for ___var in ${_MK_VARS} _MK_VARS
+	do
+	    eval "$___var=\"\$_MK_VAR_${_MK_VAR_SP}_${___var}\""
+	    unset "_MK_VAR_${_MK_VAR_SP}_${___var}"
+	done
+    }
+fi

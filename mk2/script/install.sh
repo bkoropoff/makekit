@@ -3,7 +3,7 @@
 . "${MK_HOME}/mk.sh" || exit 1
 . "./.MetaKitExports" || mk_fail "Could not read .MetaKitExports"
 
-_mk_args
+mk_parse_params
 
 target="$1"
 source="$2"

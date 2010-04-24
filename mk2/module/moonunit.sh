@@ -4,14 +4,15 @@ load()
 {
     mk_moonunit()
     {
-	unset LIBRARY SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS _rsources
-	
 	if [ "$HAVE_MOONUNIT" = no ]
 	then
 	    return 0
 	fi
 
-	_mk_args
+	mk_push_vars LIBRARY SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS
+	mk_parse_params
+
+	unset _rsources
 
 	case "$LIBRARY" in
 	    *)

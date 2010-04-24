@@ -3,7 +3,7 @@
 . "${MK_HOME}/mk.sh" || exit 1
 . "${MK_ROOT_DIR}/.MetaKitExports" || mk_fail "Could not read .MetaKitExports"
 
-_mk_args
+mk_parse_params
 
 object="$1"
 shift 1
@@ -29,8 +29,8 @@ done
 _mk_try mkdir -p "`dirname "$object"`"
 
 {
-    echo "OBJECTS=`_mk_quote_shell "${_ALL_OBJECTS# }"`"
-    echo "LIBDEPS=`_mk_quote_shell "${_ALL_LIBDEPS# }"`"
-    echo "LIBDIRS=`_mk_quote_shell "${_ALL_LIBDIRS# }"`"
-    echo "LDFLAGS=`_mk_quote_shell "${_ALL_LDFLAGS# }"`"
+    echo "OBJECTS=`mk_quote "${_ALL_OBJECTS# }"`"
+    echo "LIBDEPS=`mk_quote "${_ALL_LIBDEPS# }"`"
+    echo "LIBDIRS=`mk_quote "${_ALL_LIBDIRS# }"`"
+    echo "LDFLAGS=`mk_quote "${_ALL_LDFLAGS# }"`"
 } > ${object} || mk_fail "Could not write group: ${object}"

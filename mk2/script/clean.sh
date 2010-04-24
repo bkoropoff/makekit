@@ -4,7 +4,7 @@
 
 MK_MSG_DOMAIN="clean"
 
-_mk_args
+mk_parse_params
 
 for _target in "$@"
 do

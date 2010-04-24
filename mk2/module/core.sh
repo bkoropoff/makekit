@@ -46,32 +46,36 @@ load()
     
     mk_stage()
     {
-	unset OUTPUT COMMAND
-	
-	_mk_args
+	unset OUTPUT
+	mk_push_vars COMMAND
+	mk_parse_params
 	
 	_mk_rule "${MK_STAGE_DIR}${OUTPUT}" "${COMMAND}" "$@"
 
 	mk_add_scrub_target "$OUTPUT"
 	mk_add_all_target "$OUTPUT"
+
+	mk_pop_vars
     }
     
     mk_object()
     {
-	unset OUTPUT COMMAND
-	
-	_mk_args
+	unset OUTPUT
+	mk_push_vars COMMAND
+	mk_parse_params
 	
 	_mk_rule "${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}" "${COMMAND}" "$@"
 	
 	mk_add_clean_target "$OUTPUT"
+
+	mk_pop_vars
     }
 
     mk_output_file()
     {
-	unset INPUT OUTPUT _script
-
-	_mk_args
+	unset OUTPUT _script
+	mk_push_vars INPUT
+	mk_parse_params
 	
 	[ -z "$OUTPUT" ] && OUTPUT="$1"
 	[ -z "$INPUT" ] && INPUT="${OUTPUT}.in"
@@ -95,5 +99,7 @@ load()
 
 	mk_add_configure_output "${_output}"
 	mk_add_configure_input "${_input}"
+
+	mk_pop_vars
     }
 }

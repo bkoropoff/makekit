@@ -4,9 +4,10 @@ load()
 {
     mk_autotools()
     {
-	unset SOURCEDIR HEADERS LIBS LIBDEPS HEADERDEPS CPPFLAGS CFLAGS LDFLAGS _stage_deps
+	mk_push_vars SOURCEDIR HEADERS LIBS LIBDEPS HEADERDEPS CPPFLAGS CFLAGS LDFLAGS
+	mk_parse_params
 
-	_mk_args
+	unset _stage_deps
 
 	_stamp="`echo "$SOURCEDIR" | tr '/.' '__'`"
 	
@@ -70,5 +71,7 @@ load()
 		cd "${MK_ROOT_DIR}"
 	    fi
 	fi
+
+	mk_pop_vars
     }
 }

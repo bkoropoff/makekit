@@ -3,7 +3,7 @@
 . "${MK_HOME}/mk.sh" || exit 1
 mk_import
 
-_mk_args
+mk_parse_params
 
 _object="$1"
 _source="$2"

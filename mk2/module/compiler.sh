@@ -7,9 +7,10 @@ load()
     #
     mk_compile()
     {
-	unset SOURCE COMMAND HEADERDEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC _headers_abs
-		
-	_mk_args
+	mk_push_vars SOURCE COMMAND HEADERDEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
+	mk_parse_params
+
+	unset _headers_abs
 	
 	if [ -z "$SOURCE" ]
 	then
@@ -38,13 +39,16 @@ load()
 	    OUTPUT="$_object" \
 	    COMMAND="\$(SCRIPT)/compile.sh `mk_command_params INCLUDEDIRS CPPFLAGS CFLAGS PIC` \$@ '`_mk_resolve_input "${SOURCE}"`'" \
 	    "${SOURCE}" ${_header_abs}
+
+	mk_pop_vars
     }
     
     mk_library()
     {
-	unset INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
-	
-	_mk_args
+	mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS
+	mk_parse_params
+
+	unset _objects _libs_abs _resolved_objects
 	
 	_mk_emit "#"
 	_mk_emit "# library ${LIB} from ${MK_SUBDIR#/}"
@@ -94,13 +98,16 @@ load()
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
+
+	mk_pop_vars
     }
 
     mk_dso()
     {
-	unset INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
-	
-	_mk_args
+	mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS
+	mk_parse_params
+
+	unset _objects _libs_abs _resolved_objects
 	
 	_mk_emit "#"
 	_mk_emit "# dso ${DSO} from ${MK_SUBDIR#/}"
@@ -146,13 +153,16 @@ load()
 	    OUTPUT="$_library" \
 	    COMMAND="\$(SCRIPT)/link.sh MODE=dso `mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
+
+	mk_pop_vars
     }
 
     mk_group()
     {
-	unset GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS _objects _libs_abs _resolved_objects
-	
-	_mk_args
+	mk_push_vars GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS
+	mk_parse_params
+
+	unset _objects _libs_abs _resolved_objects
 	
 	_mk_emit "#"
 	_mk_emit "# group ${GROUP} from ${MK_SUBDIR#/}"
@@ -189,14 +199,14 @@ load()
     
     mk_program()
     {
-	unset PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS
-	unset HEADERDEPS LIBDIRS INCLUDEDIRS
-	unset _libs_abs _objects _resolved_objects
-	
+	mk_push_vars \
+	    PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS \
+	    LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS INSTALLDIR
 	# Default to installing programs in bin dir
 	INSTALLDIR="${MK_BIN_DIR}"
+	mk_parse_params
 
-	_mk_args
+	unset _libs_abs _objects _resolved_objects
 	
 	_executable="${INSTALLDIR}/${PROGRAM}"
 	
@@ -232,13 +242,16 @@ load()
 	    OUTPUT="$_executable" \
 	    COMMAND="\$(SCRIPT)/link.sh MODE=program `mk_command_params GROUPS LIBDEPS LDFLAGS` \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
+
+	mk_pop_vars
     }
     
     mk_headers()
     {
-	unset HEADERS MASTER _all_headers
+	mk_push_vars HEADERS MASTER
+	mk_parse_params
 	
-	_mk_args
+	unset _all_headers
 	
 	_mk_emit "#"
 	_mk_emit "# headers from ${MK_SUBDIR#/}"
@@ -266,6 +279,8 @@ load()
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 	done
+
+	mk_pop_vars
     }
 
     #
@@ -339,9 +354,8 @@ load()
     
     mk_try_compile()
     {
-	unset HEADERDEPS
-	
-	_mk_args
+	mk_push_vars HEADERDEPS
+	mk_parse_params
 	
 	{
 	    for _include in ${HEADERDEPS}
@@ -357,19 +371,18 @@ ${CODE}
 EOF
 	} | _mk_build_test 'compile' 'try-compile'
     
-	return "$?"
-    }   
+	_ret="$?"
+
+	mk_pop_vars
+
+	return "$_ret"
+    }
     
     mk_check_header()
     {
-	unset HEADER FAIL CPPFLAGS CFLAGS
-	
-	_mk_args
+	mk_push_vars HEADER FAIL CPPFLAGS CFLAGS
+	mk_parse_params
 
-	_saved_cflags="$CFLAGS"
-
-	CFLAGS="$CFLAGS -Wall -Werror"
-	
 	_def="HAVE_`_mk_def_name "$HEADER"`"
 	
 	if mk_check_cache "$_def"
@@ -400,8 +413,6 @@ EOF
 	    mk_cache_export "$_def" "$_result"
 	fi
 
-	CFLAGS="$_saved_cflags"
-	
 	if [ -n "$CACHED" ]
 	then
 	    mk_msg "header $HEADER: $_result (cached)"
@@ -412,6 +423,7 @@ EOF
 	case "$_result" in
 	    external|internal)
 		mk_define "$_def" ""
+		mk_pop_vars
 		return 0
 		;;
 	    no)
@@ -419,6 +431,7 @@ EOF
 		then
 		    mk_fail "missing header: $HEADER"
 		fi
+		mk_pop_vars
 		return 1
 		;;
 	esac
@@ -426,14 +439,9 @@ EOF
     
     mk_check_function()
     {
-	unset LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL PROTOTYPE
-	
-	_mk_args
+	mk_push_vars LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL PROTOTYPE
+	mk_parse_params
 
-	_saved_CFLAGS="$CFLAGS"
-
-	CFLAGS="$CFLAGS -Wall -Werror"
-	
 	if [ -n "$PROTOTYPE" ]
 	then
 	    _parts="`echo "$PROTOTYPE" | sed 's/^\(.*[^a-zA-Z_]\)\([a-zA-Z_][a-zA-Z0-9_]*\) *(\([^)]*\)).*$/\1|\2|\3/g'`"
@@ -493,8 +501,6 @@ EOF
 	    fi
 	fi
 
-	CFLAGS="$_saved_CFLAGS"
-	
 	if [ -n "$CACHED" ]
 	then
 	    mk_msg "function $_checkname: $_result (cached)"
@@ -505,6 +511,7 @@ EOF
 	case "$_result" in
 	    yes)
 		mk_define "$_def" ""
+		mk_pop_vars
 		return 0
 		;;
 	    no)
@@ -512,6 +519,7 @@ EOF
 		then
 		    mk_fail "missing function: $FUNCTION"
 		fi
+		mk_pop_vars
 		return 1
 		;;
 	esac
@@ -519,11 +527,8 @@ EOF
 
     mk_check_library()
     {
-	unset LIBDEPS LIB CPPFLAGS LDFLAGS CFLAGS FAIL
-	
-	_mk_args
-
-	_saved_LIBDEPS="$LIBDEPS"
+	mk_push_vars LIBDEPS LIB CPPFLAGS LDFLAGS CFLAGS FAIL
+	mk_parse_params
 
 	LIBDEPS="$LIBDEPS $LIB"
 	
@@ -554,8 +559,6 @@ EOF
 	    mk_cache_export "$_def" "$_result"
 	fi
 
-	LIBDEPS="$_saved_LIBDEPS"
-	
 	if [ -n "$CACHED" ]
 	then
 	    mk_msg "library $LIB: $_result (cached)"
@@ -566,6 +569,7 @@ EOF
 	case "$_result" in
 	    external|internal)
 		mk_export "LIB_`_mk_def_name "$LIB"`=$LIB"
+		mk_pop_vars
 		return 0
 		;;
 	    no)
@@ -574,6 +578,7 @@ EOF
 		    mk_fail "missing library: $LIB"
 		fi
 		mk_export "LIB_`_mk_def_name "$LIB"`="
+		mk_pop_vars
 		return 1
 		;;
 	esac
@@ -581,9 +586,8 @@ EOF
     
     mk_check_functions()
     {
-	unset LIBDEPS FUNCTIONS PROTOTYPES HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
-	
-	_mk_args
+	mk_push_vars LIBDEPS FUNCTIONS PROTOTYPES HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
+	mk_parse_params
 	
 	for _name in ${FUNCTIONS} "$@"
 	do
@@ -615,13 +619,14 @@ EOF
 	    IFS=";"
 	done
 	IFS="$_ifs"
+
+	mk_pop_vars
     }
 
     mk_check_libraries()
     {
-	unset LIBS LIBDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
-	
-	_mk_args
+	mk_push_vars LIBS LIBDEPS CPPFLAGS LDFLAGS CFLAGS FAIL
+	mk_parse_params
 	
 	for _name in ${LIBS} "$@"
 	do
@@ -634,13 +639,14 @@ EOF
 		LIBDEPS="$LIBDEPS" \
 		"$@"
 	done
+
+	mk_pop_vars
     }
     
     mk_check_headers()
     {
-	unset HEADERS FAIL CPPFLAGS CFLAGS
-	
-	_mk_args
+	mk_push_vars HEADERS FAIL CPPFLAGS CFLAGS
+	mk_parse_params
 	
 	for _name in ${HEADERS} "$@"
 	do
@@ -651,6 +657,8 @@ EOF
 		CFLAGS="$CFLAGS" \
 		"$@"
 	done
+
+	mk_pop_vars
     }
 }
 
