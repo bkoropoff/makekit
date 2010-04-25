@@ -12,8 +12,8 @@ MK_MSG_DOMAIN="configure"
 
 mk_msg "$SOURCEDIR"
 
-_mk_try mkdir -p "${MK_OBJECT_DIR}${MK_SUBDIR}/${SOURCEDIR}"
-_mk_try mkdir -p "${MK_STAGE_DIR}"
+mk_mkdir "${MK_OBJECT_DIR}${MK_SUBDIR}/${SOURCEDIR}"
+mk_mkdir "${MK_STAGE_DIR}"
 
 _src_dir="`cd ${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR} && pwd`"
 _stage_dir="`cd ${MK_STAGE_DIR} && pwd`"

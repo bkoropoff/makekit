@@ -28,7 +28,7 @@ then
 fi
 
 mk_msg "${_source#${MK_SOURCE_DIR}/}"
-_mk_try mkdir -p "`dirname "$_object"`" "${MK_ROOT_DIR}/.MetaKitDeps"
+mk_mkdir "`dirname "$_object"`" "${MK_ROOT_DIR}/.MetaKitDeps"
 _mk_try ${MK_CC} \
     ${MK_CPPFLAGS} ${CPPFLAGS} ${EXTRA_CPPFLAGS} \
     ${MK_CFLAGS} ${CFLAGS} ${EXTRA_CFLAGS} \

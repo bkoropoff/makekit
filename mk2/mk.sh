@@ -9,7 +9,7 @@ MK_MODULE_DIR="${MK_HOME}/module"
 
 _mk_try()
 {
-    mk_msg_verbose "run: $@"
+    mk_msg_verbose "=> $*"
 
     _output=`"$@" 2>&1`
     _ret=$?
@@ -42,6 +42,14 @@ mk_fail()
 {
     mk_msg "ERROR: $@" >&2
     exit 1
+}
+
+mk_mkdir()
+{
+    for __dir in "$@"
+        do
+	mkdir -p "$__dir" || mk_fail "Could not create directory: $__dir"
+    done
 }
 
 _mk_deref()

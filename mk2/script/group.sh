@@ -26,7 +26,7 @@ do
     _ALL_LDFLAGS="$_ALL_LDFLAGS $LDFLAGS"
 done
 
-_mk_try mkdir -p "`dirname "$object"`"
+mk_mkdir "`dirname "$object"`"
 
 {
     echo "OBJECTS=`mk_quote "${_ALL_OBJECTS# }"`"

@@ -11,5 +11,5 @@ source="$2"
 MK_MSG_DOMAIN="install"
 
 mk_msg "${target#${MK_STAGE_DIR}}"
-_mk_try mkdir -p "`dirname "$target"`"
+mk_mkdir "`dirname "$target"`"
 _mk_try cp "$source" "$target"

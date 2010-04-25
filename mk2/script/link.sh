@@ -41,7 +41,7 @@ done
 MK_MSG_DOMAIN="link"
 
 mk_msg "${object#${MK_STAGE_DIR}}"
-_mk_try mkdir -p "`dirname "$object"`"
+mk_mkdir "`dirname "$object"`"
 case "$MODE" in
     library)
 	_mk_try ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
