@@ -31,7 +31,7 @@ load()
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
-		_header_abs="$header_abs ${MK_INCLUDE_DIR}/${_header}"
+		_header_abs="$_header_abs ${MK_INCLUDE_DIR}/${_header}"
 	    fi
 	done
 	
@@ -195,6 +195,8 @@ load()
 	    OUTPUT="$GROUP" \
 	    COMMAND="\$(SCRIPT)/group.sh `mk_command_params GROUPDEPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects} ${GROUPDEPS}
+
+	mk_pop_vars
     }
     
     mk_program()
@@ -248,22 +250,31 @@ load()
     
     mk_headers()
     {
-	mk_push_vars HEADERS MASTER
+	mk_push_vars HEADERS MASTER INSTALLDIR HEADERDEPS
+	INSTALLDIR="${MK_INCLUDE_DIR}"
 	mk_parse_params
 	
-	unset _all_headers
+	unset _all_headers _header_abs
 	
 	_mk_emit "#"
 	_mk_emit "# headers from ${MK_SUBDIR#/}"
 	_mk_emit "#"
 	_mk_emit ""
 	
+	for _header in ${HEADERDEPS}
+	do
+	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
+	    then
+		_header_abs="$_header_abs ${MK_INCLUDE_DIR}/${_header}"
+	    fi
+	done
+
 	for _header in ${HEADERS}
 	do
 	    mk_stage \
-	        OUTPUT="${MK_INCLUDE_DIR}/${_header}" \
+	        OUTPUT="${INSTALLDIR}/${_header}" \
 		COMMAND="\$(SCRIPT)/install.sh \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
-		"${_header}"
+		"${_header}" ${_header_abs}
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 
@@ -273,9 +284,9 @@ load()
 	for _header in ${MASTER}
 	do
 	    mk_stage \
-		OUTPUT="${MK_INCLUDE_DIR}/${_header}" \
+		OUTPUT="${INSTALLDIR}/${_header}" \
 		COMMAND="\$(SCRIPT)/install.sh \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
-		"${_header}" ${_all_headers}
+		"${_header}" ${_all_headers} ${_header_abs}
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 	done
@@ -422,7 +433,7 @@ EOF
 	
 	case "$_result" in
 	    external|internal)
-		mk_define "$_def" ""
+		mk_define "$_def" "1"
 		mk_pop_vars
 		return 0
 		;;
@@ -510,7 +521,7 @@ EOF
 	
 	case "$_result" in
 	    yes)
-		mk_define "$_def" ""
+		mk_define "$_def" "1"
 		mk_pop_vars
 		return 0
 		;;
