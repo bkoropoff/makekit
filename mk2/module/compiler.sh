@@ -394,6 +394,8 @@ EOF
 	mk_push_vars HEADER FAIL CPPFLAGS CFLAGS
 	mk_parse_params
 
+	CFLAGS="$CFLAGS -Wall -Werror"
+
 	_def="HAVE_`_mk_def_name "$HEADER"`"
 	
 	if mk_check_cache "$_def"
@@ -452,6 +454,10 @@ EOF
     {
 	mk_push_vars LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL PROTOTYPE
 	mk_parse_params
+
+	unset CACHED
+
+	CFLAGS="$CFLAGS -Wall -Werror"
 
 	if [ -n "$PROTOTYPE" ]
 	then
@@ -541,6 +547,7 @@ EOF
 	mk_push_vars LIBDEPS LIB CPPFLAGS LDFLAGS CFLAGS FAIL
 	mk_parse_params
 
+	CFLAGS="$CFLAGS -Wall -Werror"
 	LIBDEPS="$LIBDEPS $LIB"
 	
 	_def="HAVE_LIB_`_mk_def_name "$LIB"`"
