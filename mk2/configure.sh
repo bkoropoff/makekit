@@ -12,10 +12,9 @@ _mk_emitf()
     printf "$@" >&6
 }
 
-_mk_process_build_file()
+_mk_process_build_module()
 {
     MK_BUILD_FILES="$MK_BUILD_FILES $1"
-
     unset configure make SUBDIRS
 
     . "$1" || mk_fail "Could not read $1"
@@ -31,57 +30,88 @@ _mk_process_build_file()
     esac
 }
 
+_mk_process_build_configure()
+{
+    MK_BUILD_FILES="$MK_BUILD_FILES ${MK_SOURCE_DIR}$1/MetaKitBuild"
+    unset configure make SUBDIRS
+
+    mk_safe_source "${MK_SOURCE_DIR}$1/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    
+    case "`type configure 2>&1`" in
+	*"function"*)
+	    MK_SUBDIR="$1"
+	    mk_msg_verbose "configuring"
+	    configure
+    esac
+}
+
+_mk_process_build_make()
+{
+    unset configure make SUBDIRS
+
+    mk_safe_source "${MK_SOURCE_DIR}$1/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    
+    case "`type make 2>&1`" in
+	*"function"*)
+	    MK_SUBDIR="$1"
+	    mk_msg_verbose "emitting make rules"
+	    make
+    esac
+}
+
 _mk_process_build_recursive()
 {
-    MK_SUBDIR="$1"
-    SOURCEDIR="${MK_SOURCE_DIR}${MK_SUBDIR}"
-    OBJECTDIR="${MK_OBJECT_DIR}${MK_SUBDIR}"
+    mk_push_vars MK_MSG_DOMAIN _preorder_make
+
     MK_MSG_DOMAIN="${1#/}"
-
-    mk_msg_verbose "entering"
-
-    export MK_SUBDIR
 
     if [ -z "$MK_MSG_DOMAIN" ]
     then
 	MK_MSG_DOMAIN="`(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")`"
     fi
 
-    mkdir -p "${OBJECTDIR}" || mk_fail "Could not create directory: ${OBJECTDIR}"
+    mk_mkdir "${MK_OBJECT_DIR}$1"
 
     # Begin exports file
-    _mk_begin_exports "${MK_OBJECT_DIR}${MK_SUBDIR}/.MetaKitExports"
+    _mk_begin_exports "${MK_OBJECT_DIR}$1/.MetaKitExports"
 
-    # Process build file
-    _mk_process_build_file "${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild"
+    # Process configure stage
+    _mk_process_build_configure "$1"
 
     # Finish exports files
     _mk_end_exports
 
     for _dir in ${SUBDIRS}
     do
-	_mk_process_build_recursive "$1/${_dir}"
-
-        # Restore exports
-	_mk_restore_exports "${MK_OBJECT_DIR}${1}/.MetaKitExports"
+	if [ "$_dir" = "." ]
+	then
+	    # Process make stage before children
+	    _preorder_make=yes
+	    _mk_process_build_make "$1"
+	else
+	    _mk_process_build_recursive "$1/${_dir}"
+	    _mk_restore_exports "${MK_OBJECT_DIR}${1}/.MetaKitExports"
+	fi
     done
 
-    MK_MSG_DOMAIN="${1#/}"
+    # Process make stage if we didn't do it before child directories
+    if [ -z "$_preorder_make" ]
+    then
+	_mk_process_build_make "$1"
+    fi
 
-    mk_msg_verbose "leaving"
+    mk_pop_vars
 }
 
 _mk_process_build()
 {
     MK_SUBDIR=":"
 
-    export MK_SUBDIR
-
     # Run build functions for all modules
     for _module in `_mk_modules`
     do
 	MK_MSG_DOMAIN="$_module"
-	_mk_process_build_file "${MK_HOME}/module/${_module}.sh"
+	_mk_process_build_module "${MK_HOME}/module/${_module}.sh"
     done
 
     # Run build functions for project
