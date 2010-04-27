@@ -7,6 +7,17 @@ else
     MK_HOME="`dirname "${0}"`"
 fi
 
-export MK_HOME
+SHELL_CANDIDATES='/bin/dash /usr/bin/bash /usr/local/bin/bash /bin/sh'
 
-"${MK_HOME}/configure.sh" "$@"
+for _shell in ${SHELL_CANDIDATES}
+do
+    if [ -x "$_shell" ]
+    then
+	MK_SHELL="$_shell"
+	break
+    fi
+done
+
+export MK_HOME MK_SHELL
+
+$MK_SHELL "${MK_HOME}/configure.sh" "$@"

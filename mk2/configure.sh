@@ -272,7 +272,7 @@ _mk_emit_make_header()
     _mk_emit "MK_HOME='${MK_HOME}'"
     _mk_emit "MK_SCRIPT_DIR='${MK_SCRIPT_DIR}'"
     _mk_emit "MK_ROOT_DIR='${MK_ROOT_DIR}'"
-    _mk_emit "MK_SHELL=/bin/sh"
+    _mk_emit "MK_SHELL=${MK_SHELL}"
     _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR=\$\${MK_SUBDIR} MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_SCRIPT_DIR)"
     _mk_emit ""
     _mk_emit "default: all"
@@ -377,7 +377,7 @@ exec 6>Makefile
 MK_MAKEFILE_FD=6
 
 # Export basic variables
-mk_export MK_HOME MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_OPTIONS
+mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_OPTIONS
 
 # Emit Makefile header
 _mk_emit_make_header
