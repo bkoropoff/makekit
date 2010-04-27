@@ -8,7 +8,7 @@ mk_parse_params
 _object="$1"
 _source="$2"
 
-EXTRA_CPPFLAGS="-I${MK_STAGE_DIR}${MK_INCLUDE_DIR} -DHAVE_CONFIG_H"
+EXTRA_CPPFLAGS="-I${MK_STAGE_DIR}${MK_INCLUDEDIR} -DHAVE_CONFIG_H"
 
 for _dir in ${INCLUDEDIRS}
 do
@@ -19,7 +19,8 @@ MK_MSG_DOMAIN="compile"
 
 if [ -z "$DISABLE_DEPGEN" ]
 then
-    DEP_FLAGS="-MMD -MP -MF ${MK_ROOT_DIR}/.MetaKitDeps/`echo ${_object%.o} | tr / _`.dep"
+    mk_mkdir ".MetaKitDeps"
+    DEP_FLAGS="-MMD -MP -MF .MetaKitDeps/`echo ${_object%.o} | tr / _`.dep"
 fi
 
 if [ "$PIC" = "yes" ]
@@ -28,7 +29,7 @@ then
 fi
 
 mk_msg "${_source#${MK_SOURCE_DIR}/}"
-mk_mkdir "`dirname "$_object"`" "${MK_ROOT_DIR}/.MetaKitDeps"
+mk_mkdir "`dirname "$_object"`"
 _mk_try ${MK_CC} \
     ${MK_CPPFLAGS} ${CPPFLAGS} ${EXTRA_CPPFLAGS} \
     ${MK_CFLAGS} ${CFLAGS} ${EXTRA_CFLAGS} \

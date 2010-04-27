@@ -32,7 +32,7 @@ load()
 
 	mk_object \
 	    OUTPUT="$_stub" \
-	    COMMAND="echo [moonunit] ${MK_SUBDIR#/}/${_stub}; moonunit-stub CPPFLAGS='$MK_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDE_DIR}' -o \$@${_rsources}" \
+	    COMMAND="echo [moonunit] ${MK_SUBDIR#/}/${_stub}; moonunit-stub CPPFLAGS='$MK_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}' -o \$@${_rsources}" \
 	    ${SOURCES}
 	
 	SOURCES="$SOURCES $_stub"
@@ -82,7 +82,7 @@ postmake()
     then
 	_mk_emitf "test: ${MK_MOONUNIT_TESTS}\n"
 	_mk_emitf "\t@echo [test] running moonunit tests; env LD_LIBRARY_PATH='%s' moonunit%s\n\n" \
-	    "${MK_STAGE_DIR}${MK_LIB_DIR}" \
+	    "${MK_STAGE_DIR}${MK_LIBDIR}" \
 	    "${MK_MOONUNIT_TESTS}"
     fi
 }

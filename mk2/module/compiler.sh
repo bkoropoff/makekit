@@ -10,7 +10,7 @@ load()
 	mk_push_vars SOURCE COMMAND HEADERDEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
 	mk_parse_params
 
-	unset _headers_abs
+	unset _header_abs
 	
 	if [ -z "$SOURCE" ]
 	then
@@ -31,7 +31,7 @@ load()
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
-		_header_abs="$_header_abs ${MK_INCLUDE_DIR}/${_header}"
+		_header_abs="$_header_abs ${MK_INCLUDEDIR}/${_header}"
 	    fi
 	done
 	
@@ -62,7 +62,7 @@ load()
 		;;
 	    *)
 		_cmd="mk_stage"
-		_library="${MK_LIB_DIR}/lib${LIB}${MK_LIB_EXT}"
+		_library="${MK_LIBDIR}/lib${LIB}${MK_LIB_EXT}"
 		;;
 	esac
 
@@ -88,7 +88,7 @@ load()
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 	
@@ -121,7 +121,7 @@ load()
 		;;
 	    *)
 		_cmd="mk_stage"
-		_library="${MK_LIB_DIR}/${DSO}${MK_DSO_EXT}"
+		_library="${MK_LIBDIR}/${DSO}${MK_DSO_EXT}"
 		;;
 	esac
 	
@@ -145,7 +145,7 @@ load()
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 	
@@ -187,7 +187,7 @@ load()
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 
@@ -205,7 +205,7 @@ load()
 	    PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS \
 	    LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS INSTALLDIR
 	# Default to installing programs in bin dir
-	INSTALLDIR="${MK_BIN_DIR}"
+	INSTALLDIR="${MK_BINDIR}"
 	mk_parse_params
 
 	unset _libs_abs _objects _resolved_objects
@@ -236,7 +236,7 @@ load()
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 	
@@ -251,7 +251,7 @@ load()
     mk_headers()
     {
 	mk_push_vars HEADERS MASTER INSTALLDIR HEADERDEPS
-	INSTALLDIR="${MK_INCLUDE_DIR}"
+	INSTALLDIR="${MK_INCLUDEDIR}"
 	mk_parse_params
 	
 	unset _all_headers _header_abs
@@ -265,7 +265,7 @@ load()
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
-		_header_abs="$_header_abs ${MK_INCLUDE_DIR}/${_header}"
+		_header_abs="$_header_abs ${MK_INCLUDEDIR}/${_header}"
 	    fi
 	done
 

@@ -19,12 +19,12 @@ load()
 
 	for _lib in ${LIBDEPS}
 	do
-	    _stage_deps="$_stage_deps ${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    _stage_deps="$_stage_deps ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	done
 	
 	for _header in ${HEADERDEPS}
 	do
-	    _stage_deps="$_stage_deps ${MK_INCLUDE_DIR}/${_header}"
+	    _stage_deps="$_stage_deps ${MK_INCLUDEDIR}/${_header}"
 	done
 	
 	mk_object \
@@ -40,19 +40,19 @@ load()
 	# Add dummy rules for headers or libraries built by this component
 	for _header in ${HEADERS}
 	do
-	    _mk_emit "${MK_STAGE_DIR}${MK_INCLUDE_DIR}/${_header}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
+	    _mk_emit "${MK_STAGE_DIR}${MK_INCLUDEDIR}/${_header}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
 	    _mk_emit ""
 
-	    mk_add_all_target "${MK_INCLUDE_DIR}/${_header}"
+	    mk_add_all_target "${MK_INCLUDEDIR}/${_header}"
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 	done
 
 	for _lib in ${LIBS}
 	do
-	    _mk_emit "${MK_STAGE_DIR}${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
+	    _mk_emit "${MK_STAGE_DIR}${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
 	    _mk_emit ""
 
-	    mk_add_all_target "${MK_LIB_DIR}/lib${_lib}${MK_LIB_EXT}"
+	    mk_add_all_target "${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $_lib"
 	done
 

@@ -71,6 +71,44 @@ load()
 	mk_pop_vars
     }
 
+    mk_install_file()
+    {
+	mk_push_vars FILE INSTALLFILE INSTALLDIR MODE
+	mk_parse_params
+
+	_input="`_mk_resolve_input "$FILE"`"
+
+	if [ -z "$INSTALLFILE" ]
+	then
+	    INSTALLFILE="$INSTALLDIR/$INSTALLFILE"
+	fi
+
+	mk_stage \
+	    OUTPUT="$INSTALLFILE" \
+	    COMMAND="\$(SCRIPT)/install.sh `mk_command_params MODE` \$@ '$_input'" \
+	    "$FILE" "$@"
+
+	mk_pop_vars
+    }
+
+    mk_install_files()
+    {
+	mk_push_vars INSTALLDIR FILES MODE
+	mk_parse_params
+
+	unset _inputs
+
+	for _file in ${FILES} "$@"
+	do
+	    mk_install_file \
+		INSTALLDIR="$INSTALLDIR" \
+		FILE="$_file" \
+		MODE="$MODE"
+	done
+
+	mk_pop_vars
+    }
+
     mk_output_file()
     {
 	unset OUTPUT _script
@@ -94,8 +132,8 @@ load()
 	_input="`_mk_resolve_input "${INPUT}"`"
 	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
 
-	mkdir -p "`dirname "$_output"`" || mk_fail "Could not create directory `dirname "$_output"`"
-	sed "${_script#;}" < "$_input" > "$_output" || mk_fail "Could not invoke sed"
+	mk_mkdir "`dirname "$_output"`"
+	sed "${_script#;}" < "$_input" > "$_output" || mk_fail "failed to generate $_output"
 
 	mk_add_configure_output "${_output}"
 	mk_add_configure_input "${_input}"

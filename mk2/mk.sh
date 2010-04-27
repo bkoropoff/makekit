@@ -11,13 +11,13 @@ _mk_try()
 {
     mk_msg_verbose "=> $*"
 
-    _output=`"$@" 2>&1`
-    _ret=$?
+    ___output=`"$@" 2>&1`
+    ___ret=$?
 
-    if [ $_ret -ne 0 ]
+    if [ $___ret -ne 0 ]
     then
 	mk_msg "FAILED: $@"
-	echo "$_output"
+	echo "$___output"
 	exit 1
     fi
 }
