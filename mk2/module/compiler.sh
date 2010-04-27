@@ -221,7 +221,7 @@ load()
 	do
 	    mk_compile \
 		SOURCE="$_source" \
-		HEADERDEPSS="$HEADERDEPS" \
+		HEADERDEPS="$HEADERDEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS"
@@ -325,7 +325,7 @@ load()
 	
 	case "${1}" in
 	    compile)
-		"${MK_SCRIPT_DIR}/compile.sh" \
+		${MK_SHELL} "${MK_SCRIPT_DIR}/compile.sh" \
 		    DISABLE_DEPGEN=yes \
 		    CPPFLAGS="$CPPFLAGS" \
 		    CFLAGS="$CFLAGS" \
@@ -334,7 +334,7 @@ load()
 		 rm -f "${__test}.o"
 		 ;;
 	    link-program)
-		"${MK_SCRIPT_DIR}/link.sh" \
+		${MK_SHELL} "${MK_SCRIPT_DIR}/link.sh" \
 		    MODE=program \
 		    LIBDEPS="$LIBDEPS" \
 		    LDFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" \
