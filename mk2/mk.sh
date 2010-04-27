@@ -57,6 +57,11 @@ _mk_deref()
     eval echo "\"\$$1\""
 }
 
+mk_get()
+{
+    eval RET="\"\$$1\""
+}
+
 _mk_set()
 {
     eval "${1}=\${2}"
@@ -90,7 +95,7 @@ mk_msg_verbose()
 
 mk_quote()
 {
-    __quote=""
+    RET=""
     __rem="$1"
     while true
     do
@@ -98,14 +103,15 @@ mk_quote()
 
 	if [ "$__prefix" != "$__rem" ]
 	then
-	    __quote="${__quote}${__prefix}'\\''"
+	    RET="${RET}${__prefix}'\\''"
 	    __rem="${__rem#*\'}"
 	else
-	    __quote="${__quote}${__rem}"
+	    RET="${RET}${__rem}"
 	    break
 	fi
     done
-    echo "'${__quote}'"
+
+    RET="'${RET}'"
 }
 
 _mk_modules_rec()
@@ -202,15 +208,16 @@ mk_command_params()
 
     for _param in "$@"
     do
-	_val="`_mk_deref "$_param"`"
+	mk_get "$_param"
 	
-	if [ -n "$_val" ]
+	if [ -n "$RET" ]
 	then
-	    _params="$_params $_param=`mk_quote "$_val"`"
+	    mk_quote "$RET"
+	    _params="$_params $_param=$RET"
 	fi
     done
 
-    echo "${_params# }"
+    RET="$_params"
 }
 
 #
@@ -262,7 +269,7 @@ while true
 do
   case "$1" in
     *"="*)
-      eval "${1%%=*}=`mk_quote "${1#*=}"`"
+      _mk_set "${1%%=*}" "${1#*=}"
       shift
     ;;
     *)

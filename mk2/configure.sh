@@ -120,17 +120,14 @@ _mk_process_build()
 
 mk_option()
 {
-    _name="$1"
-    _default="$2"
-
     _IFS="$IFS"
     IFS='
 '
     for _arg in ${MK_OPTIONS}
     do
 	case "$_arg" in
-	    "--${_name}="*)
-		echo "$_arg" | sed 's/^[^=]*=//'
+	    "--$2="*)
+		_mk_set "$1" "${_arg#*=}"
 		IFS="$_IFS"
 		return 0
 		;;
@@ -139,14 +136,12 @@ mk_option()
 
     IFS="$_IFS"
 
-    if [ "$#" -eq '2' ]
+    if [ "$#" -eq '3' ]
     then
-	echo "$_default"
+	_mk_set "$1" "$3"
     else
-	mk_fail "Option not specified: $_name"
+	mk_fail "Option not specified: $2"
     fi
-
-    set +x
 }
 
 _mk_begin_exports()
@@ -156,8 +151,9 @@ _mk_begin_exports()
 
     for _export in ${MK_EXPORTS}
     do
-	_val="`_mk_deref "$_export"`"
-	echo "$_export=`mk_quote "$_val"`" >&3	
+	mk_get "$_export"
+	mk_quote "$RET"
+	echo "$_export=$RET" >&3
     done
 }
 
@@ -185,15 +181,15 @@ mk_export()
 		_val="${1#*=}"
 		_name="${1%%=*}"
 		_mk_set "$_name" "$_val"
-		export "$_name"
 		MK_EXPORTS="$MK_EXPORTS $_name"
-		echo "$_name=`mk_quote "$_val"`" >&3
+		mk_quote "$_val"
+		echo "$_name=$RET" >&3
 		;;
 	    *)
-		_val="`_mk_deref $_export`"
-		export "$_export"
+		mk_get "$_export"
 		MK_EXPORTS="$MK_EXPORTS $_export"
-		echo "$_export=`mk_quote "$_val"`" >&3
+		mk_quote "$RET"
+		echo "$_export=$RET" >&3
 		;;
 	esac
     done
@@ -207,12 +203,12 @@ mk_define()
 	
 	if [ "$#" -eq '2' ]
 	then
-	    _val="$2"
+	    RET="$2"
 	else
-	    _val="`_mk_deref "$_name"`"
+	    mk_get "$_name"
 	fi
 	
-	echo "#define $_name $_val" >&5
+	echo "#define $_name $RET" >&5
     fi
 }
 
@@ -252,7 +248,7 @@ mk_config_header()
 
     mkdir -p "`dirname "${MK_CONFIG_HEADER}"`"
 
-    mk_msg "creating config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
+    mk_msg "config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
 
     exec 5>"${MK_CONFIG_HEADER}.new"
 
@@ -363,11 +359,13 @@ mk_msg "initializing"
 # Load all modules
 _mk_load_modules
 
+MK_MSG_DOMAIN="metakit"
+
 # Set up basic variables
 MK_ROOT_DIR="`pwd`"
-MK_SOURCE_DIR="`mk_option sourcedir 'source'`"
-MK_OBJECT_DIR="`mk_option objectdir 'object'`"
-MK_STAGE_DIR="`mk_option stagedir 'stage'`"
+mk_option MK_SOURCE_DIR sourcedir 'source'
+mk_option MK_OBJECT_DIR objectdir 'object'
+mk_option MK_STAGE_DIR stagedir 'stage'
 
 # Begin saving exports
 _mk_begin_exports ".MetaKitExports"
@@ -377,6 +375,7 @@ exec 6>Makefile
 MK_MAKEFILE_FD=6
 
 # Export basic variables
+export MK_HOME MK_SHELL MK_ROOT_DIR
 mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_OPTIONS
 
 # Emit Makefile header
@@ -398,6 +397,7 @@ _mk_close_config_header
 exec 4>&-
 
 # Dispense wisdom
+
 _fortunes="${MK_HOME}/fortunes"
 if [ -f "$_fortunes" ]
 then

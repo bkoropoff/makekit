@@ -22,7 +22,8 @@ load()
 
 	for _source in ${SOURCES}
 	do
-	    _rsources="$_rsources `_mk_resolve_input "$_source"`"
+	    mk_resolve_input "$_source"
+	    _rsources="$_rsources $RET"
 	done
 
 	for _dir in ${INCLUDEDIRS}

@@ -35,9 +35,14 @@ load()
 	    fi
 	done
 	
+	mk_resolve_input "${SOURCE}"
+	_res="$RET"
+	mk_command_params INCLUDEDIRS CPPFLAGS CFLAGS PIC
+	_params="$RET"
+
 	mk_object \
 	    OUTPUT="$_object" \
-	    COMMAND="\$(SCRIPT)/compile.sh `mk_command_params INCLUDEDIRS CPPFLAGS CFLAGS PIC` \$@ '`_mk_resolve_input "${SOURCE}"`'" \
+	    COMMAND="\$(SCRIPT)/compile.sh $_params \$@ '$_res'" \
 	    "${SOURCE}" ${_header_abs}
 
 	mk_pop_vars
@@ -66,8 +71,6 @@ load()
 		;;
 	esac
 
-
-	
 	for _source in ${SOURCES}
 	do
 	    mk_compile \
@@ -79,7 +82,8 @@ load()
 		PIC="yes"
 	    
 	    _objects="$_objects $OUTPUT"
-	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
+	    mk_resolve_input "$OUTPUT"
+	    _resolved_objects="$_resolved_objects '$RET'"
 	done
 	
 	_objects="$_objects ${GROUPS}"
@@ -91,10 +95,12 @@ load()
 		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
+
+	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=library `mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=library $RET \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -136,7 +142,8 @@ load()
 		PIC="yes"
 	    
 	    _objects="$_objects $OUTPUT"
-	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
+	    mk_resolve_input "$OUTPUT"
+	    _resolved_objects="$_resolved_objects '$RET'"
 	done
 	
 	_objects="$_objects ${GROUPS}"
@@ -149,9 +156,11 @@ load()
 	    fi
 	done
 	
+	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS
+
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=dso `mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=dso $RET \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 
 	mk_pop_vars
@@ -180,7 +189,8 @@ load()
 		PIC="yes"
 	    
 	    _objects="$_objects $OUTPUT"
-	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
+	    mk_resolve_input "$OUTPUT"
+	    _resolved_objects="$_resolved_objects '$RET'"
 	done
 	
 	for _lib in ${LIBDEPS}
@@ -191,9 +201,11 @@ load()
 	    fi
 	done
 
+	mk_command_params GROUPDEPS LIBDEPS LIBDIRS LDFLAGS
+
 	mk_object \
 	    OUTPUT="$GROUP" \
-	    COMMAND="\$(SCRIPT)/group.sh `mk_command_params GROUPDEPS LIBDEPS LIBDIRS LDFLAGS` \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT)/group.sh $RET \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects} ${GROUPDEPS}
 
 	mk_pop_vars
@@ -227,7 +239,8 @@ load()
 		CFLAGS="$CFLAGS"
 	    
 	    _objects="$_objects $OUTPUT"
-	    _resolved_objects="$_resolved_objects '`_mk_resolve_input "$OUTPUT"`'"
+	    mk_resolve_input "$OUTPUT"
+	    _resolved_objects="$_resolved_objects '$RET'"
 	done
 	
 	_objects="$_objects ${GROUPS}"
@@ -240,9 +253,11 @@ load()
 	    fi
 	done
 	
+	mk_command_params GROUPS LIBDEPS LDFLAGS
+
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=program `mk_command_params GROUPS LIBDEPS LDFLAGS` \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(SCRIPT)/link.sh MODE=program $RET \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
 
 	mk_pop_vars
@@ -300,10 +315,10 @@ load()
 
     mk_check_cache()
     {
-	_cached="`_mk_deref "${1}__CACHED"`"
-	if [ -n "$_cached" ]
+	mk_get "${1}__CACHED"
+	if [ -n "$RET" ]
 	then
-	    CACHED="$_cached"
+	    CACHED="$RET"
 	    mk_export "${1}=$CACHED"
 	    return 0
 	else
@@ -682,10 +697,10 @@ EOF
 
 configure()
 {
-    MK_CC="`mk_option cc 'gcc'`"
-    MK_CPPFLAGS="`mk_option cppflags ''`"
-    MK_CFLAGS="`mk_option cflags ''`"
-    MK_LDFLAGS="`mk_option ldflags ''`"
+    mk_option MK_CC cc 'gcc'
+    mk_option MK_CPPFLAGS cppflags ''
+    mk_option MK_CFLAGS cflags ''
+    mk_option MK_LDFLAGS ldflags ''
 
     mk_msg "C compiler: $MK_CC"
     mk_msg "C preprocessor flags: $MK_CPPFLAGS"

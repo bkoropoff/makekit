@@ -1,7 +1,7 @@
 configure()
 {
-    MK_PREFIX="`mk_option prefix '/usr/local'`"
-    MK_EPREFIX="`mk_option exec-prefix "$MK_PREFIX"`"
+    mk_option MK_PREFIX prefix '/usr/local'
+    mk_option MK_EPREFIX exec-prefix "$MK_PREFIX"
 
     if [ "${MK_PREFIX}" = "/usr" ]
     then
@@ -12,14 +12,14 @@ configure()
 	_default_localstatedir="$MK_PREFIX/var"
     fi
     
-    MK_LIBDIR="`mk_option libdir "${MK_EPREFIX}/lib"`"
-    MK_INCLUDEDIR="`mk_option includedir "${MK_PREFIX}/include"`"
-    MK_BINDIR="`mk_option bindir "${MK_EPREFIX}/bin"`"
-    MK_SBINDIR="`mk_option sbindir "${MK_EPREFIX}/sbin"`"
-    MK_SYSCONFDIR="`mk_option sysconfdir "${_default_sysconfdir}"`"
-    MK_LOCALSTATEDIR="`mk_option localstatedir "${_default_localstatedir}"`"
-    MK_DATAROOTDIR="`mk_option datarootdir "${MK_PREFIX}/share"`"
-    MK_DATADIR="`mk_option datadir "${MK_DATAROOTDIR}"`"
+    mk_option MK_LIBDIR libdir "${MK_EPREFIX}/lib"
+    mk_option MK_INCLUDEDIR includedir "${MK_PREFIX}/include"
+    mk_option MK_BINDIR bindir "${MK_EPREFIX}/bin"
+    mk_option MK_SBINDIR sbindir "${MK_EPREFIX}/sbin"
+    mk_option MK_SYSCONFDIR sysconfdir "${_default_sysconfdir}"
+    mk_option MK_LOCALSTATEDIR localstatedir "${_default_localstatedir}"
+    mk_option MK_DATAROOTDIR datarootdir "${MK_PREFIX}/share"
+    mk_option MK_DATADIR datadir "${MK_DATAROOTDIR}"
 
     mk_msg "prefix: $MK_PREFIX"
     mk_msg "exec prefix: $MK_EPREFIX"

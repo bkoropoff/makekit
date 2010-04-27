@@ -29,8 +29,12 @@ done
 mk_mkdir "`dirname "$object"`"
 
 {
-    echo "OBJECTS=`mk_quote "${_ALL_OBJECTS# }"`"
-    echo "LIBDEPS=`mk_quote "${_ALL_LIBDEPS# }"`"
-    echo "LIBDIRS=`mk_quote "${_ALL_LIBDIRS# }"`"
-    echo "LDFLAGS=`mk_quote "${_ALL_LDFLAGS# }"`"
+    mk_quote "${_ALL_OBJECTS# }"
+    echo "OBJECTS=$RET"
+    mk_quote "${_ALL_LIBDEPS# }"
+    echo "LIBDEPS=$RET"
+    mk_quote "${_ALL_LIBDIRS# }"
+    echo "LIBDIRS=$RET"
+    mk_quote "${_ALL_LDFLAGS# }"
+    echo "LDFLAGS=$RET"
 } > ${object} || mk_fail "Could not write group: ${object}"
