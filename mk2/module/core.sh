@@ -80,7 +80,7 @@ load()
 
 	if [ -z "$INSTALLFILE" ]
 	then
-	    INSTALLFILE="$INSTALLDIR/$INSTALLFILE"
+	    INSTALLFILE="$INSTALLDIR/$FILE"
 	fi
 
 	mk_stage \
