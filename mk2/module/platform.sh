@@ -14,6 +14,9 @@ configure()
 	i?86)
 	    MK_ARCH="x86"
 	    ;;
+	x86_64)
+	    MK_ARCH="x86_64"
+	    ;;
 	*)
 	    mk_fail "unknown architecture: `uname -m`"
 	    ;;
