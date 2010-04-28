@@ -15,10 +15,15 @@ _mk_emitf()
 _mk_process_build_module()
 {
     MK_BUILD_FILES="$MK_BUILD_FILES $1"
-    unset configure make SUBDIRS
+    unset option configure make SUBDIRS
 
     . "$1" || mk_fail "Could not read $1"
     
+    case "`type option 2>&1`" in
+	*"function"*)
+	    option
+    esac
+
     case "`type configure 2>&1`" in
 	*"function"*)
 	    configure
@@ -37,6 +42,11 @@ _mk_process_build_configure()
 
     mk_safe_source "${MK_SOURCE_DIR}$1/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
     
+    case "`type option 2>&1`" in
+	*"function"*)
+	    option
+    esac
+
     case "`type configure 2>&1`" in
 	*"function"*)
 	    MK_SUBDIR="$1"
@@ -120,27 +130,80 @@ _mk_process_build()
 
 mk_option()
 {
+    unset _found
+    mk_push_vars TYPE OPTION DEFAULT VAR PARAM HELP REQUIRED
+    mk_parse_params
+    
+    [ -z "$VAR" ] && VAR="$1"
+    [ -z "$OPTION" ] && OPTION="$2"
+    [ -z "$DEFAULT" ] && DEFAULT="$3"
+
     _IFS="$IFS"
     IFS='
 '
     for _arg in ${MK_OPTIONS}
     do
 	case "$_arg" in
-	    "--$2="*)
-		_mk_set "$1" "${_arg#*=}"
-		IFS="$_IFS"
-		return 0
+	    "--$OPTION="*|"--with-$OPTION="*)
+		_mk_set "$VAR" "${_arg#*=}"
+		_found=yes
+		break
+		;;
+	    "--$OPTION"|"--enable-$OPTION")
+		_mk_set "$VAR" "yes"
+		_found=yes
+		break
+		;;
+	    "--no-$OPTION"|"--disable-$OPTION")
+		_mk_set "$VAR" "yes"
+		_found=yes
+		break
 		;;
 	esac
     done
 
     IFS="$_IFS"
 
-    if [ "$#" -eq '3' ]
+    if [ -z "$_found" ]
     then
-	_mk_set "$1" "$3"
+	if [ -n "$REQUIRED" ]
+	then
+	    mk_fail "Option not specified: $OPTION"
+	else
+	    _mk_set "$VAR" "$DEFAULT"
+	fi
+    fi
+
+    if [ "$VAR" != "MK_HELP" -a "$MK_HELP" = "yes" ]
+    then
+	_mk_print_option
+    fi
+
+    mk_pop_vars
+}
+
+_mk_print_option()
+{
+    [ -z "$PARAM" ] && PARAM="$VAR"
+    [ -z "$HELP" ] && HELP="No help available"
+
+    _form="  --${OPTION}=${PARAM}"
+    _doc="$HELP"
+    
+    if [ -n "$_found" ]
+    then
+	mk_get "$VAR"
+	_doc="$_doc [$RET]"
+    elif [ -n "$DEFAULT" ]
+    then
+	_doc="$_doc [$DEFAULT]"
+    fi
+    
+    if [ "${#_form}" -gt 40 ]
+    then
+	printf "%s\n%-40s%s\bn" "$_form" "" "$_doc"
     else
-	mk_fail "Option not specified: $2"
+	printf "%-40s%s\n" "  --${OPTION}=${PARAM}" "$_doc"
     fi
 }
 
@@ -345,10 +408,76 @@ mk_add_configure_input()
     MK_CONFIGURE_INPUTS="$MK_CONFIGURE_INPUTS $1"
 }
 
+mk_help_recursive()
+{
+    unset option SUBDIRS
+    
+    mk_safe_source "${MK_SOURCE_DIR}${1}/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+
+    case "`type option 2>&1`" in
+	*"function"*)
+	    echo "Options (${1#/}):"
+	    option
+	    echo ""
+    esac
+    
+    for _dir in ${SUBDIRS}
+    do
+	if [ "$_dir" != "." ]
+	then
+	    mk_help_recursive "$1/${_dir}"
+	fi
+    done
+}
+
+mk_help()
+{
+    echo "Usage: mkconfigure [ options ... ]"
+    echo "Options:"
+    printf "%-40s%s\n" "  --help"      "Show this help"
+    printf "%-40s%s\n" "  --sourcedir=MK_SOURCE_DIR" "Source directory [$MK_SOURCE_DIR]"
+    printf "%-40s%s\n" "  --objectdir=MK_OBJECT_DIR" "Object directory [$MK_OBJECT_DIR]"
+    printf "%-40s%s\n" "  --stagedir=MK_STAGE_DIR"   "Staging directory [$MK_STAGE_DIR]"
+    echo ""
+
+    for _module in `_mk_modules`
+    do
+	unset option
+
+	. "${MK_HOME}/module/${_module}.sh"
+
+	case "`type option 2>&1`" in
+	    *"function"*)
+		echo "Options ($_module):"
+		option
+		echo ""
+	esac
+    done
+
+    if [ -f "${MK_SOURCE_DIR}/MetaKitBuild" ]
+    then
+	mk_help_recursive ""
+    fi
+}
+
 # Save our parameters for later use
 MK_OPTIONS="`( for i in "$@"; do echo "$i"; done )`"
 
+# Set up basic variables
+MK_ROOT_DIR="`pwd`"
+mk_option MK_SOURCE_DIR sourcedir '.'
+mk_option MK_OBJECT_DIR objectdir 'object'
+mk_option MK_STAGE_DIR stagedir 'stage'
+mk_option MK_HELP help 'no'
+
 MK_MSG_DOMAIN="metakit"
+
+
+if [ "$MK_HELP" = "yes" ]
+then
+    mk_help
+    exit 0
+fi
 
 # Open log file
 exec 4>config.log
@@ -360,12 +489,6 @@ mk_msg "initializing"
 _mk_load_modules
 
 MK_MSG_DOMAIN="metakit"
-
-# Set up basic variables
-MK_ROOT_DIR="`pwd`"
-mk_option MK_SOURCE_DIR sourcedir 'source'
-mk_option MK_OBJECT_DIR objectdir 'object'
-mk_option MK_STAGE_DIR stagedir 'stage'
 
 # Begin saving exports
 _mk_begin_exports ".MetaKitExports"

@@ -1,8 +1,17 @@
-configure()
+option()
 {
-    mk_option MK_PREFIX prefix '/usr/local'
-    mk_option MK_EPREFIX exec-prefix "$MK_PREFIX"
+    mk_option \
+	OPTION=prefix \
+	VAR=MK_PREFIX \
+	DEFAULT='/usr/local' \
+	HELP="Architecture-independent installation prefix"
 
+    mk_option \
+	OPTION=exec-prefix \
+	VAR=MK_EPREFIX \
+	DEFAULT="$MK_PREFIX" \
+	HELP="Architecture-dependent installation prefix"
+    
     if [ "${MK_PREFIX}" = "/usr" ]
     then
 	_default_sysconfdir="/etc"
@@ -11,7 +20,7 @@ configure()
 	_default_sysconfdir="$MK_PREFIX/etc"
 	_default_localstatedir="$MK_PREFIX/var"
     fi
-    
+
     mk_option MK_LIBDIR libdir "${MK_EPREFIX}/lib"
     mk_option MK_INCLUDEDIR includedir "${MK_PREFIX}/include"
     mk_option MK_BINDIR bindir "${MK_EPREFIX}/bin"
@@ -20,7 +29,10 @@ configure()
     mk_option MK_LOCALSTATEDIR localstatedir "${_default_localstatedir}"
     mk_option MK_DATAROOTDIR datarootdir "${MK_PREFIX}/share"
     mk_option MK_DATADIR datadir "${MK_DATAROOTDIR}"
+}
 
+configure()
+{
     mk_msg "prefix: $MK_PREFIX"
     mk_msg "exec prefix: $MK_EPREFIX"
     mk_msg "library dir: $MK_LIBDIR"

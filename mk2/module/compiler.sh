@@ -695,13 +695,16 @@ EOF
     }
 }
 
-configure()
+option()
 {
     mk_option MK_CC cc 'gcc'
     mk_option MK_CPPFLAGS cppflags ''
     mk_option MK_CFLAGS cflags ''
     mk_option MK_LDFLAGS ldflags ''
+}
 
+configure()
+{
     mk_msg "C compiler: $MK_CC"
     mk_msg "C preprocessor flags: $MK_CPPFLAGS"
     mk_msg "C compiler flags: $MK_CFLAGS"
