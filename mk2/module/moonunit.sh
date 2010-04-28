@@ -50,6 +50,8 @@ load()
 	    INCLUDEDIRS="$INCLUDEDIRS"
 
 	MK_MOONUNIT_TESTS="$MK_MOONUNIT_TESTS ${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
+
+	mk_pop_vars
     }
 }
 
