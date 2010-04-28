@@ -42,7 +42,7 @@ load()
 
 	mk_object \
 	    OUTPUT="$_object" \
-	    COMMAND="\$(SCRIPT)/compile.sh $_params \$@ '$_res'" \
+	    COMMAND="\$(SCRIPT) compile $_params \$@ '$_res'" \
 	    "${SOURCE}" ${_header_abs}
 
 	mk_pop_vars
@@ -100,7 +100,7 @@ load()
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=library $RET \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT) link MODE=library $RET \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -160,7 +160,7 @@ load()
 
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=dso $RET \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT) link MODE=dso $RET \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 
 	mk_pop_vars
@@ -205,7 +205,7 @@ load()
 
 	mk_object \
 	    OUTPUT="$GROUP" \
-	    COMMAND="\$(SCRIPT)/group.sh $RET \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT) group $RET \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects} ${GROUPDEPS}
 
 	mk_pop_vars
@@ -257,7 +257,7 @@ load()
 
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(SCRIPT)/link.sh MODE=program $RET \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(SCRIPT) link MODE=program $RET \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
 
 	mk_pop_vars
@@ -288,7 +288,7 @@ load()
 	do
 	    mk_stage \
 	        OUTPUT="${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT)/install.sh \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
+		COMMAND="\$(SCRIPT) install \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
 		"${_header}" ${_header_abs}
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
@@ -300,7 +300,7 @@ load()
 	do
 	    mk_stage \
 		OUTPUT="${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT)/install.sh \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
+		COMMAND="\$(SCRIPT) install \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
 		"${_header}" ${_all_headers} ${_header_abs}
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
@@ -340,7 +340,7 @@ load()
 	
 	case "${1}" in
 	    compile)
-		${MK_SHELL} "${MK_SCRIPT_DIR}/compile.sh" \
+		mk_run_script compile \
 		    DISABLE_DEPGEN=yes \
 		    CPPFLAGS="$CPPFLAGS" \
 		    CFLAGS="$CFLAGS" \
@@ -349,7 +349,7 @@ load()
 		 rm -f "${__test}.o"
 		 ;;
 	    link-program)
-		${MK_SHELL} "${MK_SCRIPT_DIR}/link.sh" \
+		mk_run_script link \
 		    MODE=program \
 		    LIBDEPS="$LIBDEPS" \
 		    LDFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" \

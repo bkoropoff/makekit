@@ -1,10 +1,6 @@
 #!/bin/sh
 
-. "${MK_HOME}/mk.sh" || exit 1
-
 MK_MSG_DOMAIN="clean"
-
-mk_parse_params
 
 for _target in "$@"
 do

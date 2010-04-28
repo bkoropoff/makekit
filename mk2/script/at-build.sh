@@ -1,10 +1,5 @@
 #!/bin/sh
 
-. "${MK_HOME}/mk.sh" || exit 1
-mk_import
-
-mk_parse_params
-
 MK_MSG_DOMAIN="build"
 
 mk_msg "$SOURCEDIR"

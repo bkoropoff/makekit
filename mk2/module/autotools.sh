@@ -29,12 +29,12 @@ load()
 	
 	mk_object \
 	    OUTPUT=".at_configure_${_stamp}" \
-	    COMMAND="\$(SCRIPT)/at-configure.sh SOURCEDIR='$SOURCEDIR' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' LDFLAGS='$LDFLAGS' \$@ $*" \
+	    COMMAND="\$(SCRIPT) at-configure SOURCEDIR='$SOURCEDIR' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' LDFLAGS='$LDFLAGS' \$@ $*" \
 	    ${_stage_deps}
         
 	mk_object \
 	    OUTPUT=".at_build_${_stamp}" \
-	    COMMAND="\$(SCRIPT)/at-build.sh MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' SOURCEDIR='$SOURCEDIR' \$@" \
+	    COMMAND="\$(SCRIPT) at-build MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' SOURCEDIR='$SOURCEDIR' \$@" \
 	    "$OUTPUT"
 
 	# Add dummy rules for headers or libraries built by this component

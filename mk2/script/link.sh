@@ -1,10 +1,5 @@
 #!/bin/sh
 
-. "${MK_HOME}/mk.sh" || exit 1
-. "${MK_ROOT_DIR}/.MetaKitExports" || mk_fail "Could not read .MetaKitExports"
-
-mk_parse_params
-
 object="$1"
 shift 1
 

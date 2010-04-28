@@ -12,12 +12,35 @@ _mk_emitf()
     printf "$@" >&6
 }
 
+_mk_load_modules()
+{
+    for _module in `_mk_modules`
+    do
+	MK_MSG_DOMAIN="metakit"
+	mk_msg "loading module: ${_module}"
+
+	unset load
+
+	_mk_source_module "$_module"
+
+	case "`type load 2>&1`" in
+	    *"function"*)
+		MK_MSG_DOMAIN="${_module}"
+		load
+		;;
+	esac
+    done
+}
+
 _mk_process_build_module()
 {
-    MK_BUILD_FILES="$MK_BUILD_FILES $1"
+    _mk_find_resource "module/$1.sh"
+
+    MK_BUILD_FILES="$MK_BUILD_FILES $RET"
+
     unset option configure make SUBDIRS
 
-    . "$1" || mk_fail "Could not read $1"
+    _mk_source_module "$1"
     
     case "`type option 2>&1`" in
 	*"function"*)
@@ -77,7 +100,7 @@ _mk_process_build_recursive()
 
     if [ -z "$MK_MSG_DOMAIN" ]
     then
-	MK_MSG_DOMAIN="`(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")`"
+	MK_MSG_DOMAIN="$(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")"
     fi
 
     mk_mkdir "${MK_OBJECT_DIR}$1"
@@ -121,7 +144,7 @@ _mk_process_build()
     for _module in `_mk_modules`
     do
 	MK_MSG_DOMAIN="$_module"
-	_mk_process_build_module "${MK_HOME}/module/${_module}.sh"
+	_mk_process_build_module "${_module}"
     done
 
     # Run build functions for project
@@ -329,10 +352,9 @@ EOF
 _mk_emit_make_header()
 {
     _mk_emit "MK_HOME='${MK_HOME}'"
-    _mk_emit "MK_SCRIPT_DIR='${MK_SCRIPT_DIR}'"
     _mk_emit "MK_ROOT_DIR='${MK_ROOT_DIR}'"
     _mk_emit "MK_SHELL=${MK_SHELL}"
-    _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR=\$\${MK_SUBDIR} MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_SCRIPT_DIR)"
+    _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR="\$\${MK_SUBDIR}" MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_HOME)/script.sh"
     _mk_emit ""
     _mk_emit "default: all"
     _mk_emit ""
@@ -346,7 +368,7 @@ _mk_emit_make_footer()
 	MK_MSG_DOMAIN="$_module"
 	unset postmake
 
-	. "${MK_HOME}/module/${_module}.sh"
+	_mk_source_module "${_module}"
 
 	case "`type postmake 2>&1`" in
 	    *"function"*)
@@ -357,19 +379,19 @@ _mk_emit_make_footer()
     _mk_emit "all:${MK_ALL_TARGETS}"
     _mk_emit ""
     _mk_emit "clean:"
-    _mk_emitf "\t@\$(SCRIPT)/clean.sh %s\n\n" "'.MetaKitDeps'${MK_CLEAN_TARGETS} "
+    _mk_emitf "\t@\$(SCRIPT) clean %s\n\n" "'.MetaKitDeps'${MK_CLEAN_TARGETS} "
 
     _mk_emit "scrub: clean"
-    _mk_emitf "\t@\$(SCRIPT)/clean.sh%s\n\n" "${MK_SCRUB_TARGETS}"
+    _mk_emitf "\t@\$(SCRIPT) clean %s\n\n" "${MK_SCRUB_TARGETS}"
 
     _mk_emit "nuke: scrub"
-    _mk_emitf "\t@\$(SCRIPT)/clean.sh 'Makefile'%s\n\n" "${MK_EXPORT_FILES}${MK_CONFIG_HEADERS}${MK_CONFIGURE_OUTPUTS}"
+    _mk_emitf "\t@\$(SCRIPT) 'Makefile'%s\n\n" "${MK_EXPORT_FILES}${MK_CONFIG_HEADERS}${MK_CONFIGURE_OUTPUTS}"
 
     _mk_emit "regen:"
-    _mk_emitf "\t@\$(SCRIPT)/regen.sh\n\n"
+    _mk_emitf "\t@\$(SCRIPT) regen\n\n"
 
-    _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}" "${MK_HOME}/module/"*.sh
-    _mk_emitf "\t@\$(SCRIPT)/regen.sh\n\n"
+    _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}"
+    _mk_emitf "\t@\$(SCRIPT) regen\n\n"
 
     for _target in ${MK_CONFIGURE_OUTPUTS}
     do
@@ -434,7 +456,7 @@ mk_help()
 {
     echo "Usage: mkconfigure [ options ... ]"
     echo "Options:"
-    printf "%-40s%s\n" "  --help"      "Show this help"
+    printf "%-40s%s\n" "  --help"                    "Show this help"
     printf "%-40s%s\n" "  --sourcedir=MK_SOURCE_DIR" "Source directory [$MK_SOURCE_DIR]"
     printf "%-40s%s\n" "  --objectdir=MK_OBJECT_DIR" "Object directory [$MK_OBJECT_DIR]"
     printf "%-40s%s\n" "  --stagedir=MK_STAGE_DIR"   "Staging directory [$MK_STAGE_DIR]"
@@ -444,7 +466,7 @@ mk_help()
     do
 	unset option
 
-	. "${MK_HOME}/module/${_module}.sh"
+	_mk_source_module "${_module}"
 
 	case "`type option 2>&1`" in
 	    *"function"*)
@@ -461,7 +483,7 @@ mk_help()
 }
 
 # Save our parameters for later use
-MK_OPTIONS="`( for i in "$@"; do echo "$i"; done )`"
+MK_OPTIONS="$( for i in "$@"; do echo "$i"; done )"
 
 # Set up basic variables
 MK_ROOT_DIR="`pwd`"
@@ -470,8 +492,15 @@ mk_option MK_OBJECT_DIR objectdir 'object'
 mk_option MK_STAGE_DIR stagedir 'stage'
 mk_option MK_HELP help 'no'
 
-MK_MSG_DOMAIN="metakit"
+MK_SEARCH_DIRS="${MK_HOME}"
 
+# Look for local modules and scripts in source directory
+if [ -d "${MK_SOURCE_DIR}/mklocal" ]
+then
+    MK_SEARCH_DIRS="${MK_SEARCH_DIRS} ${MK_SOURCE_DIR}/mklocal"
+fi
+
+MK_MSG_DOMAIN="metakit"
 
 if [ "$MK_HELP" = "yes" ]
 then
@@ -499,7 +528,7 @@ MK_MAKEFILE_FD=6
 
 # Export basic variables
 export MK_HOME MK_SHELL MK_ROOT_DIR
-mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_OPTIONS
+mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_OPTIONS MK_SEARCH_DIRS
 
 # Emit Makefile header
 _mk_emit_make_header

@@ -1,10 +1,5 @@
 #!/bin/sh
 
-. "${MK_HOME}/mk.sh" || exit 1
-mk_import
-
-mk_parse_params
-
 _object="$1"
 _source="$2"
 

@@ -114,6 +114,21 @@ mk_quote()
     RET="'${RET}'"
 }
 
+_mk_find_resource()
+{
+    for __dir in ${MK_SEARCH_DIRS}
+    do
+	__file="${__dir}/$1"
+	if [ -f "$__file" ]   
+	then
+	    RET="$__file"
+	    return 0
+	fi
+    done
+
+    return 1
+}
+
 _mk_modules_rec()
 {
     if ! _mk_contains "$1" ${_list}
@@ -131,35 +146,38 @@ _mk_modules_rec()
 _mk_modules()
 {
     _list=""
-
-    for _file in "${MK_HOME}/module/"*.sh
+    
+    for __dir in ${MK_SEARCH_DIRS}
     do
-	_module="`basename "$_file"`"
-	_module="${_module%.sh}"
-	unset DEPENDS
-	. "$_file"
-	_mk_modules_rec "$_module" "$DEPENDS"
+	for __file in "${__dir}/module/"*.sh
+	do
+	    if [ -f "$__file" ]
+	    then
+		_module="`basename "$__file"`"
+		_module="${_module%.sh}"
+		unset DEPENDS
+		. "$__file"
+		_mk_modules_rec "$_module" "$DEPENDS"
+	    fi
+	done
     done
 
     echo "$_list"
 }
 
-_mk_load_modules()
+_mk_source_module()
 {
-    for _module in `_mk_modules`
+    for __dir in ${MK_SEARCH_DIRS}
     do
-	MK_MSG_DOMAIN="metakit"
-	mk_msg "loading module: ${_module}"
-
-	unset load
-	. "${MK_HOME}/module/${_module}.sh"
-	case "`type load 2>&1`" in
-	    *"function"*)
-		MK_MSG_DOMAIN="${_module}"
-		load
-		;;
-	esac
+	__module="${__dir}/module/$1.sh"
+	if [ -f "$__module" ]
+	then
+	    . "${__module}"
+	    return $?
+	fi
     done
+
+    mk_fail "could not find module in search path: $1"
 }
 
 _mk_contains()

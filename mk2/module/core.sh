@@ -89,7 +89,7 @@ load()
 
 	mk_stage \
 	    OUTPUT="$INSTALLFILE" \
-	    COMMAND="\$(SCRIPT)/install.sh $_params \$@ '$_resolved'" \
+	    COMMAND="\$(SCRIPT) install $_params \$@ '$_resolved'" \
 	    "$FILE" "$@"
 
 	mk_pop_vars
@@ -144,5 +144,10 @@ load()
 	mk_add_configure_input "${_input}"
 
 	mk_pop_vars
+    }
+
+    mk_run_script()
+    {
+	${MK_SHELL} "${MK_HOME}/script.sh" "$@"
     }
 }
