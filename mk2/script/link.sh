@@ -1,5 +1,68 @@
 #!/bin/sh
 
+version_pre()
+{
+    case "$MODE" in
+	library)
+	    if [ -z "$VERSION" ]
+	    then
+		VERSION="0.0.0"
+	    fi
+	    ;;
+	program)
+	    return 0
+	    ;;
+    esac
+    
+    if [ "$VERSION" != "no" ]
+    then
+	_rest="${VERSION}."
+	MAJOR="${_rest%%.*}"
+	_rest="${_rest#*.}"
+	MINOR="${_rest%%.*}"
+	_rest="${_rest#*.}"
+	MICRO="${_rest%%.*}"
+    fi
+    
+    if [ -n "$MAJOR" ]
+    then
+	SONAME="${object##*/}.$MAJOR"
+	LINK1="${object}"
+	object="${object}.$MAJOR"
+    fi
+    
+    if [ -n "$MINOR" ]
+    then
+	LINK2="${object}"
+	object="${object}.$MINOR"
+    fi
+    
+    if [ -n "$MICRO" ]
+    then
+	LINK3="${object}"
+	object="${object}.$MICRO"
+    fi
+    
+    if [ -n "$SONAME" ]
+    then
+	COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-h,$SONAME"
+    fi
+}
+
+version_post()
+{
+    _target="${object}"
+
+    for _link in "$LINK3" "$LINK2" "$LINK1"
+    do
+	if [ -n "$_link" ]
+	then
+	    _mk_try ln -sf "${_target##*/}" "${_link}"
+	    _target="$_link"
+	fi
+    done
+}
+
 object="$1"
 shift 1
 
@@ -33,6 +96,8 @@ do
     COMBINED_LDFLAGS="$COMBINED_LDFLAGS -l${lib}"
 done
 
+version_pre
+
 MK_MSG_DOMAIN="link"
 
 mk_msg "${object#${MK_STAGE_DIR}}"
@@ -48,3 +113,5 @@ case "$MODE" in
 	_mk_try ${MK_CC} -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS}
 	;;
 esac
+
+version_post

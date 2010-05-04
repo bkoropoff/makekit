@@ -50,7 +50,7 @@ load()
     
     mk_library()
     {
-	mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS
+	mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION
 	mk_parse_params
 
 	unset _objects _libs_abs _resolved_objects
@@ -96,7 +96,7 @@ load()
 	    fi
 	done
 
-	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS
+	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS VERSION
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
@@ -110,7 +110,7 @@ load()
 
     mk_dso()
     {
-	mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS
+	mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION
 	mk_parse_params
 
 	unset _objects _libs_abs _resolved_objects
@@ -156,7 +156,7 @@ load()
 	    fi
 	done
 	
-	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS
+	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS VERSION
 
 	"$_cmd" \
 	    OUTPUT="$_library" \
