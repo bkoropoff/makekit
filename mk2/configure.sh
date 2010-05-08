@@ -385,7 +385,7 @@ _mk_emit_make_footer()
     _mk_emitf "\t@\$(SCRIPT) clean %s\n\n" "${MK_SCRUB_TARGETS}"
 
     _mk_emit "nuke: scrub"
-    _mk_emitf "\t@\$(SCRIPT) 'Makefile'%s\n\n" "${MK_EXPORT_FILES}${MK_CONFIG_HEADERS}${MK_CONFIGURE_OUTPUTS}"
+    _mk_emitf "\t@\$(SCRIPT) clean 'Makefile'%s\n\n" "${MK_EXPORT_FILES}${MK_CONFIG_HEADERS}${MK_CONFIGURE_OUTPUTS}"
 
     _mk_emit "regen:"
     _mk_emitf "\t@\$(SCRIPT) regen\n\n"
