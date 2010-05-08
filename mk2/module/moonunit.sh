@@ -9,14 +9,14 @@ load()
 	    return 0
 	fi
 
-	mk_push_vars LIBRARY SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS
+	mk_push_vars DSO SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS LIBDEPS HEADERDEPS
 	mk_parse_params
 
-	unset _rsources
+	unset _CPPFLAGS _rsources
 
-	case "$LIBRARY" in
+	case "$DSO" in
 	    *)
-		_stub="${LIBRARY}-stub.c"
+		_stub="${DSO}-stub.c"
 		;;
 	esac
 
@@ -28,26 +28,28 @@ load()
 
 	for _dir in ${INCLUDEDIRS}
 	do
-	    CPPFLAGS="$CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
+	    _CPPFLAGS="$_CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
 	done
 
 	mk_object \
 	    OUTPUT="$_stub" \
-	    COMMAND="echo [moonunit] ${MK_SUBDIR#/}/${_stub}; moonunit-stub CPPFLAGS='$MK_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}' -o \$@${_rsources}" \
+	    COMMAND="echo [moonunit] ${MK_SUBDIR#/}/${_stub}; moonunit-stub CPPFLAGS='$MK_CPPFLAGS $_CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}' -o \$@${_rsources}" \
 	    ${SOURCES}
 	
 	SOURCES="$SOURCES $_stub"
 
-	mk_library \
+	mk_dso \
 	    INSTALL="no" \
-	    LIBRARY="$LIBRARY" \
+	    DSO="$DSO" \
 	    SOURCES="$SOURCES" \
 	    HEADERS="$HEADERS" \
 	    CPPFLAGS="$CPPFLAGS" \
 	    CFLAGS="$CFLAGS" \
 	    LDFLAGS="$LDFLAGS" \
 	    LIBDIRS="$LIBDIRS" \
-	    INCLUDEDIRS="$INCLUDEDIRS"
+	    INCLUDEDIRS="$INCLUDEDIRS" \
+	    LIBDEPS="$LIBDEPS" \
+	    HEADERDEPS="$HEADERDEPS"
 
 	MK_MOONUNIT_TESTS="$MK_MOONUNIT_TESTS ${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
 
