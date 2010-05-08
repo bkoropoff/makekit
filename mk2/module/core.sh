@@ -8,21 +8,21 @@ load()
 		RET="${MK_STAGE_DIR}$1"
 		;;
 	    *)
-		_source_file="${MK_SOURCE_DIR}${MK_SUBDIR}/${1}"
+		__source_file="${MK_SOURCE_DIR}${MK_SUBDIR}/${1}"
 		
-		if [ -e "${_source_file}" ]
+		if [ -e "${__source_file}" ]
 		then
 		    # Input is a source file
-		    RET="${_source_file}"
+		    RET="${__source_file}"
 		else
 		    # Input is an object file
-		    _object="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
-		    case "$_object" in
+		    __object_file="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
+		    case "$__object_file" in
 			*'/../'*|*'/./'*)
-			    RET=`echo "$_object" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`
+			    RET=`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`
 			    ;;
 			*)
-			    RET="$_object"
+			    RET="$__object_file"
 			    ;;
 		    esac
 		fi
@@ -124,6 +124,11 @@ load()
 
 	for _export in ${MK_EXPORTS}
 	do
+	    # FIXME: deal with this a better way
+	    if [ "$_export" = "MK_OPTIONS" ]
+	    then
+		continue
+	    fi
 	    mk_get "$_export"
 	    case "$RET" in
 		*'|'*)
