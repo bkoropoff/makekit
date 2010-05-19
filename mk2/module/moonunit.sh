@@ -86,8 +86,6 @@ postmake()
     if [ "$HAVE_MOONUNIT" = yes ]
     then
 	_mk_emitf "test: ${MK_MOONUNIT_TESTS}\n"
-	_mk_emitf "\t@echo [test] running moonunit tests; env LD_LIBRARY_PATH='%s' moonunit%s\n\n" \
-	    "${MK_STAGE_DIR}${MK_LIBDIR}" \
-	    "${MK_MOONUNIT_TESTS}"
+	_mk_emitf "\t@\$(SCRIPT) moonunit ${MK_MOONUNIT_TESTS}\n\n"
     fi
 }
