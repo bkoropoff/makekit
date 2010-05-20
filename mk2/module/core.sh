@@ -153,6 +153,6 @@ load()
 
     mk_run_script()
     {
-	${MK_SHELL} "${MK_HOME}/script.sh" "$@"
+	env MK_SUBDIR="$MK_SUBDIR" ${MK_SHELL} "${MK_HOME}/script.sh" "$@"
     }
 }
