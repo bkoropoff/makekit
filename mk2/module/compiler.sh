@@ -260,6 +260,8 @@ load()
 	    COMMAND="\$(SCRIPT) link MODE=program $RET \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
 
+	MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
+
 	mk_pop_vars
     }
     
@@ -348,13 +350,18 @@ load()
 		 _ret="$?"
 		 rm -f "${__test}.o"
 		 ;;
-	    link-program)
+	    link-program|run-program)
 		mk_run_script link \
 		    MODE=program \
 		    LIBDEPS="$LIBDEPS" \
 		    LDFLAGS="$CPPFLAGS $CFLAGS $LDFLAGS" \
 		    "${__test}" "${__test}.c" >&${MK_LOG_FD} 2>&1
 		 _ret="$?"
+		 if [ "$_ret" -eq 0 -a "$1" = "run-program" ]
+		 then
+		     ./"${__test}"
+		     _ret="$?"
+		 fi
 		 rm -f "${__test}"
 		 ;;
 	    *)
@@ -615,6 +622,130 @@ EOF
 		return 1
 		;;
 	esac
+    }
+
+    mk_check_sizeof()
+    {
+	mk_push_vars TYPE HEADERDEPS CPPFLAGS LDFLAGS CFLAGS LIBDEPS
+	mk_parse_params
+
+	if [ -z "$TYPE" ]
+	then
+	    TYPE="$1"
+	fi
+
+	CFLAGS="$CFLAGS -Wall -Werror"
+	HEADERDEPS="$HEADERDEPS stdio.h"
+	
+	_def="SIZEOF_`_mk_def_name "$TYPE"`"
+	
+	if mk_check_cache "$_def"
+	then
+	    _result="$CACHED"
+	else
+	    if {
+		    for _include in ${HEADERDEPS}
+		    do
+			echo "#include <${_include}>"
+		    done
+		    
+		    echo ""
+
+		    cat <<EOF
+int main(int argc, char** argv)
+{ 
+    printf("%i\n", sizeof($TYPE));
+    return 0;
+}
+EOF
+		} | _mk_build_test 'run-program' "$_def" >".result_${_def}"
+	    then
+		read _result <.result_${_def}
+		rm -f ".result_${_def}"
+	    else
+		rm -f ".result_${_def}"
+		mk_fail "could not determine sizeof($TYPE)"
+	    fi
+	    
+	    mk_cache_export "$_def" "$_result"
+	    mk_define "$_def" "$_result"
+	fi
+
+	if [ -n "$CACHED" ]
+	then
+	    mk_msg "$MK_ARCH sizeof($TYPE): $_result (cached)"
+	else
+	    mk_msg "$MK_ARCH sizeof($TYPE): $_result"
+	fi
+	
+	mk_pop_vars
+    }
+
+    mk_check_endian()
+    {
+	mk_push_vars CPPFLAGS LDFLAGS CFLAGS LIBDEPS
+	mk_parse_params
+
+	CFLAGS="$CFLAGS -Wall -Werror"
+	HEADERDEPS="$HEADERDEPS stdio.h"
+	
+	_def="ENDIANNESS"
+	
+	if mk_check_cache "$_def"
+	then
+	    _result="$CACHED"
+	else
+	    if {
+		    cat <<EOF
+#include <stdio.h>
+
+int main(int argc, char** argv)
+{ 
+    union
+    {
+      int a;
+      char b[sizeof(int)];
+    } u;
+
+    u.a = 1;
+
+    if (u.b[0] == 1)
+    {
+        printf("little\n");
+    }
+    else
+    {
+        printf("big\n");
+    }
+
+    return 0;
+}
+EOF
+		} | _mk_build_test 'run-program' "$_def" >".result_${_def}"
+	    then
+		read _result <.result_${_def}
+		rm -f ".result_${_def}"
+	    else
+		rm -f ".result_${_def}"
+		mk_fail "could not determine endianness"
+	    fi
+	    
+	    mk_cache_export "$_def" "$_result"
+
+	    if [ "$_result" = "big" ]
+	    then
+		mk_define WORDS_BIGENDIAN 1
+	    fi
+	fi
+
+	if [ -n "$CACHED" ]
+	then
+	    mk_msg "$MK_ARCH endianness: $_result (cached)"
+	else
+	    mk_msg "$MK_ARCH endianness: $_result"
+	fi
+	
+	mk_pop_vars
     }
     
     mk_check_functions()
