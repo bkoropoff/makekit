@@ -1,3 +1,20 @@
+load()
+{
+    mk_run_with_extended_library_path()
+    {
+	unset __env
+
+	case "$MK_OS" in
+	    linux|*)
+		__env="LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$1"
+		;;
+	esac
+
+	shift
+	env "$__env" "$@"
+    }
+}
+
 configure()
 {
     case `uname` in

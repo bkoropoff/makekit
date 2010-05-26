@@ -1,4 +1,4 @@
-DEPENDS="path compiler"
+DEPENDS="path compiler program"
 
 load()
 {
@@ -59,23 +59,17 @@ load()
 
 configure()
 {
-    if type moonunit 2>&1 >/dev/null
-    then
-	HAVE_MOONUNIT_PROGRAM=yes
-    else
-	HAVE_MOONUNIT_PROGRAM=no
-    fi
-    mk_msg "program moonunit: $HAVE_MOONUNIT_PROGRAM"
+    mk_check_program moonunit
     
     mk_check_headers HEADERS="moonunit/moonunit.h"
 
-    if [ "$HAVE_MOONUNIT_PROGRAM" = yes -a "$HAVE_MOONUNIT_MOONUNIT_H" != no ]
+    if [ -n "$MOONUNIT" -a "$HAVE_MOONUNIT_MOONUNIT_H" != no ]
     then
 	HAVE_MOONUNIT=yes
     else
 	HAVE_MOONUNIT=no
     fi
-
+    
     mk_msg "moonunit available: $HAVE_MOONUNIT"
 
     mk_export HAVE_MOONUNIT
