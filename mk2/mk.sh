@@ -69,7 +69,7 @@ _mk_set()
 
 _mk_def_name()
 {
-    echo "$1" | tr 'a-z-./' 'A-Z___'
+    echo "$1" | tr 'a-z-./ *' 'A-Z____P'
 }
 
 mk_log()
