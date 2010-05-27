@@ -42,14 +42,24 @@ load()
 	    _inputs="$_inputs $RET"
 	done
 
-	_mk_emitf '%s:%s\n\t@MK_SUBDIR='%s'; \\\n\t%s\n\n' "$_lhs" "${_inputs}" "${MK_SUBDIR}" "$_command"
+	if [ -n "$_command" ]
+	then
+	    _mk_emitf '%s:%s\n\t@MK_SUBDIR='%s'; \\\n\t%s\n\n' "$_lhs" "${_inputs}" "${MK_SUBDIR}" "$_command"
+	else
+	    _mk_emitf '%s:%s\n\n' "$_lhs" "${_inputs}"
+	fi
     }
     
     mk_stage()
     {
 	unset OUTPUT
-	mk_push_vars COMMAND
+	mk_push_vars COMMAND FUNCTION
 	mk_parse_params
+
+	if [ -n "$FUNCTION" ]
+	then
+	    COMMAND="\$(FUNCTION) ${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild $FUNCTION"
+	fi
 	
 	_mk_rule "${MK_STAGE_DIR}${OUTPUT}" "${COMMAND}" "$@"
 
@@ -62,8 +72,13 @@ load()
     mk_object()
     {
 	unset OUTPUT
-	mk_push_vars COMMAND
+	mk_push_vars COMMAND FUNCTION
 	mk_parse_params
+
+	if [ -n "$FUNCTION" ]
+	then
+	    COMMAND="\$(FUNCTION) ${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild $FUNCTION"
+	fi
 	
 	_mk_rule "${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}" "${COMMAND}" "$@"
 	
@@ -143,7 +158,14 @@ load()
 	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
 
 	mk_mkdir "`dirname "$_output"`"
-	sed "${_script#;}" < "$_input" > "$_output" || mk_fail "failed to generate $_output"
+	sed "${_script#;}" < "$_input" > "${_output}.new" || mk_fail "failed to generate $_output"
+
+	if [ -f "${_output}" ] && diff "${_output}" "${_output}.new" >/dev/null 2>&1
+	then
+	    rm -f "${_output}.new"
+	else
+	    mv "${_output}.new" "${_output}"
+	fi
 
 	mk_add_configure_output "${_output}"
 	mk_add_configure_input "${_input}"
