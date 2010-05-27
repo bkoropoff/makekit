@@ -4,7 +4,7 @@ load()
 {
     mk_autotools()
     {
-	mk_push_vars SOURCEDIR HEADERS LIBS LIBDEPS HEADERDEPS CPPFLAGS CFLAGS LDFLAGS
+	mk_push_vars SOURCEDIR HEADERS LIBS LIBDEPS HEADERDEPS CPPFLAGS CFLAGS LDFLAGS INSTALL TARGETS
 	mk_parse_params
 
 	unset _stage_deps
@@ -27,14 +27,18 @@ load()
 	    _stage_deps="$_stage_deps ${MK_INCLUDEDIR}/${_header}"
 	done
 	
+	mk_command_params SOURCEDIR CPPFLAGS CFLAGS LDFLAGS
+
 	mk_object \
 	    OUTPUT=".at_configure_${_stamp}" \
-	    COMMAND="\$(SCRIPT) at-configure SOURCEDIR='$SOURCEDIR' CPPFLAGS='$CPPFLAGS' CFLAGS='$CFLAGS' LDFLAGS='$LDFLAGS' \$@ $*" \
+	    COMMAND="\$(SCRIPT) at-configure $RET \$@ $*" \
 	    ${_stage_deps}
+
+	mk_command_params SOURCEDIR INSTALL
         
 	mk_object \
 	    OUTPUT=".at_build_${_stamp}" \
-	    COMMAND="\$(SCRIPT) at-build MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' SOURCEDIR='$SOURCEDIR' \$@" \
+	    COMMAND="\$(SCRIPT) at-build MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' $RET \$@" \
 	    "$OUTPUT"
 
 	# Add dummy rules for headers or libraries built by this component
@@ -54,6 +58,21 @@ load()
 
 	    mk_add_all_target "${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $_lib"
+	done
+
+	for _target in ${TARGETS}
+	do
+	    case "$_target" in
+		"/"*)
+		    _mk_emit "${MK_STAGE_DIR}${_target}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
+		    _mk_emit ""
+		    ;;
+		*)
+		    _mk_emit "${MK_OBJECT_DIR}${MK_SUBDIR}/${SOURCEDIR}/${_target}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
+		    _mk_emit ""
+		    ;;
+	    esac
+	    _mk_emit ""
 	done
 
 	mk_add_clean_target "${MK_SUBDIR}${SOURCEDIR}"
