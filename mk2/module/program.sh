@@ -7,6 +7,11 @@ load()
 	__program="$1"
 	shift
 	
+	if [ -n "$MK_VERBOSE" ]
+	then
+	    mk_msg "=> ${__program##*/} $*"
+	fi
+
 	mk_run_with_extended_library_path \
 	    "${MK_STAGE_DIR}${MK_LIBDIR}" \
 	    "${__program}" \
