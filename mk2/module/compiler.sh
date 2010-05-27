@@ -7,7 +7,7 @@ load()
     #
     mk_compile()
     {
-	mk_push_vars SOURCE COMMAND HEADERDEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
+	mk_push_vars SOURCE COMMAND HEADERDEPS EXTRADEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
 	mk_parse_params
 
 	unset _header_abs
@@ -26,7 +26,7 @@ load()
 		mk_fail "Unsupported file type: $SOURCE"
 		;;
 	esac
-	
+
 	for _header in ${HEADERDEPS}
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
@@ -43,7 +43,7 @@ load()
 	mk_object \
 	    OUTPUT="$_object" \
 	    COMMAND="\$(SCRIPT) compile $_params \$@ '$_res'" \
-	    "${SOURCE}" ${_header_abs}
+	    "${SOURCE}" ${_header_abs} ${EXTRADEPS}
 
 	mk_pop_vars
     }
@@ -168,7 +168,8 @@ load()
 
     mk_group()
     {
-	mk_push_vars GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS
+	mk_push_vars GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS \
+	             HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS EXTRADEPS
 	mk_parse_params
 
 	unset _objects _libs_abs _resolved_objects
@@ -182,6 +183,7 @@ load()
 	do
 	    mk_compile \
 		SOURCE="$_source" \
+		EXTRADEPS="$EXTRADEPS" \
 		HEADERDEPS="$HEADERDEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
@@ -215,7 +217,7 @@ load()
     {
 	mk_push_vars \
 	    PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS \
-	    LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS INSTALLDIR
+	    LDFLAGS LIBDEPS HEADERDEPS EXTRADEPS LIBDIRS INCLUDEDIRS INSTALLDIR
 	# Default to installing programs in bin dir
 	INSTALLDIR="${MK_BINDIR}"
 	mk_parse_params
@@ -234,6 +236,7 @@ load()
 	    mk_compile \
 		SOURCE="$_source" \
 		HEADERDEPS="$HEADERDEPS" \
+		EXTRADEPS="$EXTRADEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS"
@@ -288,24 +291,46 @@ load()
 
 	for _header in ${HEADERS}
 	do
+	    mk_resolve_input "$_header"
+
 	    mk_stage \
 	        OUTPUT="${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT) install \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
+		COMMAND="\$(SCRIPT) install \$@ $RET" \
 		"${_header}" ${_header_abs}
+
+	    _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
 	    
-	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
+	    if [ "$_rel" != "$INSTALLDIR" ]
+	    then
+		_rel="$_rel/$_header"
+	    else
+		_rel="$_header"
+	    fi
+	    
+	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
 
 	    _all_headers="$_all_headers $OUTPUT"
 	done
 	
 	for _header in ${MASTER}
 	do
+	    mk_resolve_input "$_header"
+
 	    mk_stage \
 		OUTPUT="${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT) install \$@ ${MK_SOURCE_DIR}${MK_SUBDIR}/${_header}" \
+		COMMAND="\$(SCRIPT) install \$@ $RET" \
 		"${_header}" ${_all_headers} ${_header_abs}
+
+	    _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
 	    
-	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
+	    if [ "$_rel" != "$INSTALLDIR" ]
+	    then
+		_rel="$_rel/$_header"
+	    else
+		_rel="$_header"
+	    fi
+	    
+	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
 	done
 
 	mk_pop_vars
