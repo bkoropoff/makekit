@@ -355,6 +355,7 @@ _mk_emit_make_header()
     _mk_emit "MK_ROOT_DIR='${MK_ROOT_DIR}'"
     _mk_emit "MK_SHELL=${MK_SHELL}"
     _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR="\$\${MK_SUBDIR}" MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_HOME)/script.sh"
+    _mk_emit "FUNCTION=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR="\$\${MK_SUBDIR}" MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_HOME)/function.sh"
     _mk_emit ""
     _mk_emit "default: all"
     _mk_emit ""
