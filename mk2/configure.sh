@@ -36,7 +36,8 @@ _mk_process_build_module()
 {
     _mk_find_resource "module/$1.sh"
 
-    MK_BUILD_FILES="$MK_BUILD_FILES $result"
+    MK_CURRENT_FILE="$result"
+    MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
 
     unset option configure make SUBDIRS
 
@@ -60,10 +61,12 @@ _mk_process_build_module()
 
 _mk_process_build_configure()
 {
-    MK_BUILD_FILES="$MK_BUILD_FILES ${MK_SOURCE_DIR}$1/MetaKitBuild"
     unset configure make SUBDIRS
 
-    mk_safe_source "${MK_SOURCE_DIR}$1/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MetaKitBuild"
+    MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
+
+    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MetaKitBuild in ${1#/}"
     
     case "`type option 2>&1`" in
 	*"function"*)
@@ -82,11 +85,13 @@ _mk_process_build_make()
 {
     unset configure make SUBDIRS
 
-    mk_safe_source "${MK_SOURCE_DIR}$1/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MetaKitBuild"
+    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MetaKitBuild in ${1#/}"
     
     case "`type make 2>&1`" in
 	*"function"*)
 	    MK_SUBDIR="$1"
+
 	    mk_msg_verbose "emitting make rules"
 	    make
     esac
@@ -94,7 +99,7 @@ _mk_process_build_make()
 
 _mk_process_build_recursive()
 {
-    mk_push_vars MK_MSG_DOMAIN _preorder_make
+    mk_push_vars MK_MSG_DOMAIN MK_CURRENT_FILE _preorder_make
 
     MK_MSG_DOMAIN="${1#/}"
 
@@ -149,6 +154,11 @@ _mk_process_build()
 
     # Run build functions for project
     _mk_process_build_recursive ''
+
+    # Export summary variables
+    exec 3>>".MetaKitExports"
+    mk_export MK_PRECIOUS_FILES
+    exec 3>&-;
 }
 
 mk_option()
@@ -233,6 +243,7 @@ _mk_print_option()
 _mk_begin_exports()
 {
     MK_EXPORT_FILES="$MK_EXPORT_FILES '$1'"
+    MK_PRECIOUS_FILES="$MK_PRECIOUS_FILES $1"
     exec 3>"$1"
 
     for _export in ${MK_EXPORTS}
@@ -346,6 +357,8 @@ mk_config_header()
 
 EOF
 
+    mk_add_configure_output "$MK_CONFIG_HEADER"
+
     mk_pop_vars
 }
 
@@ -379,14 +392,15 @@ _mk_emit_make_footer()
 
     _mk_emit "all:${MK_ALL_TARGETS}"
     _mk_emit ""
+
     _mk_emit "clean:"
-    _mk_emitf "\t@\$(SCRIPT) clean %s\n\n" "'.MetaKitDeps'${MK_CLEAN_TARGETS} "
+    _mk_emitf "\t@\$(SCRIPT) clean\n\n"
 
     _mk_emit "scrub: clean"
-    _mk_emitf "\t@\$(SCRIPT) clean %s\n\n" "${MK_SCRUB_TARGETS}"
+    _mk_emitf "\t@\$(SCRIPT) scrub\n\n"
 
-    _mk_emit "nuke: scrub"
-    _mk_emitf "\t@\$(SCRIPT) clean 'Makefile'%s\n\n" "${MK_EXPORT_FILES}${MK_CONFIG_HEADERS}${MK_CONFIGURE_OUTPUTS}"
+    _mk_emit "nuke:"
+    _mk_emitf "\t@\$(SCRIPT) nuke\n\n"
 
     _mk_emit "regen:"
     _mk_emitf "\t@\$(SCRIPT) regen\n\n"
@@ -408,22 +422,13 @@ _mk_emit_make_footer()
 
 mk_add_all_target()
 {
-    MK_ALL_TARGETS="$MK_ALL_TARGETS ${MK_STAGE_DIR}$1"
-}
-
-mk_add_clean_target()
-{
-    MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS '${MK_OBJECT_DIR}${MK_SUBDIR}/$1'"
-}
-
-mk_add_scrub_target()
-{
-    MK_SCRUB_TARGETS="$MK_SCRUB_TARGETS '${MK_STAGE_DIR}$1'"
+    MK_ALL_TARGETS="$MK_ALL_TARGETS $1"
 }
 
 mk_add_configure_output()
 {
     MK_CONFIGURE_OUTPUTS="$MK_CONFIGURE_OUTPUTS $1"
+    MK_PRECIOUS_FILES="$MK_PRECIOUS_FILES $1"
 }
 
 mk_add_configure_input()

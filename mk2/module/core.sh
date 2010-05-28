@@ -2,89 +2,97 @@ load()
 {
     mk_resolve_input()
     {
+	mk_fail "do not call mk_resolve_input"
+    }
+
+    mk_resolve_target()
+    {
 	case "$1" in
-	    "/"*)
-		# Input is a product in the staging area
-		result="${MK_STAGE_DIR}$1"
+	    "@"*)
+		# Resolve to absolute target
+		set "${1#@}"
+		case "$1" in
+		    "/"*)
+                        # Input is a product in the staging area
+			result="${MK_STAGE_DIR}$1"
+			;;
+		    *)
+			__source_file="${MK_SOURCE_DIR}${MK_SUBDIR}/${1}"
+			
+			if [ -e "${__source_file}" ]
+			then
+                            # Input is a source file
+			    result="${__source_file}"
+			else
+                            # Input is an object file
+			    __object_file="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
+			    case "$__object_file" in
+				*'/../'*|*'/./'*)
+				    result=`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`
+				    ;;
+				*)
+				    result="$__object_file"
+				    ;;
+			    esac
+			fi
+			;;
+		esac
 		;;
 	    *)
-		__source_file="${MK_SOURCE_DIR}${MK_SUBDIR}/${1}"
-		
-		if [ -e "${__source_file}" ]
-		then
-		    # Input is a source file
-		    result="${__source_file}"
-		else
-		    # Input is an object file
-		    __object_file="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
-		    case "$__object_file" in
-			*'/../'*|*'/./'*)
-			    result=`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`
-			    ;;
-			*)
-			    result="$__object_file"
-			    ;;
-		    esac
-		fi
+		# Leave as-is
+		result="$1"
 		;;
 	esac
     }
 
     _mk_rule()
     {
-	_lhs="$1"; shift
-	_command="$1"; shift
-	_inputs=""
+	__lhs="$1"
+	shift
+	__command="$1"
+	shift
 
-	for _input in "$@"
-	do
-	    mk_resolve_input "$_input"
-	    _inputs="$_inputs $result"
-	done
-
-	if [ -n "$_command" ]
+	if [ -n "$__command" ]
 	then
-	    _mk_emitf '%s:%s\n\t@MK_SUBDIR='%s'; \\\n\t%s\n\n' "$_lhs" "${_inputs}" "${MK_SUBDIR}" "$_command"
+	    _mk_emitf '%s: %s\n\t@MK_SUBDIR='%s'; \\\n\t%s\n\n' "$__lhs" "$*" "${MK_SUBDIR}" "$__command"
 	else
-	    _mk_emitf '%s:%s\n\n' "$_lhs" "${_inputs}"
+	    _mk_emitf '%s: %s\n\n' "$__lhs" "$*"
 	fi
     }
     
-    mk_stage()
+    mk_target()
     {
-	unset OUTPUT
-	mk_push_vars COMMAND FUNCTION
+	mk_push_vars COMMAND FUNCTION TARGET DEPS
 	mk_parse_params
+
+	__resolved=""
 
 	if [ -n "$FUNCTION" ]
 	then
-	    COMMAND="\$(FUNCTION) ${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild $FUNCTION"
+	    COMMAND="\$(FUNCTION) $FUNCTION"
 	fi
-	
-	_mk_rule "${MK_STAGE_DIR}${OUTPUT}" "${COMMAND}" "$@"
 
-	mk_add_scrub_target "$OUTPUT"
-	mk_add_all_target "$OUTPUT"
+	for __dep in ${DEPS} "$@"
+	do
+	    mk_resolve_target "$__dep"
+	    __resolved="$__resolved $result"
+	done
+
+	mk_resolve_target "$TARGET"
+
+	_mk_rule "$result" "${COMMAND}" ${__resolved}
 
 	mk_pop_vars
+    }
+
+    mk_stage()
+    {
+	mk_fail "do not call mk_stage"
     }
     
     mk_object()
     {
-	unset OUTPUT
-	mk_push_vars COMMAND FUNCTION
-	mk_parse_params
-
-	if [ -n "$FUNCTION" ]
-	then
-	    COMMAND="\$(FUNCTION) ${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild $FUNCTION"
-	fi
-	
-	_mk_rule "${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}" "${COMMAND}" "$@"
-	
-	mk_add_clean_target "$OUTPUT"
-
-	mk_pop_vars
+	mk_fail "do not call mk_object"
     }
 
     mk_install_file()
@@ -97,15 +105,17 @@ load()
 	    INSTALLFILE="$INSTALLDIR/$FILE"
 	fi
 
-	mk_resolve_input "$FILE"
+	mk_resolve_target "@$FILE"
 	_resolved="$result"
 	mk_command_params MODE
 	_params="$result"
 
-	mk_stage \
-	    OUTPUT="$INSTALLFILE" \
+	mk_target \
+	    TARGET="@$INSTALLFILE" \
 	    COMMAND="\$(SCRIPT) install $_params \$@ '$_resolved'" \
-	    "$FILE" "$@"
+	    "$_resolved" "$@"
+
+	mk_add_all_target "$result"
 
 	mk_pop_vars
     }
@@ -153,7 +163,7 @@ load()
 	    _script="$_script;s|@$_export@|$result|g"
 	done
 
-	mk_resolve_input "${INPUT}"
+	mk_resolve_target "@${INPUT}"
 	_input="$result"
 	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
 

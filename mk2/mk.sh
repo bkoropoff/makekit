@@ -72,9 +72,14 @@ _mk_def_name()
     echo "$1" | tr 'a-z-./ *' 'A-Z____P'
 }
 
+mk_msg_format()
+{
+    printf "%20s %s\n" "[$1]" "$2"
+}
+
 mk_log()
 {
-    [ -n "${MK_LOG_FD}" ] && echo "[$MK_MSG_DOMAIN] $*" >&${MK_LOG_FD}
+    [ -n "${MK_LOG_FD}" ] && mk_msg_format "$MK_MSG_DOMAIN" "$*" >&${MK_LOG_FD}
 }
 
 mk_log_verbose()
@@ -85,7 +90,7 @@ mk_log_verbose()
 mk_msg()
 {
     mk_log "$@"
-    echo "[$MK_MSG_DOMAIN] $*"
+    mk_msg_format "$MK_MSG_DOMAIN" "$*"
 }
 
 mk_msg_verbose()

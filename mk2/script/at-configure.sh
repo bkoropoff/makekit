@@ -5,7 +5,8 @@ shift
 
 MK_MSG_DOMAIN="configure"
 
-mk_msg "$SOURCEDIR"
+__msg="${MK_SUBDIR}/$SOURCEDIR"
+mk_msg "${__msg#/}"
 
 mk_mkdir "${MK_OBJECT_DIR}${MK_SUBDIR}/${SOURCEDIR}"
 mk_mkdir "${MK_STAGE_DIR}"

@@ -2,7 +2,8 @@
 
 MK_MSG_DOMAIN="build"
 
-mk_msg "$SOURCEDIR"
+__msg="${MK_SUBDIR}/$SOURCEDIR"
+mk_msg "${__msg#/}"
 
 mk_mkdir "${MK_STAGE_DIR}"
 _stage_dir="`cd "${MK_STAGE_DIR}" && pwd`"

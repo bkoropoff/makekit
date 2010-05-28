@@ -2,6 +2,26 @@ DEPENDS="path compiler program"
 
 load()
 {
+    _mk_invoke_moonunit_stub()
+    {
+	mk_push_vars CPPFLAGS
+	mk_parse_params
+
+	MK_MSG_DOMAIN="moonunit-stub"
+	__output="$1"
+	shift
+
+	mk_msg "${__output#${MK_OBJECT_DIR}/}"
+
+	mk_run_program \
+	    ${MOONUNIT_STUB} \
+	    CPPFLAGS="$MK_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}" \
+	    -o "$__output" \
+	    "$@"
+
+	mk_pop_vars
+    }
+
     mk_moonunit()
     {
 	if [ "$HAVE_MOONUNIT" = no ]
@@ -22,7 +42,7 @@ load()
 
 	for _source in ${SOURCES}
 	do
-	    mk_resolve_input "$_source"
+	    mk_resolve_target "@$_source"
 	    _rsources="$_rsources $result"
 	done
 
@@ -31,10 +51,10 @@ load()
 	    _CPPFLAGS="$_CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
 	done
 
-	mk_object \
-	    OUTPUT="$_stub" \
-	    COMMAND="echo [moonunit] ${MK_SUBDIR#/}/${_stub}; moonunit-stub CPPFLAGS='$MK_CPPFLAGS $_CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}' -o \$@${_rsources}" \
-	    ${SOURCES}
+	mk_target \
+	    TARGET="@$_stub" \
+	    FUNCTION="_mk_invoke_moonunit_stub CPPFLAGS='$_CPPFLAGS' \$@ ${_rsources}" \
+	    ${_rsources}
 	
 	SOURCES="$SOURCES $_stub"
 
@@ -51,7 +71,7 @@ load()
 	    LIBDEPS="$LIBDEPS" \
 	    HEADERDEPS="$HEADERDEPS"
 
-	MK_MOONUNIT_TESTS="$MK_MOONUNIT_TESTS ${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
+	MK_MOONUNIT_TESTS="$MK_MOONUNIT_TESTS $result"
 
 	mk_pop_vars
     }
@@ -60,10 +80,11 @@ load()
 configure()
 {
     mk_check_program moonunit
+    mk_check_program moonunit-stub
     
     mk_check_headers HEADERS="moonunit/moonunit.h"
 
-    if [ -n "$MOONUNIT" -a "$HAVE_MOONUNIT_MOONUNIT_H" != no ]
+    if [ -n "$MOONUNIT" -a -n "$MOONUNIT_STUB" -a "$HAVE_MOONUNIT_MOONUNIT_H" != no ]
     then
 	HAVE_MOONUNIT=yes
     else

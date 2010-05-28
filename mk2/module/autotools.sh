@@ -19,63 +19,61 @@ load()
 
 	for _lib in ${LIBDEPS}
 	do
-	    _stage_deps="$_stage_deps ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+	    _stage_deps="$_stage_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	done
 	
 	for _header in ${HEADERDEPS}
 	do
-	    _stage_deps="$_stage_deps ${MK_INCLUDEDIR}/${_header}"
+	    _stage_deps="$_stage_deps @${MK_INCLUDEDIR}/${_header}"
 	done
 	
 	mk_command_params SOURCEDIR CPPFLAGS CFLAGS LDFLAGS
 
-	mk_object \
-	    OUTPUT=".at_configure_${_stamp}" \
+	mk_target \
+	    TARGET="@.at_configure_${_stamp}" \
 	    COMMAND="\$(SCRIPT) at-configure $result \$@ $*" \
 	    ${_stage_deps}
 
+	__configure_stamp="$result"
+
 	mk_command_params SOURCEDIR INSTALL
         
-	mk_object \
-	    OUTPUT=".at_build_${_stamp}" \
+	mk_target \
+	    TARGET="@.at_build_${_stamp}" \
 	    COMMAND="\$(SCRIPT) at-build MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' $result \$@" \
-	    "$OUTPUT"
+	    DEPS="$__configure_stamp"
+
+	__build_stamp="$result"
 
 	# Add dummy rules for headers or libraries built by this component
 	for _header in ${HEADERS}
 	do
-	    _mk_emit "${MK_STAGE_DIR}${MK_INCLUDEDIR}/${_header}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
-	    _mk_emit ""
+	    mk_target \
+		TARGET="@${MK_INCLUDEDIR}/${_header}" \
+		DEPS="$__build_stamp"
 
-	    mk_add_all_target "${MK_INCLUDEDIR}/${_header}"
+	    mk_add_all_target "$result"
+
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
 	done
 
 	for _lib in ${LIBS}
 	do
-	    _mk_emit "${MK_STAGE_DIR}${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
-	    _mk_emit ""
+	    mk_target \
+		TARGET="@${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}" \
+		DEPS="$__build_stamp"
 
-	    mk_add_all_target "${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+	    mk_add_all_target "$result"
+
 	    MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $_lib"
 	done
 
 	for _target in ${TARGETS}
 	do
-	    case "$_target" in
-		"/"*)
-		    _mk_emit "${MK_STAGE_DIR}${_target}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
-		    _mk_emit ""
-		    ;;
-		*)
-		    _mk_emit "${MK_OBJECT_DIR}${MK_SUBDIR}/${SOURCEDIR}/${_target}: ${MK_OBJECT_DIR}${MK_SUBDIR}/$OUTPUT"
-		    _mk_emit ""
-		    ;;
-	    esac
-	    _mk_emit ""
+	    mk_target \
+		TARGET="$_target" \
+		DEPS="$__build_stamp"
 	done
-
-	mk_add_clean_target "${MK_SUBDIR}${SOURCEDIR}"
 
 	if ! [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/configure" ]
 	then

@@ -20,10 +20,7 @@ _mk_load_modules()
 }
 
 mk_import
-
-__script="$1"
-shift
 _mk_load_modules
-mk_safe_source "${__script}"
+mk_safe_source "${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild"
 "$@"
 

@@ -7,11 +7,9 @@ load()
     #
     mk_compile()
     {
-	mk_push_vars SOURCE COMMAND HEADERDEPS EXTRADEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
+	mk_push_vars SOURCE COMMAND HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
 	mk_parse_params
 
-	unset _header_abs
-	
 	if [ -z "$SOURCE" ]
 	then
 	    SOURCE="$1"
@@ -31,29 +29,29 @@ load()
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
-		_header_abs="$_header_abs ${MK_INCLUDEDIR}/${_header}"
+		DEPS="$DEPS @${MK_INCLUDEDIR}/${_header}"
 	    fi
 	done
 	
-	mk_resolve_input "${SOURCE}"
+	mk_resolve_target "@${SOURCE}"
 	_res="$result"
 	mk_command_params INCLUDEDIRS CPPFLAGS CFLAGS PIC
 	_params="$result"
 
-	mk_object \
-	    OUTPUT="$_object" \
+	mk_target \
+	    TARGET="@$_object" \
 	    COMMAND="\$(SCRIPT) compile $_params \$@ '$_res'" \
-	    "${SOURCE}" ${_header_abs} ${EXTRADEPS}
+	    "${_res}" ${DEPS}
 
 	mk_pop_vars
     }
     
     mk_library()
     {
-	mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION
+	mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS
 	mk_parse_params
 
-	unset _objects _libs_abs _resolved_objects
+	unset _deps
 	
 	_mk_emit "#"
 	_mk_emit "# library ${LIB} from ${MK_SUBDIR#/}"
@@ -62,11 +60,9 @@ load()
 
 	case "$INSTALL" in
 	    no)
-		_cmd="mk_object"
 		_library="lib${LIB}${MK_LIB_EXT}"
 		;;
 	    *)
-		_cmd="mk_stage"
 		_library="${MK_LIBDIR}/lib${LIB}${MK_LIB_EXT}"
 		;;
 	esac
@@ -79,30 +75,38 @@ load()
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS" \
-		PIC="yes"
+		PIC="yes" \
+		DEPS="$DEPS"
 	    
-	    _objects="$_objects $OUTPUT"
-	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$result'"
+	    _deps="$_deps $result"
+	    OBJECTS="$OBJECTS '$result'"
 	done
 	
-	_objects="$_objects ${GROUPS}"
+	for _group in ${GROUPS}
+	do
+	    _deps="$_deps @$_group"
+	done
 	
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 
 	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS VERSION
 	
-	"$_cmd" \
-	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT) link MODE=library $result \$@${_resolved_objects}" \
-	    ${_libs_abs} ${_objects}
+	mk_target \
+	    TARGET="@$_library" \
+	    COMMAND="\$(SCRIPT) link MODE=library $result \$@${OBJECTS}" \
+	    ${_deps}
 	
+	if [ "$INSTALL" != "no" ]
+	then
+	    mk_add_all_target "$result"
+	fi
+
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
 
 	mk_pop_vars
@@ -110,11 +114,11 @@ load()
 
     mk_dso()
     {
-	mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION
+	mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS
 	mk_parse_params
-
-	unset _objects _libs_abs _resolved_objects
 	
+	unset _deps
+
 	_mk_emit "#"
 	_mk_emit "# dso ${DSO} from ${MK_SUBDIR#/}"
 	_mk_emit "#"
@@ -122,11 +126,9 @@ load()
 
 	case "$INSTALL" in
 	    no)
-		_cmd="mk_object"
 		_library="${DSO}${MK_DSO_EXT}"
 		;;
 	    *)
-		_cmd="mk_stage"
 		_library="${MK_LIBDIR}/${DSO}${MK_DSO_EXT}"
 		;;
 	esac
@@ -139,29 +141,37 @@ load()
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS" \
-		PIC="yes"
+		PIC="yes" \
+		DEPS="$DEPS"
 	    
-	    _objects="$_objects $OUTPUT"
-	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$result'"
+	    _deps="$_deps $result"
+	    OBJECTS="$OBJECTS '$result'"
 	done
 	
-	_objects="$_objects ${GROUPS}"
+	for _group in ${GROUPS}
+	do
+	    _deps="$_deps @$_group"
+	done
 	
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 	
 	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS VERSION
 
-	"$_cmd" \
-	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT) link MODE=dso $result \$@${_resolved_objects}" \
-	    ${_libs_abs} ${_objects}
+	mk_target \
+	    TARGET="@$_library" \
+	    COMMAND="\$(SCRIPT) link MODE=dso $result \$@${OBJECTS}" \
+	    ${_deps}
+
+	if [ "$INSTALL" != "no" ]
+	then
+	    mk_add_all_target "$result"
+	fi
 
 	mk_pop_vars
     }
@@ -169,11 +179,11 @@ load()
     mk_group()
     {
 	mk_push_vars GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS \
-	             HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS EXTRADEPS
+	             HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS
 	mk_parse_params
 
-	unset _objects _libs_abs _resolved_objects
-	
+	unset _deps
+
 	_mk_emit "#"
 	_mk_emit "# group ${GROUP} from ${MK_SUBDIR#/}"
 	_mk_emit "#"
@@ -183,32 +193,36 @@ load()
 	do
 	    mk_compile \
 		SOURCE="$_source" \
-		EXTRADEPS="$EXTRADEPS" \
+		DEPS="$DEPS" \
 		HEADERDEPS="$HEADERDEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS" \
 		PIC="yes"
 	    
-	    _objects="$_objects $OUTPUT"
-	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$result'"
+	    _deps="$_deps $result"
+	    OBJECTS="$OBJECTS '$result'"
+	done
+
+	for _group in ${GROUPDEPS}
+	do
+	    _deps="$_deps @$_group"
 	done
 	
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 
 	mk_command_params GROUPDEPS LIBDEPS LIBDIRS LDFLAGS
 
-	mk_object \
-	    OUTPUT="$GROUP" \
-	    COMMAND="\$(SCRIPT) group $result \$@${_resolved_objects}" \
-	    ${_libs_abs} ${_objects} ${GROUPDEPS}
+	mk_target \
+	    TARGET="@$GROUP" \
+	    COMMAND="\$(SCRIPT) group $result \$@${OBJECTS}" \
+	    ${_deps}
 
 	mk_pop_vars
     }
@@ -216,14 +230,14 @@ load()
     mk_program()
     {
 	mk_push_vars \
-	    PROGRAM SOURCES GROUPS CPPFLAGS CFLAGS \
-	    LDFLAGS LIBDEPS HEADERDEPS EXTRADEPS LIBDIRS INCLUDEDIRS INSTALLDIR
+	    PROGRAM SOURCES OBJECTS GROUPS CPPFLAGS CFLAGS \
+	    LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR
 	# Default to installing programs in bin dir
 	INSTALLDIR="${MK_BINDIR}"
 	mk_parse_params
-
-	unset _libs_abs _objects _resolved_objects
 	
+	unset _deps
+
 	_executable="${INSTALLDIR}/${PROGRAM}"
 	
 	_mk_emit "#"
@@ -236,32 +250,39 @@ load()
 	    mk_compile \
 		SOURCE="$_source" \
 		HEADERDEPS="$HEADERDEPS" \
-		EXTRADEPS="$EXTRADEPS" \
+		DEPS="$DEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS"
 	    
-	    _objects="$_objects $OUTPUT"
-	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$result'"
+	    _deps="$_deps $result"
+	    OBJECTS="$OBJECTS '$result'"
 	done
 	
-	_objects="$_objects ${GROUPS}"
+	for _group in ${GROUPS}
+	do
+	    _deps="$_deps @$_group"
+	done
 
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_libs_abs="$_libs_abs ${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
 	    fi
 	done
 	
 	mk_command_params GROUPS LIBDEPS LDFLAGS
 
-	mk_stage \
-	    OUTPUT="$_executable" \
-	    COMMAND="\$(SCRIPT) link MODE=program $result \$@ ${_resolved_objects} $@" \
-	    ${_libs_abs} ${_objects} "$@"
+	mk_target \
+	    TARGET="@$_executable" \
+	    COMMAND="\$(SCRIPT) link MODE=program $result \$@ ${OBJECTS} $@" \
+	    ${_deps} "$@"
+
+	if [ "$INSTALL" != "no" ]
+	then
+	    mk_add_all_target "$result"
+	fi
 
 	MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
 
@@ -270,11 +291,11 @@ load()
     
     mk_headers()
     {
-	mk_push_vars HEADERS MASTER INSTALLDIR HEADERDEPS
+	mk_push_vars HEADERS MASTER INSTALLDIR HEADERDEPS DEPS
 	INSTALLDIR="${MK_INCLUDEDIR}"
 	mk_parse_params
 	
-	unset _all_headers _header_abs
+	unset _all_headers
 	
 	_mk_emit "#"
 	_mk_emit "# headers from ${MK_SUBDIR#/}"
@@ -285,18 +306,20 @@ load()
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
-		_header_abs="$_header_abs ${MK_INCLUDEDIR}/${_header}"
+		DEPS="$DEPS @${MK_INCLUDEDIR}/${_header}"
 	    fi
 	done
 
 	for _header in ${HEADERS}
 	do
-	    mk_resolve_input "$_header"
-
-	    mk_stage \
-	        OUTPUT="${INSTALLDIR}/${_header}" \
+	    mk_resolve_target "@$_header"
+	    
+	    mk_target \
+	        TARGET="@${INSTALLDIR}/${_header}" \
 		COMMAND="\$(SCRIPT) install \$@ $result" \
-		"${_header}" ${_header_abs}
+		"$result" ${DEPS}
+
+	    mk_add_all_target "$result"
 
 	    _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
 	    
@@ -309,17 +332,21 @@ load()
 	    
 	    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
 
-	    _all_headers="$_all_headers $OUTPUT"
+	    _all_headers="$_all_headers $result"
 	done
 	
+	DEPS="$DEPS $_all_headers"
+
 	for _header in ${MASTER}
 	do
-	    mk_resolve_input "$_header"
-
-	    mk_stage \
-		OUTPUT="${INSTALLDIR}/${_header}" \
+	    mk_resolve_target "@$_header"
+	    
+	    mk_target \
+	        TARGET="@${INSTALLDIR}/${_header}" \
 		COMMAND="\$(SCRIPT) install \$@ $result" \
-		"${_header}" ${_all_headers} ${_header_abs}
+		"$result" ${DEPS}
+
+	    mk_add_all_target "$result"
 
 	    _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
 	    
