@@ -59,7 +59,7 @@ _mk_deref()
 
 mk_get()
 {
-    eval RET="\"\$$1\""
+    eval result="\"\$$1\""
 }
 
 _mk_set()
@@ -95,7 +95,7 @@ mk_msg_verbose()
 
 mk_quote()
 {
-    RET=""
+    result=""
     __rem="$1"
     while true
     do
@@ -103,15 +103,15 @@ mk_quote()
 
 	if [ "$__prefix" != "$__rem" ]
 	then
-	    RET="${RET}${__prefix}'\\''"
+	    result="${result}${__prefix}'\\''"
 	    __rem="${__rem#*\'}"
 	else
-	    RET="${RET}${__rem}"
+	    result="${result}${__rem}"
 	    break
 	fi
     done
 
-    RET="'${RET}'"
+    result="'${result}'"
 }
 
 _mk_find_resource()
@@ -121,7 +121,7 @@ _mk_find_resource()
 	__file="${__dir}/$1"
 	if [ -f "$__file" ]   
 	then
-	    RET="$__file"
+	    result="$__file"
 	    return 0
 	fi
     done
@@ -228,14 +228,14 @@ mk_command_params()
     do
 	mk_get "$_param"
 	
-	if [ -n "$RET" ]
+	if [ -n "$result" ]
 	then
-	    mk_quote "$RET"
-	    _params="$_params $_param=$RET"
+	    mk_quote "$result"
+	    _params="$_params $_param=$result"
 	fi
     done
 
-    RET="$_params"
+    result="$_params"
 }
 
 #

@@ -36,9 +36,9 @@ load()
 	done
 	
 	mk_resolve_input "${SOURCE}"
-	_res="$RET"
+	_res="$result"
 	mk_command_params INCLUDEDIRS CPPFLAGS CFLAGS PIC
-	_params="$RET"
+	_params="$result"
 
 	mk_object \
 	    OUTPUT="$_object" \
@@ -83,7 +83,7 @@ load()
 	    
 	    _objects="$_objects $OUTPUT"
 	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$RET'"
+	    _resolved_objects="$_resolved_objects '$result'"
 	done
 	
 	_objects="$_objects ${GROUPS}"
@@ -100,7 +100,7 @@ load()
 	
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT) link MODE=library $RET \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT) link MODE=library $result \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 	
 	MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -143,7 +143,7 @@ load()
 	    
 	    _objects="$_objects $OUTPUT"
 	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$RET'"
+	    _resolved_objects="$_resolved_objects '$result'"
 	done
 	
 	_objects="$_objects ${GROUPS}"
@@ -160,7 +160,7 @@ load()
 
 	"$_cmd" \
 	    OUTPUT="$_library" \
-	    COMMAND="\$(SCRIPT) link MODE=dso $RET \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT) link MODE=dso $result \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects}
 
 	mk_pop_vars
@@ -192,7 +192,7 @@ load()
 	    
 	    _objects="$_objects $OUTPUT"
 	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$RET'"
+	    _resolved_objects="$_resolved_objects '$result'"
 	done
 	
 	for _lib in ${LIBDEPS}
@@ -207,7 +207,7 @@ load()
 
 	mk_object \
 	    OUTPUT="$GROUP" \
-	    COMMAND="\$(SCRIPT) group $RET \$@${_resolved_objects}" \
+	    COMMAND="\$(SCRIPT) group $result \$@${_resolved_objects}" \
 	    ${_libs_abs} ${_objects} ${GROUPDEPS}
 
 	mk_pop_vars
@@ -243,7 +243,7 @@ load()
 	    
 	    _objects="$_objects $OUTPUT"
 	    mk_resolve_input "$OUTPUT"
-	    _resolved_objects="$_resolved_objects '$RET'"
+	    _resolved_objects="$_resolved_objects '$result'"
 	done
 	
 	_objects="$_objects ${GROUPS}"
@@ -260,7 +260,7 @@ load()
 
 	mk_stage \
 	    OUTPUT="$_executable" \
-	    COMMAND="\$(SCRIPT) link MODE=program $RET \$@ ${_resolved_objects} $@" \
+	    COMMAND="\$(SCRIPT) link MODE=program $result \$@ ${_resolved_objects} $@" \
 	    ${_libs_abs} ${_objects} "$@"
 
 	MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
@@ -295,7 +295,7 @@ load()
 
 	    mk_stage \
 	        OUTPUT="${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT) install \$@ $RET" \
+		COMMAND="\$(SCRIPT) install \$@ $result" \
 		"${_header}" ${_header_abs}
 
 	    _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
@@ -318,7 +318,7 @@ load()
 
 	    mk_stage \
 		OUTPUT="${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT) install \$@ $RET" \
+		COMMAND="\$(SCRIPT) install \$@ $result" \
 		"${_header}" ${_all_headers} ${_header_abs}
 
 	    _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
@@ -343,9 +343,9 @@ load()
     mk_check_cache()
     {
 	mk_get "${1}__CACHED"
-	if [ -n "$RET" ]
+	if [ -n "$result" ]
 	then
-	    CACHED="$RET"
+	    CACHED="$result"
 	    mk_export "${1}=$CACHED"
 	    return 0
 	else

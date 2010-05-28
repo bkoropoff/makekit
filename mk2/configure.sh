@@ -36,7 +36,7 @@ _mk_process_build_module()
 {
     _mk_find_resource "module/$1.sh"
 
-    MK_BUILD_FILES="$MK_BUILD_FILES $RET"
+    MK_BUILD_FILES="$MK_BUILD_FILES $result"
 
     unset option configure make SUBDIRS
 
@@ -216,7 +216,7 @@ _mk_print_option()
     if [ -n "$_found" ]
     then
 	mk_get "$VAR"
-	_doc="$_doc [$RET]"
+	_doc="$_doc [$result]"
     elif [ -n "$DEFAULT" ]
     then
 	_doc="$_doc [$DEFAULT]"
@@ -238,8 +238,8 @@ _mk_begin_exports()
     for _export in ${MK_EXPORTS}
     do
 	mk_get "$_export"
-	mk_quote "$RET"
-	echo "$_export=$RET" >&3
+	mk_quote "$result"
+	echo "$_export=$result" >&3
     done
 }
 
@@ -269,13 +269,13 @@ mk_export()
 		_mk_set "$_name" "$_val"
 		MK_EXPORTS="$MK_EXPORTS $_name"
 		mk_quote "$_val"
-		echo "$_name=$RET" >&3
+		echo "$_name=$result" >&3
 		;;
 	    *)
 		mk_get "$_export"
 		MK_EXPORTS="$MK_EXPORTS $_export"
-		mk_quote "$RET"
-		echo "$_export=$RET" >&3
+		mk_quote "$result"
+		echo "$_export=$result" >&3
 		;;
 	esac
     done
@@ -289,12 +289,12 @@ mk_define()
 	
 	if [ "$#" -eq '2' ]
 	then
-	    RET="$2"
+	    result="$2"
 	else
 	    mk_get "$_name"
 	fi
 	
-	echo "#define $_name $RET" >&5
+	echo "#define $_name $result" >&5
     fi
 }
 

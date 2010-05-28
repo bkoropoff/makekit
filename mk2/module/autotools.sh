@@ -31,14 +31,14 @@ load()
 
 	mk_object \
 	    OUTPUT=".at_configure_${_stamp}" \
-	    COMMAND="\$(SCRIPT) at-configure $RET \$@ $*" \
+	    COMMAND="\$(SCRIPT) at-configure $result \$@ $*" \
 	    ${_stage_deps}
 
 	mk_command_params SOURCEDIR INSTALL
         
 	mk_object \
 	    OUTPUT=".at_build_${_stamp}" \
-	    COMMAND="\$(SCRIPT) at-build MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' $RET \$@" \
+	    COMMAND="\$(SCRIPT) at-build MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' $result \$@" \
 	    "$OUTPUT"
 
 	# Add dummy rules for headers or libraries built by this component

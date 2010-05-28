@@ -5,7 +5,7 @@ load()
 	case "$1" in
 	    "/"*)
 		# Input is a product in the staging area
-		RET="${MK_STAGE_DIR}$1"
+		result="${MK_STAGE_DIR}$1"
 		;;
 	    *)
 		__source_file="${MK_SOURCE_DIR}${MK_SUBDIR}/${1}"
@@ -13,16 +13,16 @@ load()
 		if [ -e "${__source_file}" ]
 		then
 		    # Input is a source file
-		    RET="${__source_file}"
+		    result="${__source_file}"
 		else
 		    # Input is an object file
 		    __object_file="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
 		    case "$__object_file" in
 			*'/../'*|*'/./'*)
-			    RET=`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`
+			    result=`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`
 			    ;;
 			*)
-			    RET="$__object_file"
+			    result="$__object_file"
 			    ;;
 		    esac
 		fi
@@ -39,7 +39,7 @@ load()
 	for _input in "$@"
 	do
 	    mk_resolve_input "$_input"
-	    _inputs="$_inputs $RET"
+	    _inputs="$_inputs $result"
 	done
 
 	if [ -n "$_command" ]
@@ -98,9 +98,9 @@ load()
 	fi
 
 	mk_resolve_input "$FILE"
-	_resolved="$RET"
+	_resolved="$result"
 	mk_command_params MODE
-	_params="$RET"
+	_params="$result"
 
 	mk_stage \
 	    OUTPUT="$INSTALLFILE" \
@@ -145,16 +145,16 @@ load()
 		continue
 	    fi
 	    mk_get "$_export"
-	    case "$RET" in
+	    case "$result" in
 		*'|'*)
-		    RET="`echo "$RET" | sed 's/|/\\\\|/g'`"
+		    result="`echo "$result" | sed 's/|/\\\\|/g'`"
 		    ;;
 	    esac
-	    _script="$_script;s|@$_export@|$RET|g"
+	    _script="$_script;s|@$_export@|$result|g"
 	done
 
 	mk_resolve_input "${INPUT}"
-	_input="$RET"
+	_input="$result"
 	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
 
 	mk_mkdir "`dirname "$_output"`"
