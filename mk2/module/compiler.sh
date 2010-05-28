@@ -231,14 +231,21 @@ load()
     {
 	mk_push_vars \
 	    PROGRAM SOURCES OBJECTS GROUPS CPPFLAGS CFLAGS \
-	    LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR
+	    LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL
 	# Default to installing programs in bin dir
 	INSTALLDIR="${MK_BINDIR}"
 	mk_parse_params
 	
 	unset _deps
 
-	_executable="${INSTALLDIR}/${PROGRAM}"
+	case "$INSTALL" in
+	    no)
+		_executable="${PROGRAM}"
+		;;
+	    *)
+		_executable="${INSTALLDIR}/${PROGRAM}"
+		;;
+	esac
 	
 	_mk_emit "#"
 	_mk_emit "# program ${PROGRAM} from ${MK_SUBDIR#/}"
