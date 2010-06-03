@@ -24,6 +24,17 @@ _mk_try()
     fi
 }
 
+mk_function_exists()
+{
+    __exists_PATH="$PATH"
+    PATH=""
+    hash -r
+    type "$1" >/dev/null 2>&1
+    __exists_ret="$?"
+    PATH="$__exists_PATH"
+    return "$__exists_ret"
+}
+
 mk_safe_source()
 {
     if [ -f "$1" ]
@@ -69,11 +80,58 @@ mk_set()
     eval "${1}=\${2}"
 }
 
-alias _mk_set=mk_set
-
-_mk_def_name()
+_mk_define_name()
 {
-    echo "$1" | tr 'a-z-./ *' 'A-Z____P'
+    __rem="$1"
+    result=""
+
+    while [ -n "$__rem" ]
+    do
+	__rem2="${__rem#?}"
+	__char="${__rem%"$__rem2"}"
+	__rem="$__rem2"
+	
+	case "$__char" in
+	    # Convert lowercase letters to uppercase
+	    a) __char="A";; h) __char="H";; o) __char="O";; v) __char="V";;
+	    b) __char="B";; i) __char="I";; p) __char="P";; w) __char="W";; 
+	    c) __char="C";; j) __char="J";; q) __char="Q";; x) __char="X";; 
+	    d) __char="D";; k) __char="K";; r) __char="R";; y) __char="Y";; 
+	    e) __char="E";; l) __char="L";; s) __char="S";; z) __char="Z";; 
+	    f) __char="F";; m) __char="M";; t) __char="T";;
+	    g) __char="G";; n) __char="N";; u) __char="U";;
+	    # Leave uppercase letters and numbers alone
+	    A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|T|S|U|V|W|X|Y|Z|1|2|3|4|5|6|7|8|9) :;;
+	    # Convert * to P
+	    \*) __char="P";;
+	    # Convert everything else to _
+	    *) __char="_";;
+	esac
+
+	result="${result}${__char}"
+    done
+}
+
+_mk_slashless_name()
+{
+    __rem="$1"
+    result=""
+
+    while [ -n "$__rem" ]
+    do
+	__rem2="${__rem#?}"
+	__char="${__rem%"$__rem2"}"
+	__rem="$__rem2"
+	
+	case "$__char" in
+	    # Convert / to _
+	    /) __char="_";;
+	    # Leave everything else alone
+	    *) :;;
+	esac
+
+	result="${result}${__char}"
+    done
 }
 
 mk_msg_format()
@@ -213,7 +271,7 @@ _mk_modules_rec()
     fi
 }
 
-_mk_modules()
+_mk_module_list()
 {
     _list=""
     
@@ -223,7 +281,7 @@ _mk_modules()
 	do
 	    if [ -f "$__file" ]
 	    then
-		_module="`basename "$__file"`"
+		_module="${__file##*/}"
 		_module="${_module%.sh}"
 		unset DEPENDS
 		. "$__file"
@@ -231,8 +289,8 @@ _mk_modules()
 	    fi
 	done
     done
-
-    echo "$_list"
+    
+    result="$_list"
 }
 
 _mk_source_module()
@@ -248,6 +306,24 @@ _mk_source_module()
     done
 
     mk_fail "could not find module in search path: $1"
+}
+
+_mk_load_modules()
+{
+    _mk_module_list
+    
+    for _module in ${result}
+    do
+	unset -f load
+	
+	_mk_source_module "$_module"
+	
+	if mk_function_exists load
+	then
+	    MK_MSG_DOMAIN="${_module}"
+	    load
+	fi
+    done
 }
 
 _mk_contains()
@@ -357,7 +433,7 @@ while true
 do
   case "$1" in
     *"="*)
-      _mk_set "${1%%=*}" "${1#*=}"
+      mk_set "${1%%=*}" "${1#*=}"
       shift
     ;;
     *)

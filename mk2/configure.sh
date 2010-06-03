@@ -12,26 +12,6 @@ _mk_emitf()
     printf "$@" >&6
 }
 
-_mk_load_modules()
-{
-    for _module in `_mk_modules`
-    do
-	MK_MSG_DOMAIN="metakit"
-	mk_msg "loading module: ${_module}"
-
-	unset load
-
-	_mk_source_module "$_module"
-
-	case "`type load 2>&1`" in
-	    *"function"*)
-		MK_MSG_DOMAIN="${_module}"
-		load
-		;;
-	esac
-    done
-}
-
 _mk_process_build_module()
 {
     _mk_find_resource "module/$1.sh"
@@ -39,62 +19,51 @@ _mk_process_build_module()
     MK_CURRENT_FILE="$result"
     MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
 
-    unset option configure make SUBDIRS
+    unset -f option configure make
+    unset SUBDIRS
 
     _mk_source_module "$1"
     
-    case "`type option 2>&1`" in
-	*"function"*)
-	    option
-    esac
-
-    case "`type configure 2>&1`" in
-	*"function"*)
-	    configure
-    esac
-
-    case "`type make 2>&1`" in
-	*"function"*)
-	    make
-    esac
+    mk_function_exists option && option
+    mk_function_exists configure && configure
+    mk_function_exists make && make
 }
 
 _mk_process_build_configure()
 {
-    unset configure make SUBDIRS
+    unset -f option configure make
+    unset SUBDIRS
 
     MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MetaKitBuild"
     MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
 
     mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MetaKitBuild in ${1#/}"
     
-    case "`type option 2>&1`" in
-	*"function"*)
-	    option
-    esac
+    mk_function_exists option && option
 
-    case "`type configure 2>&1`" in
-	*"function"*)
-	    MK_SUBDIR="$1"
-	    mk_msg_verbose "configuring"
-	    configure
-    esac
+    if mk_function_exists configure
+    then
+	MK_SUBDIR="$1"
+	mk_msg_verbose "configuring"
+	configure
+    fi
 }
 
 _mk_process_build_make()
 {
-    unset configure make SUBDIRS
+    unset -f option configure make
+    unset SUBDIRS
 
     MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MetaKitBuild"
     mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MetaKitBuild in ${1#/}"
     
-    case "`type make 2>&1`" in
-	*"function"*)
-	    MK_SUBDIR="$1"
-
-	    mk_msg_verbose "emitting make rules"
-	    make
-    esac
+    if mk_function_exists make
+    then
+	MK_SUBDIR="$1"
+	
+	mk_msg_verbose "emitting make rules"
+	make
+    fi
 }
 
 _mk_process_build_recursive()
@@ -146,7 +115,8 @@ _mk_process_build()
     MK_SUBDIR=":"
 
     # Run build functions for all modules
-    for _module in `_mk_modules`
+    _mk_module_list
+    for _module in ${result}
     do
 	MK_MSG_DOMAIN="$_module"
 	_mk_process_build_module "${_module}"
@@ -174,21 +144,23 @@ mk_option()
     _IFS="$IFS"
     IFS='
 '
-    for _arg in ${MK_OPTIONS}
+
+    mk_unquote_list "$MK_OPTIONS"
+    for _arg in "$@"
     do
 	case "$_arg" in
 	    "--$OPTION="*|"--with-$OPTION="*)
-		_mk_set "$VAR" "${_arg#*=}"
+		mk_set "$VAR" "${_arg#*=}"
 		_found=yes
 		break
 		;;
 	    "--$OPTION"|"--enable-$OPTION")
-		_mk_set "$VAR" "yes"
+		mk_set "$VAR" "yes"
 		_found=yes
 		break
 		;;
 	    "--no-$OPTION"|"--disable-$OPTION")
-		_mk_set "$VAR" "yes"
+		mk_set "$VAR" "yes"
 		_found=yes
 		break
 		;;
@@ -203,7 +175,7 @@ mk_option()
 	then
 	    mk_fail "Option not specified: $OPTION"
 	else
-	    _mk_set "$VAR" "$DEFAULT"
+	    mk_set "$VAR" "$DEFAULT"
 	fi
     fi
 
@@ -277,7 +249,7 @@ mk_export()
 	    *"="*)
 		_val="${1#*=}"
 		_name="${1%%=*}"
-		_mk_set "$_name" "$_val"
+		mk_set "$_name" "$_val"
 		MK_EXPORTS="$MK_EXPORTS $_name"
 		mk_quote "$_val"
 		echo "$_name=$result" >&3
@@ -343,7 +315,7 @@ mk_config_header()
     MK_CONFIG_HEADER="${MK_OBJECT_DIR}${MK_SUBDIR}/${HEADER}"
     MK_CONFIG_HEADERS="$MK_CONFIG_HEADERS '$MK_CONFIG_HEADER'"
 
-    mkdir -p "`dirname "${MK_CONFIG_HEADER}"`"
+    mkdir -p "${MK_CONFIG_HEADER}%/*"
 
     mk_msg "config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
 
@@ -376,17 +348,15 @@ _mk_emit_make_header()
 _mk_emit_make_footer()
 {
     # Run postmake functions for all modules
-    for _module in `_mk_modules`
+    _mk_module_list
+    for _module in ${result}
     do
 	MK_MSG_DOMAIN="$_module"
-	unset postmake
+	unset -f postmake
 
 	_mk_source_module "${_module}"
 
-	case "`type postmake 2>&1`" in
-	    *"function"*)
-		postmake
-	esac
+	mk_function_exists postmake && postmake
     done
 
     _mk_emit "all:${MK_ALL_TARGETS}"
@@ -437,16 +407,17 @@ mk_add_configure_input()
 
 mk_help_recursive()
 {
-    unset option SUBDIRS
+    unset -f option
+    unset SUBDIRS
     
     mk_safe_source "${MK_SOURCE_DIR}${1}/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
 
-    case "`type option 2>&1`" in
-	*"function"*)
-	    echo "Options (${1#/}):"
-	    option
-	    echo ""
-    esac
+    if mk_function_exists option
+    then
+	echo "Options (${1#/}):"
+	option
+	echo ""
+    fi
     
     for _dir in ${SUBDIRS}
     do
@@ -467,18 +438,19 @@ mk_help()
     printf "%-40s%s\n" "  --stagedir=MK_STAGE_DIR"   "Staging directory [$MK_STAGE_DIR]"
     echo ""
 
-    for _module in `_mk_modules`
+    _mk_module_list
+    for _module in ${result}
     do
-	unset option
+	unset -f option
 
 	_mk_source_module "${_module}"
 
-	case "`type option 2>&1`" in
-	    *"function"*)
-		echo "Options ($_module):"
-		option
-		echo ""
-	esac
+	if mk_function_exists "option"
+	then
+	    echo "Options ($_module):"
+	    option
+	    echo ""
+	fi
     done
 
     if [ -f "${MK_SOURCE_DIR}/MetaKitBuild" ]
@@ -488,10 +460,11 @@ mk_help()
 }
 
 # Save our parameters for later use
-MK_OPTIONS="$( for i in "$@"; do echo "$i"; done )"
+mk_quote_list "$@"
+MK_OPTIONS="$result"
 
 # Set up basic variables
-MK_ROOT_DIR="`pwd`"
+MK_ROOT_DIR="$PWD"
 mk_option MK_SOURCE_DIR sourcedir '.'
 mk_option MK_OBJECT_DIR objectdir 'object'
 mk_option MK_STAGE_DIR stagedir 'stage'

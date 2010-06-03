@@ -412,12 +412,13 @@ load()
     mk_cache_export()
     {
 	mk_export "$1=$2"
-	_mk_set "${1}__CACHED" "$2"
+	mk_set "${1}__CACHED" "$2"
     }
 
     _mk_build_test()
     {
-	__test=".check_`echo "$2" | tr './-' '___'`"
+	_mk_slashless_name "$2"
+	__test=".check_$result"
 	cat > "${__test}.c"
 	
 	case "${1}" in
@@ -498,7 +499,8 @@ EOF
 
 	CFLAGS="$CFLAGS -Wall -Werror"
 
-	_def="HAVE_`_mk_def_name "$HEADER"`"
+	_mk_define_name "HAVE_$HEADER"
+	_def="$result"
 	
 	if mk_check_cache "$_def"
 	then
@@ -573,7 +575,8 @@ EOF
 	    _checkname="$FUNCTION()"
 	fi
 	
-	_def="HAVE_`_mk_def_name "$FUNCTION"`"
+	_mk_define_name "HAVE_$FUNCTION"
+	_def="$result"
 	
 	if [ -z "$PROTOTYPE" ] && mk_check_cache "$_def"
 	then
@@ -652,7 +655,8 @@ EOF
 	CFLAGS="$CFLAGS -Wall -Werror"
 	LIBDEPS="$LIBDEPS $LIB"
 	
-	_def="HAVE_LIB_`_mk_def_name "$LIB"`"
+	_mk_define_name "HAVE_LIB_$LIB"
+	_def="$result"
 	
 	if mk_check_cache "$_def"
 	then
@@ -688,7 +692,8 @@ EOF
 	
 	case "$_result" in
 	    external|internal)
-		mk_export "LIB_`_mk_def_name "$LIB"`=$LIB"
+		_mk_define_name "LIB_$LIB"
+		mk_export "$result=$LIB"
 		mk_pop_vars
 		return 0
 		;;
@@ -697,7 +702,8 @@ EOF
 		then
 		    mk_fail "missing library: $LIB"
 		fi
-		mk_export "LIB_`_mk_def_name "$LIB"`="
+		_mk_define_name "LIB_$LIB"
+		mk_export "$result="
 		mk_pop_vars
 		return 1
 		;;
@@ -717,7 +723,8 @@ EOF
 	CFLAGS="$CFLAGS -Wall -Werror"
 	HEADERDEPS="$HEADERDEPS stdio.h"
 	
-	_def="SIZEOF_`_mk_def_name "$TYPE"`"
+	_mk_define_name "SIZEOF_$TYPE"
+	_def="$result"
 	
 	if mk_check_cache "$_def"
 	then

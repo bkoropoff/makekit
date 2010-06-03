@@ -28,7 +28,8 @@ load()
 	    PROGRAM="$1"
 	fi
 
-	_def="`_mk_def_name "$PROGRAM"`"
+	_mk_define_name "$PROGRAM"
+	_def="$result"
 	_res=""
 
 	if _mk_contains "$PROGRAM" "$MK_INTERNAL_PROGRAMS"

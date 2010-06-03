@@ -225,11 +225,6 @@ load()
 
 	for _export in ${MK_EXPORTS}
 	do
-	    # FIXME: deal with this a better way
-	    if [ "$_export" = "MK_OPTIONS" ]
-	    then
-		continue
-	    fi
 	    mk_get "$_export"
 	    case "$result" in
 		*'|'*)

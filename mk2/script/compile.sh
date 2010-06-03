@@ -16,7 +16,8 @@ MK_MSG_DOMAIN="compile"
 if [ -z "$DISABLE_DEPGEN" ]
 then
     mk_mkdir ".MetaKitDeps"
-    DEP_FLAGS="-MMD -MP -MF .MetaKitDeps/`echo ${_object%.o} | tr / _`.dep"
+    _mk_slashless_name "${_object%.o}"
+    DEP_FLAGS="-MMD -MP -MF .MetaKitDeps/${result}.dep"
 fi
 
 if [ "$PIC" = "yes" ]
