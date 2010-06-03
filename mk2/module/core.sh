@@ -1,20 +1,18 @@
 load()
 {
-    mk_resolve_input()
-    {
-	mk_fail "do not call mk_resolve_input"
-    }
-
     mk_resolve_target()
     {
 	case "$1" in
 	    "@"*)
+		# Already an absolute target, leave as is
+		result="$1"
+		;;
+	    *)
 		# Resolve to absolute target
-		set "${1#@}"
 		case "$1" in
 		    "/"*)
                         # Input is a product in the staging area
-			result="${MK_STAGE_DIR}$1"
+			result="@${MK_STAGE_DIR}$1"
 			;;
 		    *)
 			__source_file="${MK_SOURCE_DIR}${MK_SUBDIR}/${1}"
@@ -22,27 +20,75 @@ load()
 			if [ -e "${__source_file}" ]
 			then
                             # Input is a source file
-			    result="${__source_file}"
+			    result="@${__source_file}"
 			else
                             # Input is an object file
 			    __object_file="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
 			    case "$__object_file" in
 				*'/../'*|*'/./'*)
-				    result=`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`
+				    result="@`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`"
 				    ;;
 				*)
-				    result="$__object_file"
+				    result="@$__object_file"
 				    ;;
 			    esac
 			fi
 			;;
 		esac
 		;;
-	    *)
-		# Leave as-is
-		result="$1"
-		;;
 	esac
+    }
+
+    __mk_resolve()
+    {
+	# Accumulator variable
+	__resolve_result=""
+	# Save the resolve function and quote function
+	__resolve_func="$2"
+	__resolve_quote="$3"
+	# Save the current directory
+	__resolve_PWD="$PWD"
+	# Change to the source subdirectory so that pathname expansion picks up source files.
+	cd "${MK_SOURCE_DIR}${MK_SUBDIR}" || mk_fail "could not change to directory ${MK_SOURCE_DIR}${MK_SUBDIR}"
+	# Unquote the list into the positional parameters.  This will perform pathname expansion.
+	mk_unquote_list "$1"
+	# Restore the current directory
+	cd "$__resolve_PWD"
+
+	# For each expanded item
+	for __resolve_item in "$@"
+	do
+	    # Resolve the item to a fully-qualified target/file using the resolve function
+	    "$__resolve_func" "$__resolve_item"
+	    # Quote the result using the quote function
+	    "$__resolve_quote" "$result"
+	    # Accumulate
+	    __resolve_result="$__resolve_result $result"
+	done
+
+	# Strip off the leading space
+	result="${__resolve_result# }"
+    }
+
+    mk_resolve_file()
+    {
+	mk_resolve_target "$@"
+	result="${result#@}"
+    }
+
+    mk_resolve_targets()
+    {
+	__mk_resolve "$1" mk_resolve_target mk_quote
+    }
+
+    mk_resolve_files_space()
+    {
+	__mk_resolve "$1" mk_resolve_file mk_quote_space
+    }
+
+    mk_resolve_files()
+    {
+	__mk_resolve "$1" mk_resolve_file mk_quote
     }
 
     _mk_rule()
@@ -54,45 +100,77 @@ load()
 
 	if [ -n "$__command" ]
 	then
-	    _mk_emitf '%s: %s\n\t@MK_SUBDIR='%s'; \\\n\t%s\n\n' "$__lhs" "$*" "${MK_SUBDIR}" "$__command"
+	    _mk_emitf '%s: %s\n\t@MK_SUBDIR='%s'; $(PREAMBLE); \\\n\t%s\n\n' "$__lhs" "${*# }" "${MK_SUBDIR}" "${__command# }"
 	else
-	    _mk_emitf '%s: %s\n\n' "$__lhs" "$*"
+	    _mk_emitf '%s: %s\n\n' "$__lhs" "${*# }"
 	fi
     }
     
+    _mk_build_command()
+    {
+	for __param in "$@"
+	do
+	    case "$__param" in
+		"%<"|"%>"|"%<<"|"%>>")
+		    __command="$__command ${__param#%}"
+		    ;;
+		"@"*)
+		    mk_quote "${__param#@}"
+		    __command="$__command $result"
+		    ;;
+		"&"*)
+		    mk_resolve_files "${__param#&}"
+		    __command="$__command $result"
+		    ;;
+		"%"*)
+		    mk_get "${__param#%}"
+
+		    if [ -n "$result" ]
+		    then
+			mk_quote "${__param#%}=$result"
+			__command="$__command $result"
+		    fi
+		    ;;
+		"*"*)
+		    _mk_build_command_expand "${__param#\*}"
+		    ;;
+		*)
+		    mk_quote "$__param"
+		    __command="$__command $result"
+		    ;;
+	    esac
+	done
+    }
+
+    _mk_build_command_expand()
+    {
+	
+	mk_unquote_list "$1"
+	_mk_build_command "$@"
+    }
+
     mk_target()
     {
-	mk_push_vars COMMAND FUNCTION TARGET DEPS
+	mk_push_vars TARGET DEPS
 	mk_parse_params
 
 	__resolved=""
+	__command=""
 
-	if [ -n "$FUNCTION" ]
-	then
-	    COMMAND="\$(FUNCTION) $FUNCTION"
-	fi
+	_mk_build_command "$@"
 
-	for __dep in ${DEPS} "$@"
-	do
-	    mk_resolve_target "$__dep"
-	    __resolved="$__resolved $result"
-	done
+	mk_resolve_files_space "$DEPS"
+	__resolved="$result"
 
 	mk_resolve_target "$TARGET"
+	__target="$result"
+	mk_quote_space "${result#@}"
 
-	_mk_rule "$result" "${COMMAND}" ${__resolved}
+	_mk_rule "$result" "${__command}" "${__resolved}"
 
 	mk_pop_vars
-    }
 
-    mk_stage()
-    {
-	mk_fail "do not call mk_stage"
-    }
-    
-    mk_object()
-    {
-	mk_fail "do not call mk_object"
+	result="$__target"
     }
 
     mk_install_file()
@@ -105,15 +183,13 @@ load()
 	    INSTALLFILE="$INSTALLDIR/$FILE"
 	fi
 
-	mk_resolve_target "@$FILE"
+	mk_resolve_target "$FILE"
 	_resolved="$result"
-	mk_command_params MODE
-	_params="$result"
 
 	mk_target \
-	    TARGET="@$INSTALLFILE" \
-	    COMMAND="\$(SCRIPT) install $_params \$@ '$_resolved'" \
-	    "$_resolved" "$@"
+	    TARGET="$INSTALLFILE" \
+	    DEPS="'$_resolved' $*" \
+	    mk_run_script install %MODE '$@' "$_resolved"
 
 	mk_add_all_target "$result"
 
@@ -163,7 +239,7 @@ load()
 	    _script="$_script;s|@$_export@|$result|g"
 	done
 
-	mk_resolve_target "@${INPUT}"
+	mk_resolve_file "${INPUT}"
 	_input="$result"
 	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
 
@@ -185,6 +261,14 @@ load()
 
     mk_run_script()
     {
-	env MK_SUBDIR="$MK_SUBDIR" ${MK_SHELL} "${MK_HOME}/script.sh" "$@"
+	if _mk_find_resource "script/${1}.sh"
+	then
+	    shift
+	    mk_parse_params
+	    . "$result"
+	    return "$?"
+	else
+	    mk_fail "could not find script: $1"
+	fi
     }
 }

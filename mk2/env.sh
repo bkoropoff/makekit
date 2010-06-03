@@ -20,18 +20,11 @@ _mk_load_modules()
 }
 
 mk_import
+_mk_load_modules
+if [ "$MK_SUBDIR" != ":" ]
+then
+    mk_safe_source "${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild"
+    unset -f make configure postmake
+fi
 
-for __dir in ${MK_SEARCH_DIRS}
-do
-    __script="${__dir}/script/${1}.sh"
-    if [ -f "${__script}" ]
-    then
-	shift
-	mk_parse_params
-	_mk_load_modules
-	. "${__script}"
-	return $?
-    fi
-done
 
-mk_fail "Could not find script in search patch: $1"

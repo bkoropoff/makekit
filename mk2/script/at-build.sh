@@ -3,7 +3,7 @@
 MK_MSG_DOMAIN="build"
 
 __msg="${MK_SUBDIR}/$SOURCEDIR"
-mk_msg "${__msg#/}"
+mk_msg "begin ${__msg#/}"
 
 mk_mkdir "${MK_STAGE_DIR}"
 _stage_dir="`cd "${MK_STAGE_DIR}" && pwd`"
@@ -15,3 +15,4 @@ then
 fi
 cd "${MK_ROOT_DIR}"
 _mk_try touch "$1"
+mk_msg "end ${__msg#/}"

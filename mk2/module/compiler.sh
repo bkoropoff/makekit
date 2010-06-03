@@ -7,7 +7,7 @@ load()
     #
     mk_compile()
     {
-	mk_push_vars SOURCE COMMAND HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
+	mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
 	mk_parse_params
 
 	if [ -z "$SOURCE" ]
@@ -29,19 +29,17 @@ load()
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
-		DEPS="$DEPS @${MK_INCLUDEDIR}/${_header}"
+		DEPS="$DEPS '${MK_INCLUDEDIR}/${_header}'"
 	    fi
 	done
 	
-	mk_resolve_target "@${SOURCE}"
+	mk_resolve_target "${SOURCE}"
 	_res="$result"
-	mk_command_params INCLUDEDIRS CPPFLAGS CFLAGS PIC
-	_params="$result"
 
 	mk_target \
-	    TARGET="@$_object" \
-	    COMMAND="\$(SCRIPT) compile $_params \$@ '$_res'" \
-	    "${_res}" ${DEPS}
+	    TARGET="$_object" \
+	    DEPS="$DEPS '$SOURCE'" \
+	    mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %PIC '$@' "$_res"
 
 	mk_pop_vars
     }
@@ -67,7 +65,11 @@ load()
 		;;
 	esac
 
-	for _source in ${SOURCES}
+	# Perform pathname expansion on SOURCES
+	mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
+
+	mk_unquote_list "$result"
+	for _source in "$@"
 	do
 	    mk_compile \
 		SOURCE="$_source" \
@@ -78,29 +80,29 @@ load()
 		PIC="yes" \
 		DEPS="$DEPS"
 	    
+	    mk_quote "$result"
 	    _deps="$_deps $result"
-	    OBJECTS="$OBJECTS '$result'"
+	    OBJECTS="$OBJECTS $result"
 	done
 	
-	for _group in ${GROUPS}
+	mk_unquote_list "${GROUPS}"
+	for _group in "$@"
 	do
-	    _deps="$_deps @$_group"
+	    _deps="$_deps '$_group'"
 	done
 	
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
 	    fi
 	done
 
-	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS VERSION
-	
 	mk_target \
-	    TARGET="@$_library" \
-	    COMMAND="\$(SCRIPT) link MODE=library $result \$@${OBJECTS}" \
-	    ${_deps}
+	    TARGET="$_library" \
+	    DEPS="${_deps}" \
+	    mk_run_script link MODE=library %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %VERSION '$@' "*${OBJECTS}"
 	
 	if [ "$INSTALL" != "no" ]
 	then
@@ -133,7 +135,11 @@ load()
 		;;
 	esac
 	
-	for _source in ${SOURCES}
+	# Perform pathname expansion on SOURCES
+	mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
+
+	mk_unquote_list "$result"
+	for _source in "$@"
 	do
 	    mk_compile \
 		SOURCE="$_source" \
@@ -144,29 +150,29 @@ load()
 		PIC="yes" \
 		DEPS="$DEPS"
 	    
+	    mk_quote "$result"
 	    _deps="$_deps $result"
-	    OBJECTS="$OBJECTS '$result'"
+	    OBJECTS="$OBJECTS $result"
 	done
 	
-	for _group in ${GROUPS}
+	mk_unquote_list "${GROUPS}"
+	for _group in "$@"
 	do
-	    _deps="$_deps @$_group"
+	    _deps="$_deps '$_group'"
 	done
 	
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
 	    fi
 	done
 	
-	mk_command_params GROUPS LIBDEPS LIBDIRS LDFLAGS VERSION
-
 	mk_target \
-	    TARGET="@$_library" \
-	    COMMAND="\$(SCRIPT) link MODE=dso $result \$@${OBJECTS}" \
-	    ${_deps}
+	    TARGET="$_library" \
+	    DEPS="$_deps" \
+	    mk_run_script link MODE=dso %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
 
 	if [ "$INSTALL" != "no" ]
 	then
@@ -189,40 +195,44 @@ load()
 	_mk_emit "#"
 	_mk_emit ""
 	
-	for _source in ${SOURCES}
+	# Perform pathname expansion on SOURCES
+	mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
+
+	mk_unquote_list "$result"
+	for _source in "$@"
 	do
 	    mk_compile \
 		SOURCE="$_source" \
-		DEPS="$DEPS" \
 		HEADERDEPS="$HEADERDEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
 		CFLAGS="$CFLAGS" \
-		PIC="yes"
+		PIC="yes" \
+		DEPS="$DEPS"
 	    
+	    mk_quote "$result"
 	    _deps="$_deps $result"
-	    OBJECTS="$OBJECTS '$result'"
+	    OBJECTS="$OBJECTS $result"
 	done
-
-	for _group in ${GROUPDEPS}
+	
+	mk_unquote_list "${GROUPDEPS}"
+	for _group in "$@"
 	do
-	    _deps="$_deps @$_group"
+	    _deps="$_deps '$_group'"
 	done
 	
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
 	    fi
 	done
 
-	mk_command_params GROUPDEPS LIBDEPS LIBDIRS LDFLAGS
-
 	mk_target \
-	    TARGET="@$GROUP" \
-	    COMMAND="\$(SCRIPT) group $result \$@${OBJECTS}" \
-	    ${_deps}
+	    TARGET="$GROUP" \
+	    DEPS="$_deps" \
+	    mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
 
 	mk_pop_vars
     }
@@ -252,39 +262,44 @@ load()
 	_mk_emit "#"
 	_mk_emit ""
 
-	for _source in ${SOURCES}
+	# Perform pathname expansion on SOURCES
+	mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
+
+	mk_unquote_list "$result"
+	for _source in "$@"
 	do
 	    mk_compile \
 		SOURCE="$_source" \
 		HEADERDEPS="$HEADERDEPS" \
-		DEPS="$DEPS" \
 		INCLUDEDIRS="$INCLUDEDIRS" \
 		CPPFLAGS="$CPPFLAGS" \
-		CFLAGS="$CFLAGS"
+		CFLAGS="$CFLAGS" \
+		PIC="yes" \
+		DEPS="$DEPS"
 	    
+	    mk_quote "$result"
 	    _deps="$_deps $result"
-	    OBJECTS="$OBJECTS '$result'"
+	    OBJECTS="$OBJECTS $result"
 	done
 	
-	for _group in ${GROUPS}
+	mk_unquote_list "${GROUPS}"
+	for _group in "$@"
 	do
-	    _deps="$_deps @$_group"
+	    _deps="$_deps '$_group'"
 	done
 
 	for _lib in ${LIBDEPS}
 	do
 	    if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
 	    then
-		_deps="$_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+		_deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
 	    fi
 	done
 	
-	mk_command_params GROUPS LIBDEPS LDFLAGS
-
 	mk_target \
-	    TARGET="@$_executable" \
-	    COMMAND="\$(SCRIPT) link MODE=program $result \$@ ${OBJECTS} $@" \
-	    ${_deps} "$@"
+	    TARGET="$_executable" \
+	    DEPS="$_deps" \
+	    mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS '$@' "*${OBJECTS}"
 
 	if [ "$INSTALL" != "no" ]
 	then
@@ -313,18 +328,21 @@ load()
 	do
 	    if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
 	    then
-		DEPS="$DEPS @${MK_INCLUDEDIR}/${_header}"
+		DEPS="$DEPS '${MK_INCLUDEDIR}/${_header}'"
 	    fi
 	done
 
-	for _header in ${HEADERS}
+	mk_expand_pathnames "${HEADERS}"
+
+	mk_unquote_list "$result"
+	for _header in "$@"
 	do
-	    mk_resolve_target "@$_header"
+	    mk_resolve_target "$_header"
 	    
 	    mk_target \
-	        TARGET="@${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT) install \$@ $result" \
-		"$result" ${DEPS}
+	        TARGET="${INSTALLDIR}/${_header}" \
+		DEPS="'$_header' $DEPS" \
+		mk_run_script install '$@' "${result}"
 
 	    mk_add_all_target "$result"
 
@@ -344,14 +362,17 @@ load()
 	
 	DEPS="$DEPS $_all_headers"
 
-	for _header in ${MASTER}
+	mk_expand_pathnames "${MASTER}"
+
+	mk_unquote_list "$result"
+	for _header in "$@"
 	do
-	    mk_resolve_target "@$_header"
-	    
+	    mk_resolve_target "$_header"
+	      
 	    mk_target \
-	        TARGET="@${INSTALLDIR}/${_header}" \
-		COMMAND="\$(SCRIPT) install \$@ $result" \
-		"$result" ${DEPS}
+	        TARGET="${INSTALLDIR}/${_header}" \
+		DEPS="'$_header' $DEPS" \
+		mk_run_script install '$@' "${result}"
 
 	    mk_add_all_target "$result"
 
@@ -713,7 +734,7 @@ EOF
 		    cat <<EOF
 int main(int argc, char** argv)
 { 
-    printf("%i\n", sizeof($TYPE));
+    printf("%lu\n", (unsigned long) sizeof($TYPE));
     return 0;
 }
 EOF

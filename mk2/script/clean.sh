@@ -20,7 +20,12 @@ do_clean()
     done
 }
 
-IFS='
+for __dir in "$MK_OBJECT_DIR" ".MetaKitDeps"
+do
+    if [ -d "$__dir" ]
+    then
+	IFS='
 '
-
-do_clean `find "$MK_OBJECT_DIR" ".MetaKitDeps"`
+	do_clean `find "$__dir"`
+    fi
+done

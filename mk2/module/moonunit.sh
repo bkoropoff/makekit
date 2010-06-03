@@ -13,11 +13,15 @@ load()
 
 	mk_msg "${__output#${MK_OBJECT_DIR}/}"
 
-	mk_run_program \
+	if ! mk_run_program \
 	    ${MOONUNIT_STUB} \
 	    CPPFLAGS="$MK_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}" \
 	    -o "$__output" \
 	    "$@"
+	then
+	    rm -f "$__output"
+	    mk_fail "moonunit-stub failed"
+	fi
 
 	mk_pop_vars
     }
@@ -42,19 +46,19 @@ load()
 
 	for _source in ${SOURCES}
 	do
-	    mk_resolve_target "@$_source"
-	    _rsources="$_rsources $result"
+	    mk_resolve_target "$_source"
+	    _rsources="$_rsources '$result'"
 	done
 
 	for _dir in ${INCLUDEDIRS}
 	do
-	    _CPPFLAGS="$_CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
+	    CPPFLAGS="$CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
 	done
 
 	mk_target \
-	    TARGET="@$_stub" \
-	    FUNCTION="_mk_invoke_moonunit_stub CPPFLAGS='$_CPPFLAGS' \$@ ${_rsources}" \
-	    ${_rsources}
+	    TARGET="$_stub" \
+	    DEPS="$_rsources" \
+	    _mk_invoke_moonunit_stub %CPPFLAGS '$@' "*${_rsources}"
 	
 	SOURCES="$SOURCES $_stub"
 
@@ -102,7 +106,9 @@ postmake()
 {
     if [ "$HAVE_MOONUNIT" = yes ]
     then
-	_mk_emitf "test: ${MK_MOONUNIT_TESTS}\n"
-	_mk_emitf "\t@\$(SCRIPT) moonunit ${MK_MOONUNIT_TESTS}\n\n"
+	mk_target \
+	    TARGET="@test" \
+	    DEPS="${MK_MOONUNIT_TESTS}" \
+	    mk_run_script moonunit "*${MK_MOONUNIT_TESTS}"
     fi
 }

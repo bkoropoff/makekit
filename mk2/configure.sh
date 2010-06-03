@@ -364,11 +364,10 @@ EOF
 
 _mk_emit_make_header()
 {
-    _mk_emit "MK_HOME='${MK_HOME}'"
-    _mk_emit "MK_ROOT_DIR='${MK_ROOT_DIR}'"
-    _mk_emit "MK_SHELL=${MK_SHELL}"
-    _mk_emit "SCRIPT=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR="\$\${MK_SUBDIR}" MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_HOME)/script.sh"
-    _mk_emit "FUNCTION=exec env MK_HOME='\$(MK_HOME)' MK_ROOT_DIR='\$(MK_ROOT_DIR)' MK_SUBDIR="\$\${MK_SUBDIR}" MK_VERBOSE='\$(V)' \$(MK_SHELL) \$(MK_HOME)/function.sh"
+    _mk_emit "SHELL=${MK_SHELL}"
+    _mk_emit "MK_HOME=${MK_HOME}"
+    _mk_emit "MK_ROOT_DIR=${MK_ROOT_DIR}"
+    _mk_emit "PREAMBLE=MK_HOME='\$(MK_HOME)'; MK_ROOT_DIR='\$(MK_ROOT_DIR)'; MK_VERBOSE='\$(V)'; . '\$(MK_HOME)/env.sh'"
     _mk_emit ""
     _mk_emit "default: all"
     _mk_emit ""
@@ -394,19 +393,19 @@ _mk_emit_make_footer()
     _mk_emit ""
 
     _mk_emit "clean:"
-    _mk_emitf "\t@\$(SCRIPT) clean\n\n"
+    _mk_emitf "\t@\$(PREAMBLE); mk_run_script clean\n\n"
 
     _mk_emit "scrub: clean"
-    _mk_emitf "\t@\$(SCRIPT) scrub\n\n"
+    _mk_emitf "\t@\$(PREAMBLE); mk_run_script scrub\n\n"
 
     _mk_emit "nuke:"
-    _mk_emitf "\t@\$(SCRIPT) nuke\n\n"
+    _mk_emitf "\t@\$(PREAMBLE); mk_run_script nuke\n\n"
 
     _mk_emit "regen:"
-    _mk_emitf "\t@\$(SCRIPT) regen\n\n"
+    _mk_emitf "\t@\$(PREAMBLE); mk_run_script regen\n\n"
 
     _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}"
-    _mk_emitf "\t@\$(SCRIPT) regen\n\n"
+    _mk_emitf "\t@\$(PREAMBLE); mk_run_script regen\n\n"
 
     for _target in ${MK_CONFIGURE_OUTPUTS}
     do
@@ -422,7 +421,7 @@ _mk_emit_make_footer()
 
 mk_add_all_target()
 {
-    MK_ALL_TARGETS="$MK_ALL_TARGETS $1"
+    MK_ALL_TARGETS="$MK_ALL_TARGETS ${1#@}"
 }
 
 mk_add_configure_output()

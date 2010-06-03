@@ -7,6 +7,8 @@ fi
 MK_SCRIPT_DIR="${MK_HOME}/script"
 MK_MODULE_DIR="${MK_HOME}/module"
 
+alias mk_unquote_list='eval set --'
+
 _mk_try()
 {
     mk_msg_verbose "=> $*"
@@ -62,10 +64,12 @@ mk_get()
     eval result="\"\$$1\""
 }
 
-_mk_set()
+mk_set()
 {
     eval "${1}=\${2}"
 }
+
+alias _mk_set=mk_set
 
 _mk_def_name()
 {
@@ -117,6 +121,67 @@ mk_quote()
     done
 
     result="'${result}'"
+}
+
+mk_quote_list()
+{
+    ___result=""
+    for ___item in "$@"
+    do
+	mk_quote "$___item"
+	___result="$___result $result"
+    done
+
+    result="${___result# }"
+}
+
+mk_quote_space()
+{
+    result=""
+    __rem="$1"
+    while true
+    do
+	__prefix="${__rem%%\ *}"
+
+	if [ "$__prefix" != "$__rem" ]
+	then
+	    result="${result}${__prefix}\\ "
+	    __rem="${__rem#*\ }"
+	else
+	    result="${result}${__rem}"
+	    break
+	fi
+    done
+}
+
+mk_quote_list_space()
+{
+    ___result=""
+    for ___item in "$@"
+    do
+	mk_quote_space "$___item"
+	___result="$___result $result"
+    done
+
+    result="${___result# }"
+}
+
+mk_expand_pathnames()
+{
+    ___result=""
+    ___pwd="$PWD"
+    ___dir="${2-${MK_SOURCE_DIR}${MK_SUBDIR}}"
+
+    cd "$___dir" || return 1
+    mk_unquote_list "$1"
+    cd "$___pwd" || mk_fail "where did my directory go?"
+    
+    for ___item in "$@"
+    do
+	mk_quote "$___item"
+	___result="$___result $result"
+    done
+    result="${___result# }"
 }
 
 _mk_find_resource()

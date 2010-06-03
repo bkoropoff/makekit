@@ -19,29 +19,25 @@ load()
 
 	for _lib in ${LIBDEPS}
 	do
-	    _stage_deps="$_stage_deps @${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}"
+	    _stage_deps="$_stage_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
 	done
 	
 	for _header in ${HEADERDEPS}
 	do
-	    _stage_deps="$_stage_deps @${MK_INCLUDEDIR}/${_header}"
+	    _stage_deps="$_stage_deps '${MK_INCLUDEDIR}/${_header}'"
 	done
-	
-	mk_command_params SOURCEDIR CPPFLAGS CFLAGS LDFLAGS
 
 	mk_target \
-	    TARGET="@.at_configure_${_stamp}" \
-	    COMMAND="\$(SCRIPT) at-configure $result \$@ $*" \
-	    ${_stage_deps}
+	    TARGET=".at_configure_${_stamp}" \
+	    DEPS="${_stage_deps}" \
+	    mk_run_script at-configure %SOURCEDIR %CPPFLAGS %CFLAGS %LDFLAGS '$@' "$@"
 
 	__configure_stamp="$result"
 
-	mk_command_params SOURCEDIR INSTALL
-        
 	mk_target \
-	    TARGET="@.at_build_${_stamp}" \
-	    COMMAND="\$(SCRIPT) at-build MAKE='\$(MAKE)' MFLAGS='\$(MFLAGS)' $result \$@" \
-	    DEPS="$__configure_stamp"
+	    TARGET=".at_build_${_stamp}" \
+	    DEPS="'$__configure_stamp'" \
+	    mk_run_script at-build  %SOURCEDIR MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
 
 	__build_stamp="$result"
 
@@ -49,8 +45,8 @@ load()
 	for _header in ${HEADERS}
 	do
 	    mk_target \
-		TARGET="@${MK_INCLUDEDIR}/${_header}" \
-		DEPS="$__build_stamp"
+		TARGET="${MK_INCLUDEDIR}/${_header}" \
+		DEPS="'$__build_stamp'"
 
 	    mk_add_all_target "$result"
 
@@ -60,8 +56,8 @@ load()
 	for _lib in ${LIBS}
 	do
 	    mk_target \
-		TARGET="@${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}" \
-		DEPS="$__build_stamp"
+		TARGET="${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}" \
+		DEPS="'$__build_stamp'"
 
 	    mk_add_all_target "$result"
 
@@ -72,7 +68,7 @@ load()
 	do
 	    mk_target \
 		TARGET="$_target" \
-		DEPS="$__build_stamp"
+		DEPS="'$__build_stamp'"
 	done
 
 	if ! [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/configure" ]

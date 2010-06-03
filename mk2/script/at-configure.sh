@@ -6,7 +6,7 @@ shift
 MK_MSG_DOMAIN="configure"
 
 __msg="${MK_SUBDIR}/$SOURCEDIR"
-mk_msg "${__msg#/}"
+mk_msg "begin ${__msg#/}"
 
 mk_mkdir "${MK_OBJECT_DIR}${MK_SUBDIR}/${SOURCEDIR}"
 mk_mkdir "${MK_STAGE_DIR}"
@@ -29,3 +29,4 @@ _mk_try "${_src_dir}/configure" \
     --localstatedir="${MK_LOCALSTATEDIR}" \
     "$@"
 cd "${MK_ROOT_DIR}" && _mk_try touch "$_stamp"
+mk_msg "end ${__msg#/}"
