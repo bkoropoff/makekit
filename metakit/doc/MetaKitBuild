@@ -1,0 +1,70 @@
+configure()
+{
+    mk_check_program \
+	FAIL=yes \
+	xsltproc
+
+    XSL_DIRS="/usr/share/xml/docbook/stylesheet/docbook-xsl"
+    XSL_DIR=""
+
+    for _dir in ${XSL_DIRS}
+    do
+	if [ -d "${_dir}" ]
+	then
+	    XSL_DIR="$_dir"
+	    break
+	fi
+    done
+
+    [ -z "$XSL_DIR" ] && mk_fail "could not find DocBook XSL stylesheet directory"
+
+    mk_msg "docbook XSL directory: $XSL_DIR"
+
+    mk_export XSL_DIR
+
+    mk_output_file html.xsl
+    mk_output_file man.xsl
+}
+
+make()
+{
+    INPUT="index.xml"
+    DOCDIR="${MK_DATADIR}/doc/metakit"
+    MANDIR="${MK_DATADIR}/man/man3mk"
+
+    mk_target \
+	TARGET="${DOCDIR}/html" \
+	DEPS="*.xml html.xsl" \
+	process_xml NAME=html '$@' "&$INPUT"
+
+    mk_add_all_target "$result"
+
+    mk_target \
+	TARGET="${MANDIR}" \
+	DEPS="*.xml man.xsl" \
+	process_xml NAME=man '$@' "&$INPUT"
+
+    mk_add_all_target "$result"
+}
+
+process_xml()
+{
+    mk_push_vars NAME XSL
+    mk_parse_params
+
+    MK_MSG_DOMAIN="${XSLTPROC##*/}"
+    outdir="$1"
+    infile="$2"
+
+    mk_msg "$NAME"
+    mk_mkdir "$outdir"
+    mk_run_program \
+	${XSLTPROC} \
+	--xinclude \
+	--output "$outdir/" \
+	"${MK_OBJECT_DIR}${MK_SUBDIR}/${NAME}.xsl" \
+	"$infile" || mk_fail "xsltproc failed"
+    touch "$outdir" || mk_fail "could not touch directory: $outdir"
+
+    mk_pop_vars
+}
