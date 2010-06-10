@@ -4,7 +4,7 @@ MK_MSG_DOMAIN="regen"
 
 mk_msg "mkconfigure"
 
-export MK_HOME MK_SOURCE_DIR
+export MK_HOME MK_SOURCE_DIR MK_SHELL
 
 mk_unquote_list "${MK_OPTIONS}"
 
