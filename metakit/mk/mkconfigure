@@ -1,20 +1,23 @@
 #!/bin/sh
 
-if type readlink >/dev/null 2>&1 && [ -h "$0" ]
+MK_DEFAULT_HOME="@MK_DEFAULT_HOME@"
+MK_SOURCE_DIR="`dirname "$0"`"
+
+if test -d "$MK_HOME"
 then
-    _SELF="`readlink "$0"`"
+    :
+elif test -d "$MK_DEFAULT_HOME"
+then
+    MK_HOME="${MK_DEFAULT_HOME}"
+elif test -d "${MK_SOURCE_DIR}/mk"
+then
+    MK_HOME="${MK_SOURCE_DIR}/mk"
 else
-    _SELF="$0"
+    echo "ERROR: could not find valid MK_HOME"
+    exit 1
 fi
 
-if [ "${_SELF#/}" = "${_SELF}" ]
-then
-    MK_HOME="`pwd`/`dirname "${_SELF}"`"
-else
-    MK_HOME="`dirname "${_SELF}"`"
-fi
-
-SHELL_CANDIDATES='/bin/dash /usr/bin/bash /usr/local/bin/bash /bin/sh'
+SHELL_CANDIDATES="$MK_SHELL /bin/dash /usr/bin/bash /usr/local/bin/bash /bin/sh"
 
 for _shell in ${SHELL_CANDIDATES}
 do
@@ -25,6 +28,11 @@ do
     fi
 done
 
-export MK_HOME MK_SHELL
+if test -z "$MK_SHELL"
+then
+    echo "ERROR: could not find valid MK_SHELL"
+    exit 1
+fi
 
-$MK_SHELL "${MK_HOME}/configure.sh" "$@"
+export MK_HOME MK_SHELL MK_SOURCE_DIR
+exec $MK_SHELL "${MK_HOME}/configure.sh" "$@"
