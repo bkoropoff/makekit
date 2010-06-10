@@ -80,6 +80,11 @@ mk_set()
     eval "${1}=\${2}"
 }
 
+mk_is_set()
+{
+    eval [ -n "\"\${$1+yes}\"" ]
+}
+
 _mk_define_name()
 {
     __rem="$1"

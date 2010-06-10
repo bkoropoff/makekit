@@ -141,10 +141,6 @@ mk_option()
     [ -z "$OPTION" ] && OPTION="$2"
     [ -z "$DEFAULT" ] && DEFAULT="$3"
 
-    _IFS="$IFS"
-    IFS='
-'
-
     mk_unquote_list "$MK_OPTIONS"
     for _arg in "$@"
     do
@@ -167,15 +163,14 @@ mk_option()
 	esac
     done
 
-    IFS="$_IFS"
-
     if [ -z "$_found" ]
     then
 	if [ -n "$REQUIRED" ]
 	then
 	    mk_fail "Option not specified: $OPTION"
 	else
-	    mk_set "$VAR" "$DEFAULT"
+	    mk_get "$VAR"
+	    mk_is_set "$VAR" || mk_set "$VAR" "$DEFAULT"
 	fi
     fi
 
