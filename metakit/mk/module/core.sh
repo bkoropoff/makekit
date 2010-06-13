@@ -170,6 +170,13 @@ load()
 
 	_mk_rule "$result" "${__command}" "${__resolved}"
 
+	case "$__target" in
+	    "@${MK_STAGE_DIR}"/*)
+		mk_quote "${__target#@}"
+		MK_SUBDIR_TARGETS="$MK_SUBDIR_TARGETS $result"
+		;;
+	esac
+
 	mk_pop_vars
 
 	result="$__target"
@@ -268,4 +275,37 @@ load()
 	    mk_fail "could not find script: $1"
 	fi
     }
+}
+
+configure()
+{
+    # Add a post-make() hook to write out a rule
+    # to build all staging targets in that subdirectory
+    mk_add_make_posthook _mk_core_write_subdir_rule
+}
+
+_mk_core_write_subdir_rule()
+{
+    if [ "$MK_SUBDIR" != ":" -a "$MK_SUBDIR" != "" ]
+    then
+	mk_unquote_list "$MK_SUBDIR_TARGETS"
+	mk_quote_list_space "$@"
+	_targets="$result"
+	mk_unquote_list "$SUBDIRS"
+	for __subdir in "$@"
+	do
+	    if [ "$__subdir" != "." ]
+	    then
+		mk_quote_space "${MK_SUBDIR#/}/$__subdir"
+		_targets="$_targets $result"
+	    fi
+	done
+	_mk_emit "#"
+	_mk_emit "# staging targets in ${MK_SUBDIR#/}"
+	_mk_emit "#"
+	_mk_emit ""
+	_mk_emitf "%s: %s\n\n" "${MK_SUBDIR#/}" "$_targets"
+    fi
+
+    unset MK_SUBDIR_TARGETS
 }
