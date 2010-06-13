@@ -247,6 +247,57 @@ mk_expand_pathnames()
     result="${___result# }"
 }
 
+# Matches a list of pathname patterns that specify absolute paths
+# against a directory (by default, the staging directory).  Because
+# the pathnames are absolute we have to be clever in order to get
+# the shell to match against the working directory instead of
+# the root of the filesstem
+mk_expand_absolute_pathnames()
+{
+    ___result=""
+    ___pwd="$PWD"
+    ___dir="${2-${MK_STAGE_DIR}}"
+
+    # Unquote list with globbing turned off
+    # This gives us a list of unexpanded patterns in $@
+    set -f
+    mk_unquote_list "$1"
+    set +f
+
+    # Enter the directory where matching should take place
+    cd "$___dir" || return 1
+
+    for ___item in "$@"
+    do
+	# Prefix with .
+	# For example, /usr/bin/* becomes ./usr/bin/*
+	___item=".${___item}"
+	# Now we can actually expand the pattern
+	# First, make IFS empty to prevent field splitting
+	___ifs="$IFS"
+	IFS=""
+	# Set $@ to the expansion.  Note that this doesn't
+	# interfere with the outer for loop
+	set -- ${___item}
+	# Restore IFS
+	IFS="$___ifs"
+
+	# Now iterate over each match
+	for ___item in "$@"
+	do
+	    # Strip the leading . we added
+	    mk_quote "${___item#.}"
+	    ___result="$___result $result"
+	done
+	IFS=""
+    done
+
+    # Go back home
+    cd "$___pwd" || mk_fail "where did my directory go?"
+
+    result="${___result# }"
+}
+
 _mk_find_resource()
 {
     for __dir in ${MK_SEARCH_DIRS}

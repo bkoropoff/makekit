@@ -2,7 +2,7 @@
 
 MK_MSG_DOMAIN="regen"
 
-mk_msg "mkconfigure"
+mk_msg "reconfiguring"
 
 export MK_HOME MK_SOURCE_DIR MK_SHELL
 

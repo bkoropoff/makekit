@@ -20,7 +20,7 @@ do_clean()
     done
 }
 
-for __dir in "$MK_OBJECT_DIR" ".MetaKitDeps"
+for __dir in "$MK_OBJECT_DIR" "$MK_RUN_DIR" ".MetaKitDeps"
 do
     if [ -d "$__dir" ]
     then

@@ -1,19 +1,53 @@
 DEPENDS="core path compiler platform"
 
+_mk_at_system_string()
+{
+    mk_get "MK_${1}_OS"
+
+    case "${result}" in
+	linux)
+	    __os="linux-gnu"
+	    ;;
+	*)
+	    __os="unknown"
+	    ;;
+    esac
+
+    mk_get "MK_${1}_ARCH"
+
+    case "${result}" in
+	x86)
+	    __arch="i686-pc"
+	    ;;
+	x86_64)
+	    __arch="x86_64-unknown"
+	    ;;
+	*)
+	    __arch="unknown-unknown"
+	    ;;
+    esac
+
+    result="${__arch}-${__os}"
+}
+
 load()
 {
     mk_autotools()
     {
-	mk_push_vars SOURCEDIR HEADERS LIBS LIBDEPS HEADERDEPS CPPFLAGS CFLAGS LDFLAGS INSTALL TARGETS
+	mk_push_vars \
+	    SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
+	    CPPFLAGS CFLAGS LDFLAGS INSTALL TARGETS SELECT \
+	    dir prefix
 	mk_parse_params
 
 	unset _stage_deps
 
-	_stamp="`echo "$SOURCEDIR" | tr '/.' '__'`"
-	
+	_mk_slashless_name "${SOURCEDIR}/${MK_SYSTEM}"
+	dir="$result"
+
 	_mk_emit ""
 	_mk_emit "#"
-	_mk_emit "# autotools source component $SOURCEDIR"
+	_mk_emit "# autotools source component $SOURCEDIR ($MK_SYSTEM)"
 	_mk_emit "#"
 	_mk_emit ""
 
@@ -28,20 +62,26 @@ load()
 	done
 
 	mk_target \
-	    TARGET=".at_configure_${_stamp}" \
+	    TARGET=".${dir}_configure" \
 	    DEPS="${_stage_deps}" \
-	    mk_run_script at-configure %SOURCEDIR %CPPFLAGS %CFLAGS %LDFLAGS '$@' "$@"
+	    mk_run_script \
+	    at-configure \
+	    %SOURCEDIR %CPPFLAGS %CFLAGS %LDFLAGS \
+	    DIR="$dir" '$@' "$@"
 
 	__configure_stamp="$result"
 
 	mk_target \
-	    TARGET=".at_build_${_stamp}" \
+	    TARGET=".${dir}_build" \
 	    DEPS="'$__configure_stamp'" \
-	    mk_run_script at-build  %SOURCEDIR MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
+	    mk_run_script \
+	    at-build \
+	    %SYSTEM %SOURCEDIR %INSTALL %SELECT \
+	    DIR="$dir" MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
 
 	__build_stamp="$result"
 
-	# Add dummy rules for headers or libraries built by this component
+	# Add dummy rules for target built by this component
 	for _header in ${HEADERS}
 	do
 	    mk_target \
@@ -62,6 +102,15 @@ load()
 	    mk_add_all_target "$result"
 
 	    MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $_lib"
+	done
+
+	for _program in ${PROGRAMS}
+	do
+	    mk_target \
+		TARGET="@${MK_OBJECT_DIR}/build-run/bin/${_program}" \
+		DEPS="'$__build_stamp'"
+
+	    MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $_program"
 	done
 
 	for _target in ${TARGETS}
@@ -87,4 +136,31 @@ load()
 
 	mk_pop_vars
     }
+}
+
+option()
+{
+    _mk_at_system_string BUILD
+
+    mk_option \
+	OPTION="at-build-string" \
+	VAR=MK_AT_BUILD_STRING \
+	DEFAULT="$result" \
+	HELP="Build system string"
+
+    _mk_at_system_string HOST
+
+    mk_option \
+	OPTION="at-host-string" \
+	VAR=MK_AT_HOST_STRING \
+	DEFAULT="$result" \
+	HELP="Host system string"
+}
+
+configure()
+{
+    mk_msg "build system string: $MK_AT_BUILD_STRING"
+    mk_msg "host system string: $MK_AT_HOST_STRING"
+
+    mk_export MK_AT_BUILD_STRING MK_AT_HOST_STRING
 }

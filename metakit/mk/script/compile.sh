@@ -3,7 +3,9 @@
 _object="$1"
 _source="$2"
 
-EXTRA_CPPFLAGS="-I${MK_STAGE_DIR}${MK_INCLUDEDIR} -DHAVE_CONFIG_H"
+_mk_define_name "$MK_SYSTEM"
+
+EXTRA_CPPFLAGS="-I${MK_STAGE_DIR}${MK_INCLUDEDIR} -DHAVE_CONFIG_H -D_MK_$result"
 INCLUDE_CPPFLAGS=""
 
 for _dir in ${INCLUDEDIRS}
@@ -25,7 +27,8 @@ then
     EXTRA_CFLAGS="$EXTRA_CFLAGS -fPIC"
 fi
 
-mk_msg "${_source#${MK_SOURCE_DIR}/}"
+mk_msg "${_source#${MK_SOURCE_DIR}/} ($MK_SYSTEM)"
+
 mk_mkdir "`dirname "$_object"`"
 _mk_try ${MK_CC} \
     ${INCLUDE_CPPFLAGS} ${MK_CPPFLAGS} ${CPPFLAGS} ${EXTRA_CPPFLAGS} \

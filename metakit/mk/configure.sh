@@ -25,8 +25,12 @@ _mk_process_build_module()
     _mk_source_module "$1"
     
     mk_function_exists option && option
-    mk_function_exists configure && configure
-    mk_function_exists make && make
+    if mk_function_exists configure
+    then
+	_mk_configure_prehooks
+	configure
+	_mk_configure_posthooks
+    fi
 }
 
 _mk_process_build_configure()
@@ -45,7 +49,9 @@ _mk_process_build_configure()
     then
 	MK_SUBDIR="$1"
 	mk_msg_verbose "configuring"
+	_mk_configure_prehooks
 	configure
+	_mk_configure_posthooks
     fi
 }
 
@@ -62,7 +68,9 @@ _mk_process_build_make()
 	MK_SUBDIR="$1"
 	
 	mk_msg_verbose "emitting make rules"
+	_mk_configure_prehooks
 	make
+	_mk_configure_posthooks
     fi
 }
 
@@ -122,12 +130,15 @@ _mk_process_build()
 	_mk_process_build_module "${_module}"
     done
 
+    _mk_end_exports
+
     # Run build functions for project
     _mk_process_build_recursive ''
 
     # Export summary variables
     exec 3>>".MetaKitExports"
-    mk_export MK_PRECIOUS_FILES
+    mk_quote "$MK_PRECIOUS_FILES"
+    echo "MK_PRECIOUS_FILES=$result" >&3
     exec 3>&-;
 }
 
@@ -141,40 +152,43 @@ mk_option()
     [ -z "$OPTION" ] && OPTION="$2"
     [ -z "$DEFAULT" ] && DEFAULT="$3"
 
+    if [ "$VAR" = "MK_HELP" -a "$MK_HELP" != "yes" ]
+    then
+	_skip_help="yes"
+    else
+	_skip_help=""
+    fi
+
     mk_unquote_list "$MK_OPTIONS"
     for _arg in "$@"
     do
 	case "$_arg" in
-	    "--$OPTION="*|"--with-$OPTION="*)
+	    "--$OPTION="*|"--with-$OPTION="*|"$VAR="*)
 		mk_set "$VAR" "${_arg#*=}"
-		_found=yes
 		break
 		;;
 	    "--$OPTION"|"--enable-$OPTION")
 		mk_set "$VAR" "yes"
-		_found=yes
 		break
 		;;
 	    "--no-$OPTION"|"--disable-$OPTION")
 		mk_set "$VAR" "yes"
-		_found=yes
 		break
 		;;
 	esac
     done
 
-    if [ -z "$_found" ]
+    if ! mk_is_set "$VAR"
     then
 	if [ -n "$REQUIRED" ]
 	then
 	    mk_fail "Option not specified: $OPTION"
 	else
-	    mk_get "$VAR"
-	    mk_is_set "$VAR" || mk_set "$VAR" "$DEFAULT"
+	    mk_set "$VAR" "$DEFAULT"
 	fi
     fi
 
-    if [ "$VAR" != "MK_HELP" -a "$MK_HELP" = "yes" ]
+    if [ "$MK_HELP" = "yes" -a -z "$_skip_help" ]
     then
 	_mk_print_option
     fi
@@ -184,13 +198,18 @@ mk_option()
 
 _mk_print_option()
 {
-    [ -z "$PARAM" ] && PARAM="$VAR"
+    [ -z "$PARAM" ] && PARAM="value"
     [ -z "$HELP" ] && HELP="No help available"
 
-    _form="  --${OPTION}=${PARAM}"
+    if [ -n "$OPTION" ]
+    then
+	_form="  --${OPTION}=${PARAM}"
+    else
+	_form="  ${VAR}=${PARAM}"
+    fi
     _doc="$HELP"
     
-    if [ -n "$_found" ]
+    if mk_is_set "$VAR"
     then
 	mk_get "$VAR"
 	_doc="$_doc [$result]"
@@ -201,9 +220,9 @@ _mk_print_option()
     
     if [ "${#_form}" -gt 40 ]
     then
-	printf "%s\n%-40s%s\bn" "$_form" "" "$_doc"
+	printf "%s\n%-40s%s\n" "$_form" "" "$_doc"
     else
-	printf "%-40s%s\n" "  --${OPTION}=${PARAM}" "$_doc"
+	printf "%-40s%s\n" "$_form" "$_doc"
     fi
 }
 
@@ -212,17 +231,17 @@ _mk_begin_exports()
     MK_EXPORT_FILES="$MK_EXPORT_FILES '$1'"
     MK_PRECIOUS_FILES="$MK_PRECIOUS_FILES $1"
     exec 3>"$1"
+}
 
+_mk_end_exports()
+{
     for _export in ${MK_EXPORTS}
     do
 	mk_get "$_export"
 	mk_quote "$result"
 	echo "$_export=$result" >&3
     done
-}
 
-_mk_end_exports()
-{
     echo "MK_EXPORTS='$MK_EXPORTS'" >&3	
     exec 3>&-
 }
@@ -242,91 +261,83 @@ mk_export()
     do
 	case "$_export" in
 	    *"="*)
-		_val="${1#*=}"
-		_name="${1%%=*}"
+		_val="${_export#*=}"
+		_name="${_export%%=*}"
 		mk_set "$_name" "$_val"
 		MK_EXPORTS="$MK_EXPORTS $_name"
 		mk_quote "$_val"
-		echo "$_name=$result" >&3
 		;;
 	    *)
 		mk_get "$_export"
 		MK_EXPORTS="$MK_EXPORTS $_export"
 		mk_quote "$result"
-		echo "$_export=$result" >&3
 		;;
 	esac
     done
 }
 
-mk_define()
+mk_add_configure_prehook()
 {
-    if [ -n "$MK_CONFIG_HEADER" ]
+    if ! _mk_contains "$1" "$_MK_CONFIGURE_PREHOOKS"
     then
-	_name="$1"
-	
-	if [ "$#" -eq '2' ]
-	then
-	    result="$2"
-	else
-	    mk_get "$_name"
-	fi
-	
-	echo "#define $_name $result" >&5
+	_MK_CONFIGURE_PREHOOKS="$_MK_CONFIGURE_PREHOOKS $1"
     fi
 }
 
-_mk_close_config_header()
+mk_add_configure_posthook()
 {
-    if [ -n "${MK_CONFIG_HEADER}" ]
+    if ! _mk_contains "$1" "$_MK_CONFIGURE_POSTHOOKS"
     then
-	cat >&5 <<EOF
-
-#endif
-EOF
-	exec 5>&-
-
-	if [ -f "${MK_CONFIG_HEADER}" ] && diff "${MK_CONFIG_HEADER}" "${MK_CONFIG_HEADER}.new" >/dev/null 2>&1
-	then
-	    # The config header has not changed, so don't touch the timestamp on the file */
-	    rm -f "${MK_CONFIG_HEADER}.new"
-	else
-	    mv "${MK_CONFIG_HEADER}.new" "${MK_CONFIG_HEADER}"
-	fi
-
-	MK_CONFIG_HEADER=""
+	_MK_CONFIGURE_POSTHOOKS="$_MK_CONFIGURE_POSTHOOKS $1"
     fi
 }
 
-mk_config_header()
+mk_add_make_prehook()
 {
-    mk_push_vars HEADER
-    mk_parse_params
+    if ! _mk_contains "$1" "$_MK_MAKE_PREHOOKS"
+    then
+	_MK_MAKE_PREHOOKS="$_MK_MAKE_PREHOOKS $1"
+    fi
+}
 
-    _mk_close_config_header
+mk_add_make_posthook()
+{
+    if ! _mk_contains "$1" "$_MK_MAKE_POSTHOOKS"
+    then
+	_MK_MAKE_POSTHOOKS="$_MK_MAKE_POSTHOOKS $1"
+    fi
+}
 
-    [ -z "$HEADER" ] && HEADER="$1"
+_mk_configure_prehooks()
+{
+    for _hook in ${_MK_CONFIGURE_PREHOOKS}
+    do
+	"$_hook"
+    done
+}
 
-    MK_CONFIG_HEADER="${MK_OBJECT_DIR}${MK_SUBDIR}/${HEADER}"
-    MK_CONFIG_HEADERS="$MK_CONFIG_HEADERS '$MK_CONFIG_HEADER'"
+_mk_configure_posthooks()
+{
+    for _hook in ${_MK_CONFIGURE_POSTHOOKS}
+    do
+	"$_hook"
+    done
+}
 
-    mkdir -p "${MK_CONFIG_HEADER}%/*"
+_mk_make_prehooks()
+{
+    for _hook in ${_MK_MAKE_PREHOOKS}
+    do
+	"$_hook"
+    done
+}
 
-    mk_msg "config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
-
-    exec 5>"${MK_CONFIG_HEADER}.new"
-
-    cat >&5 <<EOF
-/* Generated by MetaKit */
-
-#ifndef __MK_CONFIG_H__
-#define __MK_CONFIG_H__
-
-EOF
-
-    mk_add_configure_output "$MK_CONFIG_HEADER"
-
-    mk_pop_vars
+_mk_make_posthooks()
+{
+    for _hook in ${_MK_MAKE_POSTHOOKS}
+    do
+	"$_hook"
+    done
 }
 
 _mk_emit_make_header()
@@ -342,16 +353,21 @@ _mk_emit_make_header()
 
 _mk_emit_make_footer()
 {
-    # Run postmake functions for all modules
+    # Run make functions for all modules
     _mk_module_list
     for _module in ${result}
     do
 	MK_MSG_DOMAIN="$_module"
-	unset -f postmake
-
+	unset -f make
+	
 	_mk_source_module "${_module}"
-
-	mk_function_exists postmake && postmake
+	
+	if mk_function_exists make
+	then
+	    _mk_make_prehooks
+	    make
+	    _mk_make_posthooks
+	fi
     done
 
     _mk_emit "all:${MK_ALL_TARGETS}"
@@ -427,10 +443,7 @@ mk_help()
 {
     echo "Usage: mkconfigure [ options ... ]"
     echo "Options:"
-    printf "%-40s%s\n" "  --help"                    "Show this help"
-    printf "%-40s%s\n" "  --sourcedir=MK_SOURCE_DIR" "Source directory [$MK_SOURCE_DIR]"
-    printf "%-40s%s\n" "  --objectdir=MK_OBJECT_DIR" "Object directory [$MK_OBJECT_DIR]"
-    printf "%-40s%s\n" "  --stagedir=MK_STAGE_DIR"   "Staging directory [$MK_STAGE_DIR]"
+    _basic_options
     echo ""
 
     _mk_module_list
@@ -454,16 +467,51 @@ mk_help()
     fi
 }
 
+_basic_options()
+{
+    mk_option \
+	VAR=MK_SOURCE_DIR \
+	OPTION=sourcedir \
+	PARAM=path \
+	DEFAULT='.' \
+	HELP="Source directory"
+   
+    mk_option \
+	VAR=MK_OBJECT_DIR \
+	OPTION=objectdir \
+	PARAM=path \
+	DEFAULT='object' \
+	HELP="Intermediate file directory"
+    
+    mk_option \
+	VAR=MK_STAGE_DIR \
+	OPTION=stagedir \
+	PARAM=path \
+	DEFAULT='stage' \
+	HELP="Staging directory"
+    
+    mk_option \
+	VAR=MK_RUN_DIR \
+	OPTION=rundir \
+	PARAM=path \
+	DEFAULT='run' \
+	HELP="Self-built tools install directory"
+	
+    mk_option \
+	VAR=MK_HELP \
+	OPTION=help \
+	PARAM='yes|no' \
+	DEFAULT='no' \
+	HELP="Show this help"
+}
+
 # Save our parameters for later use
 mk_quote_list "$@"
 MK_OPTIONS="$result"
 
 # Set up basic variables
 MK_ROOT_DIR="$PWD"
-mk_option MK_SOURCE_DIR sourcedir '.'
-mk_option MK_OBJECT_DIR objectdir 'object'
-mk_option MK_STAGE_DIR stagedir 'stage'
-mk_option MK_HELP help 'no'
+_basic_options
 
 MK_SEARCH_DIRS="${MK_HOME}"
 
@@ -496,12 +544,12 @@ MK_MSG_DOMAIN="metakit"
 _mk_begin_exports ".MetaKitExports"
 
 # Open Makefile for writing
-exec 6>Makefile
+exec 6>.Makefile.new
 MK_MAKEFILE_FD=6
 
 # Export basic variables
 export MK_HOME MK_SHELL MK_ROOT_DIR
-mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_OPTIONS MK_SEARCH_DIRS
+mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_RUN_DIR MK_OPTIONS MK_SEARCH_DIRS
 
 # Emit Makefile header
 _mk_emit_make_header
@@ -512,11 +560,9 @@ _mk_process_build
 # Emit Makefile footer
 _mk_emit_make_footer
 
-# Close Makefile
+# Close and atomically replace Makefile
 exec 6>&-
-
-# Close config header file if one was open
-_mk_close_config_header
+mv ".Makefile.new" "Makefile" || mk_fail "could not replace Makefile"
 
 # Close log file
 exec 4>&-

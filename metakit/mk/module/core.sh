@@ -1,3 +1,5 @@
+DEPENDS="platform"
+
 load()
 {
     mk_resolve_target()
@@ -100,7 +102,7 @@ load()
 
 	if [ -n "$__command" ]
 	then
-	    _mk_emitf '%s: %s\n\t@MK_SUBDIR='%s'; $(PREAMBLE); \\\n\t%s\n\n' "$__lhs" "${*# }" "${MK_SUBDIR}" "${__command# }"
+	    _mk_emitf '%s: %s\n\t@MK_SUBDIR='%s'; $(PREAMBLE); mk_system "%s"; \\\n\t%s\n\n' "$__lhs" "${*# }" "${MK_SUBDIR}" "$MK_SYSTEM" "${__command# }"
 	else
 	    _mk_emitf '%s: %s\n\n' "$__lhs" "${*# }"
 	fi
@@ -111,7 +113,7 @@ load()
 	for __param in "$@"
 	do
 	    case "$__param" in
-		"%<"|"%>"|"%<<"|"%>>")
+		"%<"|"%>"|"%<<"|"%>>"|"%;")
 		    __command="$__command ${__param#%}"
 		    ;;
 		"@"*)

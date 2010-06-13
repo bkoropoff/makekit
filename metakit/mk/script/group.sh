@@ -10,7 +10,7 @@ _ALL_LDFLAGS="$LDFLAGS"
 
 MK_MSG_DOMAIN="group"
 
-mk_msg "${object#${MK_OBJECT_DIR}/}"
+mk_msg "${object#${MK_OBJECT_DIR}/} ($MK_SYSTEM)"
 
 for _group in ${GROUPDEPS}
 do

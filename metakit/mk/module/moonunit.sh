@@ -85,16 +85,22 @@ load()
 
 configure()
 {
-    mk_check_program moonunit
-    mk_check_program moonunit-stub
-    
-    mk_check_headers HEADERS="moonunit/moonunit.h"
-
-    if [ -n "$MOONUNIT" -a -n "$MOONUNIT_STUB" -a "$HAVE_MOONUNIT_MOONUNIT_H" != no ]
+    if [ "${MK_BUILD_OS}-${MK_BUILD_ARCH}" != "${MK_HOST_OS}-${MK_HOST_ARCH}" ]
     then
-	HAVE_MOONUNIT=yes
-    else
+	mk_msg "moonunit unavailable when cross-compiling"
 	HAVE_MOONUNIT=no
+    else
+	mk_check_program moonunit
+	mk_check_program moonunit-stub
+	
+	mk_check_headers HEADERS="moonunit/moonunit.h"
+	
+	if [ -n "$MOONUNIT" -a -n "$MOONUNIT_STUB" -a "$HAVE_MOONUNIT_MOONUNIT_H" != no ]
+	then
+	    HAVE_MOONUNIT=yes
+	else
+	    HAVE_MOONUNIT=no
+	fi
     fi
     
     mk_msg "moonunit available: $HAVE_MOONUNIT"
@@ -102,7 +108,7 @@ configure()
     mk_export HAVE_MOONUNIT
 }
 
-postmake()
+make()
 {
     if [ "$HAVE_MOONUNIT" = yes ]
     then

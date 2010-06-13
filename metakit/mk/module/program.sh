@@ -12,10 +12,7 @@ load()
 	    mk_msg "=> ${__program##*/} $*"
 	fi
 
-	mk_run_with_extended_library_path \
-	    "${MK_STAGE_DIR}${MK_LIBDIR}" \
-	    "${__program}" \
-	    "$@"
+	"$__program" "$@"
     }
 
     mk_check_program()
@@ -34,7 +31,7 @@ load()
 
 	if _mk_contains "$PROGRAM" "$MK_INTERNAL_PROGRAMS"
 	then
-	    _res="${MK_STAGE_DIR}${MK_BIN_DIR}/${PROGRAM}"
+	    _res="${MK_RUN_BINDIR}/${PROGRAM}"
 	else
 	    _IFS="$IFS"
 	    IFS=":"

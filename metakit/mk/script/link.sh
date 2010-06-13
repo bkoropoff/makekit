@@ -66,15 +66,25 @@ version_post()
 object="$1"
 shift 1
 
-STAGE_LIBDIR="${MK_STAGE_DIR}${MK_LIBDIR}"
+
+if [ "${MK_SYSTEM%/*}" = "build" ]
+then
+    LINK_LIBDIR="$MK_RUN_LIBDIR"
+    RPATH_LIBDIR="$MK_ROOT_DIR/$MK_RUN_LIBDIR"
+else
+    mk_get_system_var MK_LIBDIR "$MK_SYSTEM"
+    RPATH_LIBDIR="$result"
+    mk_resolve_file "$result"
+    LINK_LIBDIR="$result"
+fi
 
 COMBINED_LIBDEPS="$LIBDEPS"
-COMBINED_LDFLAGS="$LDFLAGS -L${STAGE_LIBDIR}"
+COMBINED_LDFLAGS="$LDFLAGS -L${LINK_LIBDIR}"
 COMBINED_LIBDIRS="$LIBDIRS"
 
 case "${MK_OS}" in
     linux)
-	COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-rpath,${MK_LIBDIR} -Wl,-rpath-link,${STAGE_LIBDIR}"
+	COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-rpath,${RPATH_LIBDIR} -Wl,-rpath-link,${LINK_LIBDIR}"
 	;;
 esac
 
@@ -100,8 +110,11 @@ version_pre
 
 MK_MSG_DOMAIN="link"
 
-mk_msg "${object#${MK_STAGE_DIR}}"
+
+mk_msg "${object#${MK_STAGE_DIR}} ($MK_SYSTEM)"
+
 mk_mkdir "`dirname "$object"`"
+
 case "$MODE" in
     library)
 	_mk_try ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
