@@ -45,14 +45,11 @@ _mk_process_build_configure()
     
     mk_function_exists option && option
 
-    if mk_function_exists configure
-    then
-	MK_SUBDIR="$1"
-	mk_msg_verbose "configuring"
-	_mk_configure_prehooks
-	configure
-	_mk_configure_posthooks
-    fi
+    MK_SUBDIR="$1"
+    mk_msg_verbose "configuring"
+    _mk_configure_prehooks
+    mk_function_exists configure && configure
+    _mk_configure_posthooks
 }
 
 _mk_process_build_make()
@@ -63,15 +60,11 @@ _mk_process_build_make()
     MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MetaKitBuild"
     mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MetaKitBuild in ${1#/}"
     
-    if mk_function_exists make
-    then
-	MK_SUBDIR="$1"
-	
-	mk_msg_verbose "emitting make rules"
-	_mk_configure_prehooks
-	make
-	_mk_configure_posthooks
-    fi
+    MK_SUBDIR="$1"
+    mk_msg_verbose "emitting make rules"
+    _mk_make_prehooks
+    mk_function_exists make && make
+    _mk_make_posthooks
 }
 
 _mk_process_build_recursive()

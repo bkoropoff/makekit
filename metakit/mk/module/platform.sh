@@ -281,9 +281,10 @@ configure()
     mk_add_make_prehook _mk_platform_restore_system_vars
 
     # Register hooks that commit all system variables
-    # at the end of all configure() functions so that they
-    # get written out as exports correctly
+    # at the end of all configure() and make() functions so that they
+    # get written out as exports and restored correctly
     mk_add_configure_posthook _mk_platform_commit_system_vars
+    mk_add_make_posthook _mk_platform_commit_system_vars
 
     # Set the default system now
     mk_system "host/${MK_HOST_PRIMARY_ISA}"
