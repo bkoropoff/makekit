@@ -116,5 +116,7 @@ make()
 	    TARGET="@test" \
 	    DEPS="${MK_MOONUNIT_TESTS}" \
 	    mk_run_script moonunit "*${MK_MOONUNIT_TESTS}"
+
+	mk_add_phony_target "$result"
     fi
 }

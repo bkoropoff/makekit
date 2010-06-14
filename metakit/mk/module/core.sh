@@ -50,8 +50,11 @@ load()
 	__resolve_quote="$3"
 	# Save the current directory
 	__resolve_PWD="$PWD"
+	if [ "$MK_SUBDIR" != ":" ]
+	then
 	# Change to the source subdirectory so that pathname expansion picks up source files.
-	cd "${MK_SOURCE_DIR}${MK_SUBDIR}" || mk_fail "could not change to directory ${MK_SOURCE_DIR}${MK_SUBDIR}"
+	    cd "${MK_SOURCE_DIR}${MK_SUBDIR}" || mk_fail "could not change to directory ${MK_SOURCE_DIR}${MK_SUBDIR}"
+	fi
 	# Unquote the list into the positional parameters.  This will perform pathname expansion.
 	mk_unquote_list "$1"
 	# Restore the current directory
@@ -102,9 +105,9 @@ load()
 
 	if [ -n "$__command" ]
 	then
-	    _mk_emitf '%s: %s\n\t@MK_SUBDIR='%s'; $(PREAMBLE); mk_system "%s"; \\\n\t%s\n\n' "$__lhs" "${*# }" "${MK_SUBDIR}" "$MK_SYSTEM" "${__command# }"
+	    _mk_emitf '\n%s: %s\n\t@MK_SUBDIR='%s'; $(PREAMBLE); mk_system "%s"; \\\n\t%s\n' "$__lhs" "${*# }" "${MK_SUBDIR}" "$MK_SYSTEM" "${__command# }"
 	else
-	    _mk_emitf '%s: %s\n\n' "$__lhs" "${*# }"
+	    _mk_emitf '\n%s: %s\n' "$__lhs" "${*# }"
 	fi
     }
     
@@ -172,7 +175,7 @@ load()
 
 	case "$__target" in
 	    "@${MK_STAGE_DIR}"/*)
-		mk_quote "${__target#@}"
+		mk_quote "${__target}"
 		MK_SUBDIR_TARGETS="$MK_SUBDIR_TARGETS $result"
 		;;
 	esac
@@ -275,6 +278,62 @@ load()
 	    mk_fail "could not find script: $1"
 	fi
     }
+
+    mk_add_all_target()
+    {
+	mk_quote "$1"
+	MK_ALL_TARGETS="$MK_ALL_TARGETS $result"
+    }
+
+    mk_add_phony_target()
+    {
+	mk_quote "$1"
+	MK_PHONY_TARGETS="$MK_PHONY_TARGETS $result"
+    }
+
+    
+    mk_check_cache()
+    {
+	_mk_define_name "CACHED_$MK_SYSTEM"
+	if mk_is_set "${1}__${result}"
+	then
+	    mk_get "${1}__${result}"
+	    __value="${result}"
+	    mk_declare_system_var "$1"
+	    mk_set "$1" "$__value"
+	    result="$__value"
+	    return 0
+	else
+	    return 1
+	fi
+    }
+
+    mk_cache()
+    {
+	_mk_define_name "CACHED_$MK_SYSTEM"
+	MK_CACHE_VARS="$MK_CACHE_VARS ${1}__${result}"
+	mk_set "${1}__${result}" "$2"
+	mk_set "$1" "$2"
+	mk_declare_system_var "$1"
+    }
+
+    _mk_save_cache()
+    {
+	{
+	    for __var in ${MK_CACHE_VARS}
+	    do
+		mk_get "$__var"
+		mk_quote "$result"
+		echo "$__var=$result"
+	    done
+	    echo "MK_CACHE_VARS='${MK_CACHE_VARS# }'"
+	} > .MetaKitCache
+    }
+
+    _mk_load_cache()
+    {
+	mk_safe_source "./.MetaKitCache"
+    }
 }
 
 configure()
@@ -282,21 +341,64 @@ configure()
     # Add a post-make() hook to write out a rule
     # to build all staging targets in that subdirectory
     mk_add_make_posthook _mk_core_write_subdir_rule
+   
+    # Emit the default target
+    mk_target \
+	TARGET="@default" \
+	DEPS="@all"
+    
+    mk_add_phony_target "$result"
+
+    # Load configure check cache if there is one
+    _mk_load_cache
+}
+
+make()
+{
+    mk_target \
+	TARGET="@all" \
+	DEPS="$MK_ALL_TARGETS"
+
+    mk_add_phony_target "$result"
+
+    mk_target \
+	TARGET="@clean" \
+	mk_run_script clean
+
+    mk_add_phony_target "$result"
+
+    mk_target \
+	TARGET="@scrub" \
+	DEPS="@clean" \
+	mk_run_script scrub
+
+    mk_add_phony_target "$result"
+
+    mk_target \
+	TARGET="@nuke" \
+	mk_run_script nuke
+
+    mk_add_phony_target "$result"
+
+    mk_target \
+	TARGET="@.PHONY" \
+	DEPS="$MK_PHONY_TARGETS"
+
+    # Save configure check cache
+    _mk_save_cache
 }
 
 _mk_core_write_subdir_rule()
 {
     if [ "$MK_SUBDIR" != ":" -a "$MK_SUBDIR" != "" ]
     then
-	mk_unquote_list "$MK_SUBDIR_TARGETS"
-	mk_quote_list_space "$@"
-	_targets="$result"
+	_targets=""
 	mk_unquote_list "$SUBDIRS"
 	for __subdir in "$@"
 	do
 	    if [ "$__subdir" != "." ]
 	    then
-		mk_quote_space "${MK_SUBDIR#/}/$__subdir"
+		mk_quote "@${MK_SUBDIR#/}/$__subdir"
 		_targets="$_targets $result"
 	    fi
 	done
@@ -304,7 +406,12 @@ _mk_core_write_subdir_rule()
 	_mk_emit "# staging targets in ${MK_SUBDIR#/}"
 	_mk_emit "#"
 	_mk_emit ""
-	_mk_emitf "%s: %s\n\n" "${MK_SUBDIR#/}" "$_targets"
+
+	mk_target \
+	    TARGET="@${MK_SUBDIR#/}" \
+	    DEPS="$MK_SUBDIR_TARGETS $_targets"
+
+	mk_add_phony_target "$result"
     fi
 
     unset MK_SUBDIR_TARGETS

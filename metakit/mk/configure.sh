@@ -128,6 +128,8 @@ _mk_process_build()
     # Run build functions for project
     _mk_process_build_recursive ''
 
+    MK_SUBDIR=":"
+
     # Export summary variables
     exec 3>>".MetaKitExports"
     mk_quote "$MK_PRECIOUS_FILES"
@@ -339,15 +341,13 @@ _mk_emit_make_header()
     _mk_emit "MK_HOME=${MK_HOME}"
     _mk_emit "MK_ROOT_DIR=${MK_ROOT_DIR}"
     _mk_emit "PREAMBLE=MK_HOME='\$(MK_HOME)'; MK_ROOT_DIR='\$(MK_ROOT_DIR)'; MK_VERBOSE='\$(V)'; . '\$(MK_HOME)/env.sh'"
-    _mk_emit ""
-    _mk_emit "default: all"
-    _mk_emit ""
 }
 
 _mk_emit_make_footer()
 {
-    # Run make functions for all modules
+    # Run make functions for all modules in reverse order
     _mk_module_list
+    _mk_reverse ${result}
     for _module in ${result}
     do
 	MK_MSG_DOMAIN="$_module"
@@ -363,23 +363,9 @@ _mk_emit_make_footer()
 	fi
     done
 
-    _mk_emit "all:${MK_ALL_TARGETS}"
     _mk_emit ""
-
-    _mk_emit "clean:"
-    _mk_emitf "\t@\$(PREAMBLE); mk_run_script clean\n\n"
-
-    _mk_emit "scrub: clean"
-    _mk_emitf "\t@\$(PREAMBLE); mk_run_script scrub\n\n"
-
-    _mk_emit "nuke:"
-    _mk_emitf "\t@\$(PREAMBLE); mk_run_script nuke\n\n"
-
-    _mk_emit "regen:"
-    _mk_emitf "\t@\$(PREAMBLE); mk_run_script regen\n\n"
-
     _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}"
-    _mk_emitf "\t@\$(PREAMBLE); mk_run_script regen\n\n"
+    _mk_emitf "\t@\$(PREAMBLE); MK_SOURCE_DIR='%s'; MK_MSG_DOMAIN='metakit'; mk_msg 'regenerating Makefile'; set -- %s; . '\$(MK_HOME)/configure.sh'\n\n" "$MK_SOURCE_DIR" "$MK_OPTIONS"
 
     for _target in ${MK_CONFIGURE_OUTPUTS}
     do
@@ -389,13 +375,6 @@ _mk_emit_make_footer()
 
     _mk_emit "sinclude .MetaKitDeps/*.dep"
     _mk_emit ""
-
-    _mk_emit ".PHONY: default all clean scrub regen"
-}
-
-mk_add_all_target()
-{
-    MK_ALL_TARGETS="$MK_ALL_TARGETS ${1#@}"
 }
 
 mk_add_configure_output()

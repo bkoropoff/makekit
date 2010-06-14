@@ -513,30 +513,6 @@ EOF
 	
 	mk_pop_vars
     }
-    
-    mk_check_cache()
-    {
-	_mk_define_name "CACHED_$MK_SYSTEM"
-	if mk_is_set "${1}__${result}"
-	then
-	    mk_get "${1}__${result}"
-	    __value="${result}"
-	    mk_declare_system_var "$1"
-	    mk_set "$1" "$__value"
-	    result="$__value"
-	    return 0
-	else
-	    return 1
-	fi
-    }
-
-    mk_cache_export()
-    {
-	_mk_define_name "CACHED_$MK_SYSTEM"
-	mk_set "${1}__${result}" "$2"
-	mk_set "$1" "$2"
-	mk_declare_system_var "$1"
-    }
 
     _mk_build_test()
     {
@@ -639,7 +615,7 @@ EOF
 	elif _mk_contains "$HEADER" ${MK_INTERNAL_HEADERS}
 	then
 	    _result="internal"
-	    mk_cache_export "$_varname" "$_result"
+	    mk_cache "$_varname" "$_result"
 	else
 	    {
 		echo "#include <${HEADER}>"
@@ -660,7 +636,7 @@ EOF
 		_result="no"
 	    fi
 	    
-	    mk_cache_export "$_varname" "$_result"
+	    mk_cache "$_varname" "$_result"
 	fi
 
 	mk_msg "header $HEADER: $_result ($MK_SYSTEM)"
@@ -746,7 +722,7 @@ EOF
 		_result="no"
 	    fi
 
-	    mk_cache_export "$_varname" "$_result"
+	    mk_cache "$_varname" "$_result"
 	fi
 
 	mk_msg "function $_checkname: $_result ($MK_SYSTEM)"
@@ -786,7 +762,7 @@ EOF
 	elif _mk_contains "$LIB" ${MK_INTERNAL_LIBS}
 	then
 	    _result="internal"
-	    mk_cache_export "$_varname" "$_result"
+	    mk_cache "$_varname" "$_result"
 	else
 	    {
 		cat <<EOF
@@ -804,7 +780,7 @@ EOF
 		_result="no"
 	    fi
 	    
-	    mk_cache_export "$_varname" "$_result"
+	    mk_cache "$_varname" "$_result"
 	fi
 	
 	mk_msg "library $LIB: $_result ($MK_SYSTEM)"
@@ -867,7 +843,7 @@ EOF
 		mk_fail "could not determine sizeof($TYPE)"
 	    fi
 	    
-	    mk_cache_export "$_varname" "$_result"
+	    mk_cache "$_varname" "$_result"
 
 	    mk_define "$_defname" "$_result"
 	fi
@@ -944,7 +920,7 @@ EOF
 		mk_fail "could not determine endianness"
 	    fi
 	    
-	    mk_cache_export "$_varname" "$_result"
+	    mk_cache "$_varname" "$_result"
 
 	    if [ "$_result" = "big" ]
 	    then

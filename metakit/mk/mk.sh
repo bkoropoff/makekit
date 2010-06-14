@@ -398,6 +398,17 @@ _mk_contains()
     return 1
 }
 
+_mk_reverse()
+{
+    result=""
+    for ___item in "$@"
+    do
+	result="$___item $result"
+    done
+
+    result="${result% }"
+}
+
 _mk_random()
 {
     if [ -z "$MK_RANDOM_SEED" ]
