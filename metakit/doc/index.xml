@@ -1,11 +1,15 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE reference PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-          "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<reference xmlns:xi="http://www.w3.org/2001/XInclude">
-  <referenceinfo>
+<book 
+   xmlns="http://docbook.org/ns/docbook" version="5.0"
+   xmlns:xi="http://www.w3.org/2001/XInclude">
+  <info>
+    <title>MetaKit Guide</title>
+    <author>
+      <firstname>Brian</firstname>
+      <surname>Koropoff</surname>
+    </author>
     <productname>MetaKit</productname>
-  </referenceinfo>
-  <title>MetaKit Function Reference</title>
-  <xi:include href="mk_target.xml"/>
-  <xi:include href="mk_resolve_target.xml"/>
-</reference>
+  </info>
+  
+  <xi:include href="chapter/c-projects.xml"/>
+  <xi:include href="appendix/reference.xml"/>
+</book>
