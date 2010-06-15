@@ -16,7 +16,7 @@ do_clean()
 	fi
 	
 	mk_msg "${_target#${MK_OBJECT_DIR}/}"
-    	_mk_try rm -f "$_target"
+    	mk_run_or_fail rm -f "$_target"
     done
 }
 

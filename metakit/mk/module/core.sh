@@ -334,6 +334,21 @@ load()
     {
 	mk_safe_source "./.MetaKitCache"
     }
+
+    mk_run_or_fail()
+    {
+	mk_msg_verbose "+ $*"
+	
+	___output=`"$@" 2>&1`
+	___ret=$?
+	
+	if [ $___ret -ne 0 ]
+	then
+	    mk_msg "FAILED: $*"
+	    echo "$___output"
+	    exit 1
+	fi
+    }
 }
 
 configure()

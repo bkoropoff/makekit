@@ -2,19 +2,6 @@ DEPENDS="core platform"
 
 load()
 {
-    mk_run_program()
-    {
-	__program="$1"
-	shift
-	
-	if [ -n "$MK_VERBOSE" ]
-	then
-	    mk_msg "=> ${__program##*/} $*"
-	fi
-
-	"$__program" "$@"
-    }
-
     mk_check_program()
     {
 	mk_push_vars PROGRAM FAIL

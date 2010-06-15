@@ -125,11 +125,11 @@ load()
 	    if [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/autogen.sh" ]
 	    then
 		mk_msg "running autogen.sh for ${SOURCEDIR}"
-		cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && _mk_try "./autogen.sh"
+		cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail "./autogen.sh"
 		cd "${MK_ROOT_DIR}"
 	    else
 		mk_msg "running autoreconf for ${SOURCEDIR}"
-		cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && _mk_try autoreconf -fi
+		cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail autoreconf -fi
 		cd "${MK_ROOT_DIR}"
 	    fi
 	fi

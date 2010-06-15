@@ -57,7 +57,7 @@ version_post()
     do
 	if [ -n "$_link" ]
 	then
-	    _mk_try ln -sf "${_target##*/}" "${_link}"
+	    mk_run_or_fail ln -sf "${_target##*/}" "${_link}"
 	    _target="$_link"
 	fi
     done
@@ -117,13 +117,13 @@ mk_mkdir "`dirname "$object"`"
 
 case "$MODE" in
     library)
-	_mk_try ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
+	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
 	;;
     dso)
-	_mk_try ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
+	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
 	;;
     program)
-	_mk_try ${MK_CC} -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS}
+	mk_run_or_fail ${MK_CC} -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS}
 	;;
 esac
 

@@ -13,8 +13,7 @@ load()
 
 	mk_msg "${__output#${MK_OBJECT_DIR}/}"
 
-	if ! mk_run_program \
-	    ${MOONUNIT_STUB} \
+	if ! ${MOONUNIT_STUB} \
 	    CPPFLAGS="$MK_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}" \
 	    -o "$__output" \
 	    "$@"

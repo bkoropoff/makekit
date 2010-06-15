@@ -30,7 +30,7 @@ fi
 mk_msg "${_source#${MK_SOURCE_DIR}/} ($MK_SYSTEM)"
 
 mk_mkdir "`dirname "$_object"`"
-_mk_try ${MK_CC} \
+mk_run_or_fail ${MK_CC} \
     ${INCLUDE_CPPFLAGS} ${MK_CPPFLAGS} ${CPPFLAGS} ${EXTRA_CPPFLAGS} \
     ${MK_CFLAGS} ${CFLAGS} ${EXTRA_CFLAGS} \
     ${DEP_FLAGS} \

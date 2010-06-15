@@ -7,6 +7,6 @@ do
     if [ -e "$_target" ]
     then
 	mk_msg "${_target}"
-    	_mk_try rm -rf "$_target"
+    	mk_run_or_fail rm -rf "$_target"
     fi
 done

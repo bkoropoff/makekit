@@ -12,21 +12,6 @@ MK_MODULE_DIR="${MK_HOME}/module"
 
 alias mk_unquote_list='eval set --'
 
-_mk_try()
-{
-    mk_msg_verbose "=> $*"
-
-    ___output=`"$@" 2>&1`
-    ___ret=$?
-
-    if [ $___ret -ne 0 ]
-    then
-	mk_msg "FAILED: $@"
-	echo "$___output"
-	exit 1
-    fi
-}
-
 mk_function_exists()
 {
     __exists_PATH="$PATH"
