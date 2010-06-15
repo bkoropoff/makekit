@@ -772,7 +772,7 @@ int main(int argc, char** argv)
 }
 EOF
 	    } >.check.c
-	    mk_log "running link test for library: $LIBRARY"
+	    mk_log "running link test for library: $LIB"
 	    if _mk_build_test 'link-program' ".check.c"
 	    then
 		_result="external"
