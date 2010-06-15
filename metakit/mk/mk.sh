@@ -1,7 +1,10 @@
-# Make bash process aliases in non-interactive mode
+# Work around bashisms
 if [ -n "$BASH_VERSION" ]
 then
+    # Make bash process aliases in non-interactive mode
     shopt -s expand_aliases
+    # Unset special variable GROUPS so it becomes normal
+    unset GROUPS
 fi
 
 MK_SCRIPT_DIR="${MK_HOME}/script"
