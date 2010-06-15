@@ -11,4 +11,4 @@ then
     unset -f make configure option
 fi
 
-MK_LOG_DOMAIN="${MK_SUBDIR#/}"
+MK_MSG_DOMAIN="${MK_SUBDIR#/}"
