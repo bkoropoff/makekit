@@ -8,6 +8,10 @@ _mk_at_system_string()
 	linux)
 	    __os="linux-gnu"
 	    ;;
+	solaris)
+	    mk_get "MK_${1}_DISTRO_VERSION"
+	    __os="solaris2.${result}"
+	    ;;
 	*)
 	    __os="unknown"
 	    ;;

@@ -217,6 +217,35 @@ mk_quote_list_space()
     result="${___result# }"
 }
 
+mk_quote_c_string()
+{
+    result=""
+    __rem="$1"
+    while true
+    do
+	__prefix="${__rem%%[\"\\]*}"
+
+	if [ "$__prefix" != "$__rem" ]
+	then
+	    __rem="${__rem#$__prefix}"
+	    case "$__rem" in
+		"\\"*)
+		    result="${result}${__prefix}\\\\"
+		    ;;
+		"\""*)
+		    result="${result}${__prefix}\\\""
+		    ;;
+	    esac
+	    __rem="${__rem#?}"
+	else
+	    result="${result}${__rem}"
+	    break
+	fi
+    done
+
+    result="\"${result}\""
+}
+
 mk_expand_pathnames()
 {
     ___result=""

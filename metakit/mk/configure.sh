@@ -246,8 +246,6 @@ _mk_restore_exports()
     unset ${MK_EXPORTS}
 
     . "$1"
-
-    export ${MK_EXPORTS}
 }
 
 mk_export()
@@ -259,13 +257,10 @@ mk_export()
 		_val="${_export#*=}"
 		_name="${_export%%=*}"
 		mk_set "$_name" "$_val"
-		MK_EXPORTS="$MK_EXPORTS $_name"
-		mk_quote "$_val"
+		_mk_contains "$_name" ${MK_EXPORTS} || MK_EXPORTS="$MK_EXPORTS $_name"
 		;;
 	    *)
-		mk_get "$_export"
-		MK_EXPORTS="$MK_EXPORTS $_export"
-		mk_quote "$result"
+		_mk_contains "$_export" ${MK_EXPORTS} || MK_EXPORTS="$MK_EXPORTS $_export"
 		;;
 	esac
     done
@@ -520,7 +515,6 @@ exec 6>.Makefile.new
 MK_MAKEFILE_FD=6
 
 # Export basic variables
-export MK_HOME MK_SHELL MK_ROOT_DIR
 mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_RUN_DIR MK_OPTIONS MK_SEARCH_DIRS
 
 # Emit Makefile header

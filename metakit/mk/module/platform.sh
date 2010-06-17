@@ -130,14 +130,18 @@ option()
 {
     case `uname` in
 	Linux)
-	    _default_MK_BUILD_OS='linux'
+	    _default_MK_BUILD_OS="linux"
+	    ;;
+	SunOS)
+	    _default_MK_BUILD_OS="solaris"
 	    ;;
 	*)
-	    mk_fail "unknown OS: `uname`"
+	    _default_MK_BUILD_OS="unknown"
+	    ;;
     esac
 
     case `uname -m` in
-	i?86)
+	i?86|i86pc)
 	    _default_MK_BUILD_ARCH="x86"
 	    ;;
 	x86_64)
@@ -174,6 +178,11 @@ option()
 		_default_MK_BUILD_DISTRO="unknown"
 		_default_MK_BUILD_DISTRO_VERSION="unknown"
 	    fi		
+	    ;;
+	solaris)
+	    __release="`uname -r`"
+	    _default_MK_BUILD_DISTRO="solaris"
+	    _default_MK_BUILD_DISTRO_VERSION="${__release#*.}"
 	    ;;
 	*)
 	    _default_MK_BUILD_DISTRO="unknown"
@@ -247,32 +256,55 @@ option()
 
 configure()
 {
-    mk_export MK_SYSTEM_VARS
+    mk_export \
+	MK_BUILD_OS MK_BUILD_DISTRO MK_BUILD_DISTRO_VERSION \
+	MK_BUILD_ARCH MK_BUILD_ISAS MK_BUILD_PRIMARY_ISA \
+	MK_HOST_OS MK_HOST_DISTRO MK_HOST_DISTRO_VERSION \
+	MK_HOST_ARCH MK_HOST_ISAS MK_HOST_PRIMARY_ISA \
+	MK_SYSTEM_VARS
 
-    case "$MK_HOST_OS" in
-	linux)
-	    MK_LIB_EXT=".so"
-	    MK_DSO_EXT=".so"
-	    ;;
-    esac
+    mk_declare_system_var \
+	MK_OS MK_DISTRO MK_DISTRO_VERSION MK_ARCH MK_ISAS \
+	MK_DSO_EXT MK_LIB_EXT
 
-    mk_msg "build operating system: $MK_BUILD_OS"
-    mk_msg "build distribution: $MK_BUILD_DISTRO"
-    mk_msg "build distribution version: $MK_BUILD_DISTRO_VERSION"
-    mk_msg "build processor architecture: $MK_BUILD_ARCH"
-    mk_msg "build instruction set architectures: $MK_BUILD_ISAS"
+    for _isa in ${MK_BUILD_ISAS}
+    do
+	mk_set_system_var SYSTEM="build/$_isa" MK_OS "$MK_BUILD_OS"
+	mk_set_system_var SYSTEM="build/$_isa" MK_DISTRO "$MK_BUILD_DISTRO"
+	mk_set_system_var SYSTEM="build/$_isa" MK_DISTRO_VERSION "$MK_BUILD_DISTRO_VERSION"
+	mk_set_system_var SYSTEM="build/$_isa" MK_ARCH "$MK_BUILD_ARCH"
+	mk_set_system_var SYSTEM="build/$_isa" MK_ISAS "$MK_BUILD_ISAS"
+    done
 
-    mk_msg "host operating system: $MK_HOST_OS"
-    mk_msg "host distribution: $MK_HOST_DISTRO"
-    mk_msg "host distribution version: $MK_HOST_DISTRO_VERSION"
-    mk_msg "host processor architecture: $MK_HOST_ARCH"
-    mk_msg "host instruction set architectures: $MK_HOST_ISAS"
+    for _isa in ${MK_HOST_ISAS}
+    do
+	mk_set_system_var SYSTEM="host/$_isa" MK_OS "$MK_HOST_OS"
+	mk_set_system_var SYSTEM="host/$_isa" MK_DISTRO "$MK_HOST_DISTRO"
+	mk_set_system_var SYSTEM="host/$_isa" MK_DISTRO_VERSION "$MK_HOST_DISTRO_VERSION"
+	mk_set_system_var SYSTEM="host/$_isa" MK_ARCH "$MK_HOST_ARCH"
+	mk_set_system_var SYSTEM="host/$_isa" MK_ISAS "$MK_HOST_ISAS"
+    done
 
-    mk_export MK_BUILD_OS MK_BUILD_DISTRO MK_BUILD_DISTRO_VERSION MK_BUILD_ARCH MK_BUILD_ISAS MK_BUILD_PRIMARY_ISA
-    mk_export MK_HOST_OS MK_HOST_DISTRO MK_HOST_DISTRO_VERSION MK_HOST_ARCH MK_HOST_ISAS MK_HOST_PRIMARY_ISA
-    mk_export MK_LIB_EXT MK_DSO_EXT
-
-    mk_export MK_OS="$MK_HOST_OS" MK_ARCH="$MK_HOST_ARCH"
+    for _sys in build host
+    do
+	mk_system "$_sys"
+	
+	for _isa in "$MK_ISAS"
+	do
+	    case "$MK_OS-$_isa" in
+		linux-*|solaris-*)
+		    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".so"
+		    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DSO_EXT ".so"
+		    ;;
+	    esac
+	done
+	
+	mk_msg "$_sys operating system: $MK_OS"
+	mk_msg "$_sys distribution: $MK_DISTRO"
+	mk_msg "$_sys distribution version: $MK_DISTRO_VERSION"
+	mk_msg "$_sys processor architecture: $MK_ARCH"
+	mk_msg "$_sys instruction set architectures: $MK_ISAS"
+    done
 
     # Register hooks that set the target system to the default
     # or restore any modified system variables at the start of

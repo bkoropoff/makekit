@@ -1,5 +1,7 @@
 #!/bin/sh
 
+MK_MSG_DOMAIN="link"
+
 version_pre()
 {
     case "$MODE" in
@@ -63,6 +65,45 @@ version_post()
     done
 }
 
+combine_libtool_flags()
+{
+    for _lib in ${COMBINED_LIBDEPS}
+    do
+	for _path in ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -L/usr/lib -L/lib
+	do
+	    case "$_path" in
+		"-L"*)
+		    if [ -e "${_path#-L}/lib${_lib}.la" ]
+		    then
+			unset dependency_libs
+			mk_safe_source "${_path#-L}/lib${_lib}.la" || mk_fail "could not read libtool archive"
+			for _dep in ${dependency_libs}
+			do
+			    case "$_dep" in
+				"${MK_LIBDIR}"/*.la)
+				    _dep="${_dep##*/}"
+				    _dep="${_dep#lib}"
+				    _mk_contains "${_dep%.la}" ${COMBINED_LIBDEPS} ||
+				    COMBINED_LIBDEPS="${COMBINED_LIBDEPS} ${_dep%.la}" 
+				    ;;
+				"-l"*)
+				    _mk_contains "${_dep#-l}" ${COMBINED_LIBDEPS} ||
+				    COMBINED_LIBDEPS="${COMBINED_LIBDEPS} ${_dep#-l}"
+				    ;;
+				"-L"*)
+				    _mk_contains "${_dep}" ${COMBINED_LDFLAGS} ||
+				    COMBINED_LDFLAGS="$COMBINED_LDFLAGS $_dep"
+				    ;;
+			    esac
+			done
+			break
+		    fi
+		    ;;
+	    esac
+	done
+    done
+}
+
 object="$1"
 shift 1
 
@@ -72,9 +113,8 @@ then
     LINK_LIBDIR="$MK_RUN_LIBDIR"
     RPATH_LIBDIR="$MK_ROOT_DIR/$MK_RUN_LIBDIR"
 else
-    mk_get_system_var MK_LIBDIR "$MK_SYSTEM"
-    RPATH_LIBDIR="$result"
-    mk_resolve_file "$result"
+    RPATH_LIBDIR="$MK_LIBDIR"
+    mk_resolve_file "$MK_LIBDIR"
     LINK_LIBDIR="$result"
 fi
 
@@ -82,18 +122,10 @@ COMBINED_LIBDEPS="$LIBDEPS"
 COMBINED_LDFLAGS="$LDFLAGS -L${LINK_LIBDIR}"
 COMBINED_LIBDIRS="$LIBDIRS"
 
-case "${MK_OS}" in
-    linux)
-	COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-rpath,${RPATH_LIBDIR} -Wl,-rpath-link,${LINK_LIBDIR}"
-	;;
-esac
-
 for _group in ${GROUPS}
 do
     unset OBJECTS LIBDEPS LIBDIRS LDFLAGS
-    _dirname="`dirname "$_group"`"
     mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/$_group" || mk_fail "Could not read group $_group"
-
 
     GROUP_OBJECTS="$GROUP_OBJECTS ${OBJECTS}"
     COMBINED_LIBDEPS="$COMBINED_LIBDEPS $LIBDEPS"
@@ -101,29 +133,55 @@ do
     COMBINED_LDFLAGS="$COMBINED_LDFLAGS $LDFLAGS"
 done
 
+case "${MK_OS}" in
+    linux)
+	COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-rpath,${RPATH_LIBDIR} -Wl,-rpath-link,${LINK_LIBDIR}"
+	;;
+    solaris)
+	COMBINED_LDFLAGS="$COMBINED_LDFLAGS -R${RPATH_LIBDIR}"
+	
+	if [ "$MODE" = "library" ]
+	then
+	    COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-z,defs -Wl,-z,text"
+	    COMBINED_LIBDEPS="$COMBINED_LIBDEPS c"
+	fi
+
+	# The solaris linker is anal retentive about implicit shared library dependencies,
+	# so use available libtool .la files to add implicit dependencies to the link command
+	combine_libtool_flags
+	;;
+esac
+
 for lib in ${COMBINED_LIBDEPS}
 do
-    COMBINED_LDFLAGS="$COMBINED_LDFLAGS -l${lib}"
+    _LIBS="$_LIBS -l${lib}"
 done
+
+[ "${object%/*}" != "${object}" ] && mk_mkdir "${object%/*}"
+
+# Create a fake .la file that can be used by combine_libtool_flags
+# This should be expanded upon for full compatibility with libtool
+mk_msg_verbose "${object%.*}.la"
+
+{
+    mk_quote "-L${RPATH_LIBDIR} $_LIBS"
+    echo "# Created by MetaKit"
+    echo "dependency_libs=$result"
+} > "${object%.*}.la" || mk_fail "could not write ${object%.*}.la"
 
 version_pre
 
-MK_MSG_DOMAIN="link"
-
-
 mk_msg "${object#${MK_STAGE_DIR}} ($MK_SYSTEM)"
-
-mk_mkdir "`dirname "$object"`"
 
 case "$MODE" in
     library)
-	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
+	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
 	;;
     dso)
-	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS} -fPIC
+	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
 	;;
     program)
-	mk_run_or_fail ${MK_CC} -o "$object" "$@" ${GROUP_OBJECTS} ${MK_LDFLAGS} ${COMBINED_LDFLAGS}
+	mk_run_or_fail ${MK_CC} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} ${_LIBS}
 	;;
 esac
 

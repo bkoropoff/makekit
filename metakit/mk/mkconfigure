@@ -17,7 +17,14 @@ else
     exit 1
 fi
 
-SHELL_CANDIDATES="$MK_SHELL /bin/dash /usr/bin/bash /usr/local/bin/bash /bin/sh"
+SHELL_CANDIDATES="\
+    $MK_SHELL \
+    /bin/dash \
+    /bin/bash \
+    /usr/bin/bash \
+    /usr/local/bin/bash \
+    /usr/xpg4/bin/sh \
+    /bin/sh"
 
 for _shell in ${SHELL_CANDIDATES}
 do
@@ -35,4 +42,10 @@ then
 fi
 
 export MK_HOME MK_SHELL MK_SOURCE_DIR
-exec $MK_SHELL "${MK_HOME}/configure.sh" "$@"
+
+if [ -n "$MK_TRACE" ]
+then
+    _trace="-x"
+fi
+
+exec $MK_SHELL ${_trace} "${MK_HOME}/configure.sh" "$@"

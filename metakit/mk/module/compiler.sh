@@ -495,7 +495,7 @@ EOF
 	MK_CONFIG_HEADER="${MK_OBJECT_DIR}${MK_SUBDIR}/${HEADER}"
 	MK_CONFIG_HEADERS="$MK_CONFIG_HEADERS '$MK_CONFIG_HEADER'"
 	
-	mkdir -p "${MK_CONFIG_HEADER}%/*"
+	mkdir -p "${MK_CONFIG_HEADER%/*}"
 	
 	mk_msg "config header ${MK_CONFIG_HEADER#${MK_OBJECT_DIR}/}"
 	
@@ -561,7 +561,7 @@ EOF
 		echo ""
 		echo "Failed code:"
 		echo ""
-		cat "${__test}.c" | awk 'BEGIN { no = 1; } { printf("%3i  %s\n", no, $0); no++; }'
+		cat "${__test}.c" | awk 'BEGIN { no = 1; } { printf("%3d  %s\n", no, $0); no++; }'
 		echo ""
 	    } >&${MK_LOG_FD}
 	fi

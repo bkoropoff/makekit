@@ -37,7 +37,7 @@ _lib_dir="${_stage_dir}${_libdir}"
 
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$DIR" && \
 mk_run_or_fail "${_src_dir}/configure" \
-    CC="$_cc" \
+    CC="$MK_CC" \
     CPPFLAGS="-I${_include_dir} $_cppflags $CPPFLAGS" \
     CFLAGS="$MK_CFLAGS $CFLAGS" \
     LDFLAGS="-L${_lib_dir} $MK_LDFLAGS $LDFLAGS" \

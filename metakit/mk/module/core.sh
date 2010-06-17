@@ -228,36 +228,42 @@ load()
 
     mk_output_file()
     {
-	unset OUTPUT _script
-	mk_push_vars INPUT
+	mk_push_vars INPUT OUTPUT
 	mk_parse_params
-	
+
 	[ -z "$OUTPUT" ] && OUTPUT="$1"
 	[ -z "$INPUT" ] && INPUT="${OUTPUT}.in"
 
-	for _export in ${MK_EXPORTS}
-	do
-	    mk_get "$_export"
-	    case "$result" in
-		*'|'*)
-		    result="`echo "$result" | sed 's/|/\\\\|/g'`"
-		    ;;
-	    esac
-	    _script="$_script;s|@$_export@|$result|g"
-	done
+	# Emit an awk script that will perform replacements
+	{
+	    echo "{"
+	    
+	    for _export in ${MK_EXPORTS}
+	    do
+		mk_get "$_export"
+		mk_quote_c_string "$result"
+
+		echo "    gsub(\"@${_export}@\", $result);"
+	    done
+
+	    echo "    print \$0;"
+	    echo "}"
+	} > ".awk.$$"
 
 	mk_resolve_file "${INPUT}"
 	_input="$result"
-	_output="${MK_OBJECT_DIR}${MK_SUBDIR}/${OUTPUT}"
+	mk_resolve_file "${OUTPUT}"
+	_output="$result"
 
-	mk_mkdir "`dirname "$_output"`"
-	sed "${_script#;}" < "$_input" > "${_output}.new" || mk_fail "failed to generate $_output"
+	mk_mkdir "${_output%/*}"
+	awk -f ".awk.$$" < "$_input" > "${_output}.new" || mk_fail "awk error"
+	mk_run_or_fail rm -f ".awk.$$"
 
 	if [ -f "${_output}" ] && diff "${_output}" "${_output}.new" >/dev/null 2>&1
 	then
-	    rm -f "${_output}.new"
+	    mk_run_or_fail rm -f "${_output}.new"
 	else
-	    mv "${_output}.new" "${_output}"
+	    mk_run_or_fail mv "${_output}.new" "${_output}"
 	fi
 
 	mk_add_configure_output "${_output}"
