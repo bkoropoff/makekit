@@ -135,6 +135,9 @@ option()
 	SunOS)
 	    _default_MK_BUILD_OS="solaris"
 	    ;;
+	FreeBSD)
+	    _default_MK_BUILD_OS="freebsd"
+	    ;;
 	*)
 	    _default_MK_BUILD_OS="unknown"
 	    ;;
@@ -178,6 +181,11 @@ option()
 		_default_MK_BUILD_DISTRO="unknown"
 		_default_MK_BUILD_DISTRO_VERSION="unknown"
 	    fi		
+	    ;;
+	freebsd)
+	    __release="`uname -r`"
+	    _default_MK_BUILD_DISTRO="`uname -s | tr 'A-Z' 'a-z'`"
+	    _default_MK_BUILD_DISTRO_VERSION="${__release%-*}"
 	    ;;
 	solaris)
 	    __release="`uname -r`"
@@ -292,7 +300,7 @@ configure()
 	for _isa in "$MK_ISAS"
 	do
 	    case "$MK_OS-$_isa" in
-		linux-*|solaris-*)
+		linux-*|solaris-*|freebsd-*)
 		    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".so"
 		    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DSO_EXT ".so"
 		    ;;

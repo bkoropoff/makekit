@@ -104,6 +104,19 @@ combine_libtool_flags()
     done
 }
 
+create_libtool_archive()
+{
+    # Create a fake .la file that can be used by combine_libtool_flags
+    # This should be expanded upon for full compatibility with libtool
+    mk_msg_verbose "${object%.*}.la"
+    
+    {
+	mk_quote "-L${RPATH_LIBDIR} $_LIBS"
+	echo "# Created by MetaKit"
+	echo "dependency_libs=$result"
+    } > "${object%.*}.la" || mk_fail "could not write ${object%.*}.la"
+}
+
 object="$1"
 shift 1
 
@@ -134,7 +147,7 @@ do
 done
 
 case "${MK_OS}" in
-    linux)
+    linux|freebsd)
 	COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-rpath,${RPATH_LIBDIR} -Wl,-rpath-link,${LINK_LIBDIR}"
 	;;
     solaris)
@@ -159,15 +172,11 @@ done
 
 [ "${object%/*}" != "${object}" ] && mk_mkdir "${object%/*}"
 
-# Create a fake .la file that can be used by combine_libtool_flags
-# This should be expanded upon for full compatibility with libtool
-mk_msg_verbose "${object%.*}.la"
-
-{
-    mk_quote "-L${RPATH_LIBDIR} $_LIBS"
-    echo "# Created by MetaKit"
-    echo "dependency_libs=$result"
-} > "${object%.*}.la" || mk_fail "could not write ${object%.*}.la"
+case "$MODE" in
+    library|dso)
+	create_libtool_archive
+	;;
+esac
 
 version_pre
 
