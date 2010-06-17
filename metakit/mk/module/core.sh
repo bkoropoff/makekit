@@ -25,15 +25,12 @@ load()
 			    result="@${__source_file}"
 			else
                             # Input is an object file
-			    __object_file="${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
-			    case "$__object_file" in
-				*'/../'*|*'/./'*)
-				    result="@`echo "$__object_file" | sed -e 's|/\./|/|g' -e ':s;s|[^/]*/\.\./||g; t s'`"
-				    ;;
-				*)
-				    result="@$__object_file"
-				    ;;
-			    esac
+			    # Makefile targets are matched verbatim, so
+			    # we need to normalize the file path so that paths
+			    # with '.' or '..' are reduced to the canonical form
+			    # that appears on the left hand side of make rules.
+			    mk_normalize_path "${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
+			    result="@$result"
 			fi
 			;;
 		esac
@@ -137,7 +134,7 @@ load()
 		    fi
 		    ;;
 		"*"*)
-		    _mk_build_command_expand "${__param#\*}"
+		    _mk_build_command_expand "${__param#?}"
 		    ;;
 		*)
 		    mk_quote "$__param"
