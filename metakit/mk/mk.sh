@@ -315,6 +315,41 @@ mk_expand_absolute_pathnames()
     result="${___result# }"
 }
 
+mk_normalize_path()
+{
+    __path_IFS="$IFS"
+    IFS="/"
+    set -f
+    set -- ${1}
+    set +f
+    IFS="$__path_IFS"
+
+    result=""
+    
+    for __path_item in "$@"
+    do
+	case "$__path_item" in
+	    '.')
+		continue;
+		;;
+	    '..')
+		if [ -z "$result" ]
+		then
+		    result="/.."
+		else
+		    result="${result%/*}"
+		fi
+		;;
+	    *)
+		result="${result}/${__path_item}"
+		;;
+	esac
+    done
+
+    result="${result#/}"
+    unset __path_IFS __path_item
+}
+
 _mk_find_resource()
 {
     for __dir in ${MK_SEARCH_DIRS}
