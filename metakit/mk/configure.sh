@@ -392,7 +392,12 @@ mk_help_recursive()
 
     if mk_function_exists option
     then
-	echo "Options (${1#/}):"
+	if [ -z "$1" ]
+	then
+	    echo "Options (${MK_SOURCE_DIR#*/}):"
+	else
+	    echo "Options (${1#/}):"
+	fi
 	option
 	echo ""
     fi
@@ -462,7 +467,7 @@ _basic_options()
 	OPTION=rundir \
 	PARAM=path \
 	DEFAULT='run' \
-	HELP="Self-built tools install directory"
+	HELP="Build tool install directory"
 	
     mk_option \
 	VAR=MK_HELP \
