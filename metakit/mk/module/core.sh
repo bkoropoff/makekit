@@ -398,6 +398,27 @@ mk_safe_rm()
     mk_run_or_fail rm -rf -- "$result"
 }
 
+mk_warn()
+{
+    if [ -n "$MK_FAIL_ON_WARN" ]
+    then
+	mk_fail "$@"
+    else
+	mk_msg "WARNING: $*"
+	sleep 1
+    fi
+}
+
+option()
+{
+    mk_option \
+	OPTION="fail-on-warn" \
+	VAR="MK_FAIL_ON_WARN" \
+	PARAM="yes|no" \
+	DEFAULT="no" \
+	HELP="Fail on warnings"
+}
+
 configure()
 {
     # Add a post-make() hook to write out a rule

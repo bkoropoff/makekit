@@ -36,6 +36,43 @@ mk_compile()
     mk_pop_vars
 }
 
+_mk_verify_libdeps()
+{
+    for __dep in ${2}
+    do
+        _mk_contains "$__dep" ${MK_INTERNAL_LIBS} && continue
+        _mk_define_name "HAVE_LIB_${__dep}"
+        
+        mk_get "$result"
+
+        if [ "$result" = "no" ]
+        then
+            mk_fail "$1 depends on missing library $__dep"
+        elif [ -z "$result" ]
+        then
+            mk_warn "$1 depends on unchecked library $__dep"
+        fi
+    done
+}
+
+_mk_verify_headerdeps()
+{
+    for __dep in ${2}
+    do
+        _mk_contains "$__dep" ${MK_INTERNAL_HEADERS} && continue
+        _mk_define_name "HAVE_${__dep}"
+        mk_get "$result"
+
+        if [ "$result" = "no" ]
+        then
+            mk_fail "$1 depends on missing header $__dep"
+        elif [ -z "$result" ]
+        then
+            mk_warn "$1 depends on unchecked header $__dep"
+        fi
+    done
+}
+
 _mk_library()
 {
     unset _deps _objects
@@ -104,6 +141,9 @@ mk_library()
     mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS
     mk_parse_params
     
+    _mk_verify_libdeps "lib$LIB${MK_LIB_EXT}" "$LIBDEPS"
+    _mk_verify_headerdeps "lib$LIB${MK_LIB_EXT}" "$HEADERDEPS"
+
     _mk_library "$@"
     
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -116,6 +156,9 @@ mk_dso()
     mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS
     mk_parse_params
     
+    _mk_verify_libdeps "$DSO${MK_DSO_EXT}" "$LIBDEPS"
+    _mk_verify_headerdeps "$DSO${MK_DSO_EXT}" "$HEADERDEPS"
+
     unset _deps
     
     _mk_emit "#"
@@ -185,6 +228,9 @@ mk_group()
 	HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS
     mk_parse_params
     
+    _mk_verify_libdeps "$GROUP" "$LIBDEPS"
+    _mk_verify_headerdeps "$GROUP" "$HEADERDEPS"
+
     unset _deps
     
     _mk_emit "#"
@@ -241,6 +287,9 @@ mk_program()
 	LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL
     mk_parse_params
     
+    _mk_verify_libdeps "$PROGRAM" "$LIBDEPS"
+    _mk_verify_headerdeps "$PROGRAM" "$HEADERDEPS"
+
     unset _deps
     
     if [ -z "$INSTALLDIR" ]
@@ -333,6 +382,8 @@ mk_headers()
     INSTALLDIR="${MK_INCLUDEDIR}"
     mk_parse_params
     
+    _mk_verify_headerdeps "header" "$HEADERDEPS"
+
     unset _all_headers
     
     _mk_emit "#"
