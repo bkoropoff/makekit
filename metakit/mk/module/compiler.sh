@@ -77,10 +77,7 @@ _mk_library()
 {
     unset _deps _objects
     
-    _mk_emit "#"
-    _mk_emit "# library ${LIB} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
-    _mk_emit "#"
-    _mk_emit ""
+    mk_comment "library ${LIB} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
     
     case "$INSTALL" in
 	no)
@@ -161,10 +158,7 @@ mk_dso()
 
     unset _deps
     
-    _mk_emit "#"
-    _mk_emit "# dso ${DSO} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
-    _mk_emit "#"
-    _mk_emit ""
+    mk_comment "dso ${DSO} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
     
     case "$INSTALL" in
 	no)
@@ -233,10 +227,7 @@ mk_group()
 
     unset _deps
     
-    _mk_emit "#"
-    _mk_emit "# group ${GROUP} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
-    _mk_emit "#"
-    _mk_emit ""
+    mk_comment "group ${GROUP} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
     
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
@@ -319,10 +310,7 @@ mk_program()
 	_libdir="$MK_LIBDIR"
     fi
     
-    _mk_emit "#"
-    _mk_emit "# program ${PROGRAM} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
-    _mk_emit "#"
-    _mk_emit ""
+    mk_comment "program ${PROGRAM} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
     
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
@@ -386,10 +374,7 @@ mk_headers()
 
     unset _all_headers
     
-    _mk_emit "#"
-    _mk_emit "# headers from ${MK_SUBDIR#/}"
-    _mk_emit "#"
-    _mk_emit ""
+    mk_comment "headers from ${MK_SUBDIR#/}"
     
     for _header in ${HEADERDEPS}
     do
@@ -1187,21 +1172,25 @@ option()
 	    
 	    mk_option \
 		VAR="${_def}_CC" \
+                PARAM="program" \
 		DEFAULT="$_default_cc" \
 		HELP="C compiler ($_sys/$_isa)"
 	    
 	    mk_option \
 		VAR="${_def}_CPPFLAGS" \
+                PARAM="flags" \
 		DEFAULT="$MK_DEFAULT_CPPFLAGS" \
 		HELP="C preprocessor flags ($_sys/$_isa)"
 	    
 	    mk_option \
 		VAR="${_def}_CFLAGS" \
+                PARAM="flags" \
 		DEFAULT="$MK_DEFAULT_CFLAGS" \
 		HELP="C compiler flags ($_sys/$_isa)"
 	    
 	    mk_option \
 		VAR="${_def}_LDFLAGS" \
+                PARAM="flags" \
 		DEFAULT="$MK_DEFAULT_LDFLAGS" \
 		HELP="Linker flags ($_sys/$_isa)"
 	done

@@ -39,21 +39,69 @@ option()
 		;;
 	esac
 
+	if [ "$_isa" = "${MK_HOST_ISAS% *}" ]
+	then
+	    _option="libdir"
+	else
+	    _option="libdir-$(echo $_isa | tr '_' '-')"
+	fi
+
 	mk_option \
-	    OPTION="libdir-$_isa" \
+	    OPTION="$_option" \
 	    VAR="$_var"  \
 	    PARAM="path" \
 	    DEFAULT="$_default_libdir" \
 	    HELP="Library directory ($_isa)"
     done
 
-    mk_option MK_INCLUDEDIR includedir "${MK_PREFIX}/include"
-    mk_option MK_BINDIR bindir "${MK_EPREFIX}/bin"
-    mk_option MK_SBINDIR sbindir "${MK_EPREFIX}/sbin"
-    mk_option MK_SYSCONFDIR sysconfdir "${_default_sysconfdir}"
-    mk_option MK_LOCALSTATEDIR localstatedir "${_default_localstatedir}"
-    mk_option MK_DATAROOTDIR datarootdir "${MK_PREFIX}/share"
-    mk_option MK_DATADIR datadir "${MK_DATAROOTDIR}"
+    mk_option \
+	VAR=MK_INCLUDEDIR \
+	OPTION=includedir \
+	PARAM="path" \
+	DEFAULT="${MK_PREFIX}/include" \
+	HELP="Header file directory"
+
+    mk_option \
+	VAR=MK_BINDIR \
+	OPTION=bindir \
+	PARAM="path" \
+	DEFAULT="${MK_EPREFIX}/bin" \
+	HELP="Program directory"
+
+    mk_option \
+	VAR=MK_SBINDIR \
+	OPTION=sbindir \
+	PARAM="path" \
+	DEFAULT="${MK_EPREFIX}/sbin" \
+	HELP="System program directory"
+
+    mk_option \
+	VAR=MK_SYSCONFDIR \
+	OPTION=sysconfdir \
+	PARAM="path" \
+	DEFAULT="${_default_sysconfdir}" \
+	HELP="System configuration directory"
+    
+    mk_option \
+	VAR=MK_LOCALSTATEDIR \
+	OPTION=localstatedir \
+	PARAM="path" \
+	DEFAULT="${_default_localstatedir}" \
+	HELP="Local state directory"
+
+    mk_option \
+	VAR=MK_DATAROOTDIR \
+	OPTION=datarootdir \
+	PARAM="path" \
+	DEFAULT="${MK_PREFIX}/share" \
+	HELP="Root data directory"
+    
+    mk_option \
+	VAR=MK_DATADIR \
+	OPTION=datadir \
+	PARAM="path" \
+	DEFAULT="${MK_DATAROOTDIR}" \
+	HELP="Data directory"
 }
 
 configure()

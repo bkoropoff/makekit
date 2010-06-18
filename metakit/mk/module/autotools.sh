@@ -53,11 +53,7 @@ load()
 	_mk_slashless_name "${SOURCEDIR}/${MK_SYSTEM}"
 	dir="$result"
 
-	_mk_emit ""
-	_mk_emit "#"
-	_mk_emit "# autotools source component $SOURCEDIR ($MK_SYSTEM)"
-	_mk_emit "#"
-	_mk_emit ""
+	mk_comment "autotools source component $SOURCEDIR ($MK_SYSTEM)"
 
 	for _lib in ${LIBDEPS}
 	do

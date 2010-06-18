@@ -17,14 +17,14 @@ mk_resolve_target()
 {
     case "$1" in
 	"@"*)
-		# Already an absolute target, leave as is
+            # Already an absolute target, leave as is
 	    result="$1"
 	    ;;
 	*)
-		# Resolve to absolute target
+	    # Resolve to absolute target
 	    case "$1" in
 		"/"*)
-                        # Input is a product in the staging area
+                    # Input is a product in the staging area
 		    result="@${MK_STAGE_DIR}$1"
 		    ;;
 		*)
@@ -32,14 +32,14 @@ mk_resolve_target()
 		    
 		    if [ -e "${__source_file}" ]
 		    then
-                            # Input is a source file
+                        # Input is a source file
 			result="@${__source_file}"
 		    else
-                            # Input is an object file
-			    # Makefile targets are matched verbatim, so
-			    # we need to normalize the file path so that paths
-			    # with '.' or '..' are reduced to the canonical form
-			    # that appears on the left hand side of make rules.
+                        # Input is an object file
+	                # Makefile targets are matched verbatim, so
+			# we need to normalize the file path so that paths
+			# with '.' or '..' are reduced to the canonical form
+			# that appears on the left hand side of make rules.
 			mk_normalize_path "${MK_OBJECT_DIR}${MK_SUBDIR}/${1}"
 			result="@$result"
 		    fi
@@ -485,10 +485,7 @@ _mk_core_write_subdir_rule()
 		_targets="$_targets $result"
 	    fi
 	done
-	_mk_emit "#"
-	_mk_emit "# staging targets in ${MK_SUBDIR#/}"
-	_mk_emit "#"
-	_mk_emit ""
+	mk_comment "staging targets in ${MK_SUBDIR#/}"
 
 	mk_target \
 	    TARGET="@${MK_SUBDIR#/}" \
