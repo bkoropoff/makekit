@@ -407,6 +407,16 @@ mk_headers()
     mk_pop_vars
 }
 
+mk_declare_internal_header()
+{
+    MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $1"
+}
+
+mk_declare_internal_library()
+{
+    MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $1"
+}
+
 #
 # Helper functions for configure() stage
 # 
@@ -608,13 +618,12 @@ mk_check_header()
     _defname="$result"
     _varname="$_defname"
 
-    if mk_check_cache "$_varname"
-    then
-	_result="$result"
-    elif _mk_contains "$HEADER" ${MK_INTERNAL_HEADERS}
+    if _mk_contains "$HEADER" ${MK_INTERNAL_HEADERS}
     then
 	_result="internal"
-	mk_cache "$_varname" "$_result"
+    elif mk_check_cache "$_varname"
+    then
+	_result="$result"
     else
 	{
             for _header in ${HEADERDEPS}
@@ -759,14 +768,13 @@ mk_check_library()
     _mk_define_name "HAVE_LIB_$LIB"
     _defname="$result"
     _varname="$_defname"
-    
-    if mk_check_cache "$_varname"
-    then
-	_result="$result"
-    elif _mk_contains "$LIB" ${MK_INTERNAL_LIBS}
+
+    if _mk_contains "$LIB" ${MK_INTERNAL_LIBS}
     then
 	_result="internal"
-	mk_cache "$_varname" "$_result"
+    elif mk_check_cache "$_varname"
+    then
+	_result="$result"
     else
 	{
 	    cat <<EOF
