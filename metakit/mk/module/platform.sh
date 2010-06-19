@@ -1,32 +1,4 @@
-mk_declare_system_var()
-{
-    mk_push_vars EXPORT
-    mk_parse_params
-
-    for __var in "$@"
-    do
-	if ! _mk_contains "$__var" ${MK_SYSTEM_VARS}
-	then
-	    MK_SYSTEM_VARS="$MK_SYSTEM_VARS $__var"
-	    if [ "$EXPORT" != "no" ]
-	    then
-		for __isa in ${MK_HOST_ISAS}
-		do
-		    _mk_define_name "host/${__isa}"
-		    mk_export "${__var}_$result"
-		done
-		
-		for __isa in ${MK_BUILD_ISAS}
-		do
-		    _mk_define_name "build/${__isa}"
-		    mk_export "${__var}_$result"
-		done
-	    fi
-	fi
-    done
-
-    mk_pop_vars
-}
+### section common
 
 mk_get_system_var()
 {
@@ -124,6 +96,38 @@ mk_run_with_extended_library_path()
     
     shift
     env "$__env" "$@"
+}
+
+### section configure
+
+mk_declare_system_var()
+{
+    mk_push_vars EXPORT
+    mk_parse_params
+
+    for __var in "$@"
+    do
+	if ! _mk_contains "$__var" ${MK_SYSTEM_VARS}
+	then
+	    MK_SYSTEM_VARS="$MK_SYSTEM_VARS $__var"
+	    if [ "$EXPORT" != "no" ]
+	    then
+		for __isa in ${MK_HOST_ISAS}
+		do
+		    _mk_define_name "host/${__isa}"
+		    mk_export "${__var}_$result"
+		done
+		
+		for __isa in ${MK_BUILD_ISAS}
+		do
+		    _mk_define_name "build/${__isa}"
+		    mk_export "${__var}_$result"
+		done
+	    fi
+	fi
+    done
+
+    mk_pop_vars
 }
 
 option()

@@ -1,5 +1,9 @@
 #!/bin/sh
 
+BASIC_VARIABLES="\
+    MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR \
+    MK_RUN_DIR MK_OPTIONS MK_SEARCH_DIRS MK_MODULE_LIST MK_MODULE_FILES"
+
 . "${MK_HOME}/mk.sh" || exit 1
 
 _mk_emit()
@@ -12,6 +16,52 @@ _mk_emitf()
     printf "$@" >&6
 }
 
+_mk_find_module_imports_recursive()
+{
+    unset MODULES SUBDIRS
+    
+    mk_safe_source "${MK_SOURCE_DIR}${1}/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+
+    result="$result $MODULES"
+    
+    for _dir in ${SUBDIRS}
+    do
+	if [ "$_dir" != "." ]
+	then
+	    _mk_find_module_imports_recursive "$1/${_dir}"
+	fi
+    done
+}
+
+_mk_find_module_imports()
+{
+    result=""
+    _mk_find_module_imports_recursive ""
+}
+
+_mk_modules_rec()
+{
+    for __module in "$@"
+    do
+	_mk_contains "$__module" ${MK_MODULE_LIST} && continue
+	_mk_find_resource "module/${__module}.sh" || mk_fail "could not find module: $__module"
+	set -- "$__module" "$result"
+	unset DEPENDS
+	. "$result"
+	_mk_modules_rec ${DEPENDS}
+	MK_MODULE_LIST="$MK_MODULE_LIST $1"
+	MK_MODULE_FILES="$MK_MODULE_FILES $2"
+    done
+}
+
+_mk_module_list()
+{
+    MK_MODULE_LIST=""
+    MK_MODULE_FILES=""
+
+    _mk_modules_rec "$@"
+}
+
 _mk_process_build_module()
 {
     _mk_find_resource "module/$1.sh"
@@ -22,8 +72,8 @@ _mk_process_build_module()
     unset -f option configure make
     unset SUBDIRS
 
-    _mk_source_module "$1"
-    
+    mk_source_or_fail "$MK_CURRENT_FILE"
+   
     mk_function_exists option && option
     if mk_function_exists configure
     then
@@ -80,14 +130,11 @@ _mk_process_build_recursive()
 
     mk_mkdir "${MK_OBJECT_DIR}$1"
 
-    # Begin exports file
-    _mk_begin_exports "${MK_OBJECT_DIR}$1/.MetaKitExports"
-
     # Process configure stage
     _mk_process_build_configure "$1"
 
-    # Finish exports files
-    _mk_end_exports
+    # Write exports files
+    _mk_write_exports "${MK_OBJECT_DIR}$1/.MetaKitExports"
 
     for _dir in ${SUBDIRS}
     do
@@ -115,26 +162,19 @@ _mk_process_build()
 {
     MK_SUBDIR=":"
 
-    # Run build functions for all modules
-    _mk_module_list
-    for _module in ${result}
+    for _module in ${MK_MODULE_LIST}
     do
 	MK_MSG_DOMAIN="$_module"
 	_mk_process_build_module "${_module}"
     done
 
-    _mk_end_exports
+    # Write exports file for build root
+    _mk_write_exports ".MetaKitExports"
 
     # Run build functions for project
     _mk_process_build_recursive ''
 
     MK_SUBDIR=":"
-
-    # Export summary variables
-    exec 3>>".MetaKitExports"
-    mk_quote "$MK_PRECIOUS_FILES"
-    echo "MK_PRECIOUS_FILES=$result" >&3
-    exec 3>&-;
 }
 
 mk_option()
@@ -221,24 +261,20 @@ _mk_print_option()
     fi
 }
 
-_mk_begin_exports()
+_mk_write_exports()
 {
-    MK_EXPORT_FILES="$MK_EXPORT_FILES '$1'"
+    {
+        for _export in ${MK_EXPORTS}
+	do
+	    mk_get "$_export"
+	    mk_quote "$result"
+	    echo "$_export=$result"
+	done
+
+	echo "MK_EXPORTS='$MK_EXPORTS'"
+    } >"$1"
+
     MK_PRECIOUS_FILES="$MK_PRECIOUS_FILES $1"
-    exec 3>"$1"
-}
-
-_mk_end_exports()
-{
-    for _export in ${MK_EXPORTS}
-    do
-	mk_get "$_export"
-	mk_quote "$result"
-	echo "$_export=$result" >&3
-    done
-
-    echo "MK_EXPORTS='$MK_EXPORTS'" >&3	
-    exec 3>&-
 }
 
 _mk_restore_exports()
@@ -332,23 +368,22 @@ _mk_make_posthooks()
 
 _mk_emit_make_header()
 {
-    _mk_emit "SHELL=${MK_SHELL}"
-    _mk_emit "MK_HOME=${MK_HOME}"
-    _mk_emit "MK_ROOT_DIR=${MK_ROOT_DIR}"
-    _mk_emit "PREAMBLE=MK_HOME='\$(MK_HOME)'; MK_ROOT_DIR='\$(MK_ROOT_DIR)'; MK_VERBOSE='\$(V)'; . '\$(MK_HOME)/env.sh'"
+    _mk_emit "SHELL=${MK_SHELL} -- .MetaKitBuild"
+    _mk_emit "MK_CONTEXT=MK_VERBOSE='\$(V)'; _mk_restore_context"
 }
 
 _mk_emit_make_footer()
 {
     # Run make functions for all modules in reverse order
-    _mk_module_list
-    _mk_reverse ${result}
-    for _module in ${result}
+    _mk_reverse ${MK_MODULE_FILES}
+    for _file in ${result}
     do
-	MK_MSG_DOMAIN="$_module"
+	_module="${_file##*/}"
+	MK_MSG_DOMAIN="${_module%.sh}"
+
 	unset -f make
 	
-	_mk_source_module "${_module}"
+	mk_source_or_fail "${_file}"
 	
 	if mk_function_exists make
 	then
@@ -418,12 +453,15 @@ mk_help()
     _basic_options
     echo ""
 
-    _mk_module_list
-    for _module in ${result}
+    _mk_reverse ${MK_MODULE_FILES}
+    for _file in ${result}
     do
-	unset -f option
+	_module="${_file##*/}"
+	_module="${_module%.sh}"
 
-	_mk_source_module "${_module}"
+	unset -f option
+	
+	mk_source_or_fail "${_file}"
 
 	if mk_function_exists "option"
 	then
@@ -477,6 +515,51 @@ _basic_options()
 	HELP="Show this help"
 }
 
+#
+# Generates .MetaKitBuild in the build directory, which is used as the shell by make
+#
+# This script is a concatenation of the core MetaKit functions (mk.sh),
+# all imported modules, and a short footer which executes the build command
+# passed by make (build.sh).
+# 
+# Since this script is parsed and executed by the shell for every command make runs,
+# we pass it through an awk script which strips it down as much as possible:
+#
+# - Comments are removed
+# - Sections from modules that are only used when running configure are removed
+#
+# Each build action begins by invoking _mk_restore_context with the name of the 
+# subdirectory which generated it.  This sources the .MetaKitExports and
+# MetaKitBuild files for that subdirectory.
+#
+# The end result is that all build actions run in the same context as the
+# make() function which produced them.  This makes writing build rules
+# more convenient: you can call a helper function in your MetaKitBuild file and
+# have it work as you would expect.
+# 
+_mk_emit_build_script()
+{
+    {
+	echo "### section build"
+	# Set essential variables
+	for _var in MK_HOME MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_PRECIOUS_FILES
+	do
+	    mk_get "$_var"
+	    mk_quote "$result"
+	    echo "$_var=$result"
+	done
+	echo ""
+	cat "${MK_HOME}/mk.sh"
+	echo ""
+	for _file in ${MK_MODULE_FILES}
+	do
+	    cat "$_file"
+	    echo ""
+	done
+	cat "${MK_HOME}/build.sh"
+    } | awk -f "${MK_HOME}/build.awk" >.MetaKitBuild || mk_fail "could not write .MetaKitBuild"
+}
+
 # Save our parameters for later use
 mk_quote_list "$@"
 MK_OPTIONS="$result"
@@ -493,6 +576,10 @@ then
     MK_SEARCH_DIRS="${MK_SEARCH_DIRS} ${MK_SOURCE_DIR}/mklocal"
 fi
 
+# Find all required modules
+_mk_find_module_imports
+_mk_module_list ${result}
+
 MK_MSG_DOMAIN="metakit"
 
 if [ "$MK_HELP" = "yes" ]
@@ -507,20 +594,12 @@ MK_LOG_FD=4
 
 mk_msg "initializing"
 
-# Load all modules
-_mk_load_modules
-
-MK_MSG_DOMAIN="metakit"
-
-# Begin saving exports
-_mk_begin_exports ".MetaKitExports"
-
 # Open Makefile for writing
 exec 6>.Makefile.new
 MK_MAKEFILE_FD=6
 
 # Export basic variables
-mk_export MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR MK_RUN_DIR MK_OPTIONS MK_SEARCH_DIRS
+mk_export ${BASIC_VARIABLES}
 
 # Emit Makefile header
 _mk_emit_make_header
@@ -537,6 +616,9 @@ mv ".Makefile.new" "Makefile" || mk_fail "could not replace Makefile"
 
 # Close log file
 exec 4>&-
+
+# Generate build script
+_mk_emit_build_script
 
 # Dispense wisdom
 

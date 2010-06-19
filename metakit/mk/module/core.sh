@@ -1,16 +1,70 @@
-DEPENDS="platform"
+DEPENDS="platform program"
 
-mk_skip_subdir()
+### section common
+
+mk_run_or_fail()
 {
-    __skip="$1"
+    mk_quote_list "$@"
+    mk_msg_verbose "+ $result"
     
-    mk_unquote_list "$SUBDIRS"
-    for __subdir in "$@"
-    do
-	[ "$__subdir" = "$__skip" ] || SUBDIRS="$SUBDIRS $__subdir"
-    done
+    ___output=`"$@" 2>&1`
+    ___ret="$?"
+    
+    if [ "$___ret" -ne 0 ]
+    then
+	mk_msg "FAILED: $result"
+	echo "$___output"
+	exit 1
+    fi
+}
 
-    unset __skip __subdir
+mk_cd_or_fail()
+{
+    mk_quote "$1"
+    mk_msg_verbose "+ 'cd' $result"
+    cd "$1" || mk_fail "FAILED: 'cd' $result"
+}
+
+mk_safe_rm()
+{
+    if [ -z "${MK_ROOT_DIR}" -o "$PWD" != "${MK_ROOT_DIR}" ]
+    then
+	mk_fail "CRITICAL: attempt to mk_safe_rm outside of build directory"
+    fi
+
+    mk_normalize_path "$1"
+    
+    case "${result}" in
+	'/'*|'..'|'..'/*)
+	    mk_fail "CRITICAL: attempt to mk_safe_rm path that escape build directory: $result"
+	    ;;
+    esac
+
+    mk_run_or_fail rm -rf -- "$result"
+}
+
+mk_warn()
+{
+    if [ -n "$MK_FAIL_ON_WARN" ]
+    then
+	mk_fail "$@"
+    else
+	mk_msg "WARNING: $*"
+	sleep 1
+    fi
+}
+
+mk_run_script()
+{
+    if _mk_find_resource "script/${1}.sh"
+    then
+	shift
+	mk_parse_params
+	. "$result"
+	return "$?"
+    else
+	mk_fail "could not find script: $1"
+    fi
 }
 
 mk_resolve_target()
@@ -104,6 +158,21 @@ mk_resolve_files()
     __mk_resolve "$1" mk_resolve_file mk_quote
 }
 
+### section configure
+
+mk_skip_subdir()
+{
+    __skip="$1"
+    
+    mk_unquote_list "$SUBDIRS"
+    for __subdir in "$@"
+    do
+	[ "$__subdir" = "$__skip" ] || SUBDIRS="$SUBDIRS $__subdir"
+    done
+
+    unset __skip __subdir
+}
+
 mk_comment()
 {
     _mk_emit ""
@@ -121,7 +190,7 @@ _mk_rule()
 
     if [ -n "$__command" ]
     then
-	_mk_emitf '\n%s: %s\n\t@MK_SUBDIR='%s'; $(PREAMBLE); mk_system "%s"; \\\n\t%s\n' "$__lhs" "${*# }" "${MK_SUBDIR}" "$MK_SYSTEM" "${__command# }"
+	_mk_emitf '\n%s: %s\n\t@$(MK_CONTEXT) "%s"; mk_system "%s"; \\\n\t%s\n' "$__lhs" "${*# }" "$MK_SUBDIR" "$MK_SYSTEM" "${__command# }"
     else
 	_mk_emitf '\n%s: %s\n' "$__lhs" "${*# }"
     fi
@@ -288,19 +357,6 @@ mk_output_file()
     mk_pop_vars
 }
 
-mk_run_script()
-{
-    if _mk_find_resource "script/${1}.sh"
-    then
-	shift
-	mk_parse_params
-	. "$result"
-	return "$?"
-    else
-	mk_fail "could not find script: $1"
-    fi
-}
-
 mk_add_all_target()
 {
     mk_quote "$1"
@@ -312,7 +368,6 @@ mk_add_phony_target()
     mk_quote "$1"
     MK_PHONY_TARGETS="$MK_PHONY_TARGETS $result"
 }
-
 
 mk_check_cache()
 {
@@ -355,58 +410,6 @@ _mk_save_cache()
 _mk_load_cache()
 {
     mk_safe_source "./.MetaKitCache"
-}
-
-mk_run_or_fail()
-{
-    mk_quote_list "$@"
-    mk_msg_verbose "+ $result"
-    
-    ___output=`"$@" 2>&1`
-    ___ret="$?"
-    
-    if [ "$___ret" -ne 0 ]
-    then
-	mk_msg "FAILED: $result"
-	echo "$___output"
-	exit 1
-    fi
-}
-
-mk_cd_or_fail()
-{
-    mk_quote "$1"
-    mk_msg_verbose "+ 'cd' $result"
-    cd "$1" || mk_fail "FAILED: 'cd' $result"
-}
-
-mk_safe_rm()
-{
-    if [ -z "${MK_ROOT_DIR}" -o "$PWD" != "${MK_ROOT_DIR}" ]
-    then
-	mk_fail "CRITICAL: attempt to mk_safe_rm outside of build directory"
-    fi
-
-    mk_normalize_path "$1"
-    
-    case "${result}" in
-	'/'*|'..'|'..'/*)
-	    mk_fail "CRITICAL: attempt to mk_safe_rm path that escape build directory: $result"
-	    ;;
-    esac
-
-    mk_run_or_fail rm -rf -- "$result"
-}
-
-mk_warn()
-{
-    if [ -n "$MK_FAIL_ON_WARN" ]
-    then
-	mk_fail "$@"
-    else
-	mk_msg "WARNING: $*"
-	sleep 1
-    fi
 }
 
 option()

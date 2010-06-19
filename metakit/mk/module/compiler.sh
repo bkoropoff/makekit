@@ -1,5 +1,7 @@
 DEPENDS="core platform"
 
+### section configure
+
 #
 # Helper functions for make() stage
 #

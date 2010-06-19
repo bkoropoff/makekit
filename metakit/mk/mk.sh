@@ -1,3 +1,5 @@
+### section common
+
 # Work around bashisms
 if [ -n "$BASH_VERSION" ]
 then
@@ -6,9 +8,6 @@ then
     # Unset special variable GROUPS so it becomes normal
     unset GROUPS
 fi
-
-MK_SCRIPT_DIR="${MK_HOME}/script"
-MK_MODULE_DIR="${MK_HOME}/module"
 
 alias mk_unquote_list='eval set --'
 
@@ -33,10 +32,9 @@ mk_safe_source()
     fi
 }
 
-mk_import()
+mk_source_or_fail()
 {
-    mk_safe_source "${MK_ROOT_DIR}/.MetaKitExports" || mk_fail "Could not read configuration"
-    [ "$MK_SUBDIR" != ":" ] && mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/.MetaKitExports"
+    mk_safe_source "$1" || mk_fail "could not source file: $1"
 }
 
 mk_fail()
@@ -51,11 +49,6 @@ mk_mkdir()
         do
 	mkdir -p "$__dir" || mk_fail "Could not create directory: $__dir"
     done
-}
-
-_mk_deref()
-{
-    eval echo "\"\$$1\""
 }
 
 mk_get()
@@ -363,75 +356,6 @@ _mk_find_resource()
     done
 
     return 1
-}
-
-_mk_modules_rec()
-{
-    if ! _mk_contains "$1" ${_list}
-    then
-	for _dep in ${2}
-	do
-	    unset DEPENDS
-	    . "${MK_HOME}/module/${_dep}.sh"
-	    _mk_modules_rec "$_dep" "$DEPENDS"
-	done
-	_list="$_list $1"
-    fi
-}
-
-_mk_module_list()
-{
-    _list=""
-    
-    for __dir in ${MK_SEARCH_DIRS}
-    do
-	for __file in "${__dir}/module/"*.sh
-	do
-	    if [ -f "$__file" ]
-	    then
-		_module="${__file##*/}"
-		_module="${_module%.sh}"
-		unset DEPENDS
-		. "$__file"
-		_mk_modules_rec "$_module" "$DEPENDS"
-	    fi
-	done
-    done
-    
-    result="$_list"
-}
-
-_mk_source_module()
-{
-    for __dir in ${MK_SEARCH_DIRS}
-    do
-	__module="${__dir}/module/$1.sh"
-	if [ -f "$__module" ]
-	then
-	    . "${__module}"
-	    return $?
-	fi
-    done
-
-    mk_fail "could not find module in search path: $1"
-}
-
-_mk_load_modules()
-{
-    _mk_module_list
-    
-    for _module in ${result}
-    do
-	unset -f load
-	
-	_mk_source_module "$_module"
-	
-	if mk_function_exists load
-	then
-	    MK_MSG_DOMAIN="${_module}"
-	    load
-	fi
-    done
 }
 
 _mk_contains()
