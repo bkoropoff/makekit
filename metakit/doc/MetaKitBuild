@@ -1,15 +1,15 @@
+MODULES="core"
+
 configure()
 {
     mk_check_program \
 	FAIL=yes \
 	xsltproc
 
-    mk_check_program fop
+    mk_check_program fop || mk_msg "missing Apache FOP -- PDF documentation will not be generated"
 
     mk_resolve_file "docbook-xsl-ns"
     mk_export XSL_DIR="${MK_ROOT_DIR}/$result"
-
-    mk_msg "XSL directory: $XSL_DIR"
 
     mk_output_file html.xsl
     mk_output_file man.xsl
