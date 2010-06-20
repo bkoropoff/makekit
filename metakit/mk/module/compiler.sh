@@ -419,7 +419,7 @@ mk_headers()
 	fi
     done
     
-    mk_expand_pathnames "${HEADERS}"
+    mk_expand_pathnames "${HEADERS} $*"
     
     mk_unquote_list "$result"
     for _header in "$@"
