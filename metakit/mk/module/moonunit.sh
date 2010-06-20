@@ -81,21 +81,15 @@ mk_moonunit()
 	    ;;
     esac
 
-    for _source in ${SOURCES}
-    do
-	mk_resolve_target "$_source"
-	_rsources="$_rsources '$result'"
-    done
-
     for _dir in ${INCLUDEDIRS}
     do
-	CPPFLAGS="$CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
+	_CPPFLAGS="$_CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
     done
 
     mk_target \
 	TARGET="$_stub" \
-	DEPS="$_rsources" \
-	_mk_invoke_moonunit_stub %CPPFLAGS '$@' "*${_rsources}"
+	DEPS="$SOURCES" \
+	_mk_invoke_moonunit_stub CPPFLAGS="$_CPPFLAGS $CPPFLAGS $MK_CPPFLAGS" '$@' "&$SOURCES"
     
     SOURCES="$SOURCES $_stub"
 
