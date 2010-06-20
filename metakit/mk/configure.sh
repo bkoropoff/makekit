@@ -427,7 +427,7 @@ _mk_emit_make_footer()
 
     _mk_emit ""
     _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}"
-    _mk_emitf '\t@\$(MK_CONTEXT) :; mk_msg "regenerating Makefile"; set -- %s; mk_source_or_fail %s; exit 0\n\n' "$MK_OPTIONS" "'${MK_HOME}/configure.sh'"
+    _mk_emitf '\t@$(MK_CONTEXT) :; mk_msg "regenerating Makefile"; set -- %s; . %s; exit 0\n\n' "$MK_OPTIONS" "'${MK_HOME}/configure.sh'"
 
     for _target in ${MK_CONFIGURE_OUTPUTS}
     do
