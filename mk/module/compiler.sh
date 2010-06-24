@@ -185,7 +185,7 @@ mk_library()
 
 mk_dso()
 {
-    mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS
+    mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS INSTALLDIR
     mk_parse_params
     
     _mk_verify_libdeps "$DSO${MK_DSO_EXT}" "$LIBDEPS"
@@ -195,12 +195,14 @@ mk_dso()
     
     mk_comment "dso ${DSO} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
     
+    [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
+
     case "$INSTALL" in
 	no)
 	    _library="${DSO}${MK_DSO_EXT}"
 	    ;;
 	*)
-	    _library="${MK_LIBDIR}/${DSO}${MK_DSO_EXT}"
+	    _library="${INSTALLDIR}/${DSO}${MK_DSO_EXT}"
 	    ;;
     esac
     
