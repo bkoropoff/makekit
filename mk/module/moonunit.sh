@@ -73,7 +73,7 @@ mk_moonunit()
     mk_push_vars DSO SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS LIBDEPS HEADERDEPS GROUPS DEPS
     mk_parse_params
 
-    unset _CPPFLAGS _rsources
+    unset _CPPFLAGS _rsources _deps
 
     case "$DSO" in
 	*)
@@ -86,9 +86,14 @@ mk_moonunit()
 	_CPPFLAGS="$_CPPFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/${_dir} -I${MK_OBJECT_DIR}${MK_SUBDIR}/${_dir}"
     done
 
+    for _header in ${HEADERDEPS}
+    do
+	_deps="$_deps '${MK_INCLUDEDIR}/${_header}'"
+    done
+
     mk_target \
 	TARGET="$_stub" \
-	DEPS="$SOURCES" \
+	DEPS="$SOURCES $_deps" \
 	_mk_invoke_moonunit_stub CPPFLAGS="$_CPPFLAGS $CPPFLAGS $MK_CPPFLAGS" '$@' "&$SOURCES"
     
     SOURCES="$SOURCES $_stub"
