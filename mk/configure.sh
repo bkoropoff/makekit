@@ -485,8 +485,7 @@ mk_help()
     _basic_options
     echo ""
 
-    _mk_reverse ${MK_MODULE_FILES}
-    for _file in ${result}
+    for _file in ${MK_MODULE_FILES}
     do
 	_module="${_file##*/}"
 	_module="${_module%.sh}"
