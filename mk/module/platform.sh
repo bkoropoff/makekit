@@ -335,7 +335,7 @@ configure()
     do
 	mk_system "$_sys"
 	
-	for _isa in "$MK_ISAS"
+	for _isa in $MK_ISAS
 	do
 	    case "$MK_OS-$_isa" in
 		linux-*|solaris-*|freebsd-*)
