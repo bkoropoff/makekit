@@ -558,19 +558,16 @@ _mk_core_install()
 
     mk_msg_domain "install"
    
-    mk_mkdir "${DESTDIR}"
-    
     [ -d "${MK_STAGE_DIR}" ] || return 0
 
-    set -- "${MK_STAGE_DIR}"/*
-
-    for _top in "$@"
+    find "${MK_STAGE_DIR}" -type f -o -type s |
+    while read -r _file
     do
-	[ -e "$_top" ] && mk_run_or_fail cp -pPRf "${_top}" "${DESTDIR}/"
+	_file="${_file#$MK_STAGE_DIR}"
+	mk_msg "$_file"
+	mk_mkdir "${DESTDIR}${_file%/*}"
+	mk_run_or_fail cp -pPf "${MK_STAGE_DIR}${_file}" "${DESTDIR}${_file}"
     done
-
-    # Produce a list of what was installed
-    { cd "${MK_STAGE_DIR}" && find *; } | { while read -r FILE; do mk_msg "${FILE}"; done }
 
     return 0
 }
