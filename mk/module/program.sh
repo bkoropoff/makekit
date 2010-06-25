@@ -77,9 +77,11 @@ mk_check_program()
 	then
 	    mk_fail "could not find program: $PROGRAM"
 	fi
+	mk_pop_vars
 	return 1
     else
 	mk_msg "program $PROGRAM: $_res"
+	mk_pop_vars
 	return 0
     fi
 }
