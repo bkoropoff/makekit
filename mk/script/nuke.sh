@@ -9,7 +9,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the MetaKit project nor the names of its
+#     * Neither the name of the MakeKit project nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -28,7 +28,7 @@
 
 MK_MSG_DOMAIN="nuke"
 
-for _target in "${MK_STAGE_DIR}" "${MK_OBJECT_DIR}" "${MK_RUN_DIR}" "Makefile" "config.log" ".MetaKit"*
+for _target in "${MK_STAGE_DIR}" "${MK_OBJECT_DIR}" "${MK_RUN_DIR}" "Makefile" "config.log" ".MakeKit"*
 do
     if [ -e "$_target" ]
     then

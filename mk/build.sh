@@ -9,7 +9,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the MetaKit project nor the names of its
+#     * Neither the name of the MakeKit project nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -42,18 +42,18 @@ _mk_restore_context()
 
     case "$MK_SUBDIR" in
 	":")
-	    MK_MSG_DOMAIN="metakit"
-	    mk_source_or_fail "${MK_ROOT_DIR}/.MetaKitExports"
+	    MK_MSG_DOMAIN="makekit"
+	    mk_source_or_fail "${MK_ROOT_DIR}/.MakeKitExports"
 	    ;;
 	"")
 	    MK_MSG_DOMAIN="${MK_SOURCE_DIR##*/}"
-	    mk_source_or_fail "${MK_OBJECT_DIR}/.MetaKitExports"
-	    mk_source_or_fail "${MK_SOURCE_DIR}/MetaKitBuild"
+	    mk_source_or_fail "${MK_OBJECT_DIR}/.MakeKitExports"
+	    mk_source_or_fail "${MK_SOURCE_DIR}/MakeKitBuild"
 	    ;;
 	*)
 	    MK_MSG_DOMAIN="${MK_SUBDIR#/}"
-	    mk_source_or_fail "${MK_OBJECT_DIR}${MK_SUBDIR}/.MetaKitExports"
-	    mk_source_or_fail "${MK_SOURCE_DIR}${MK_SUBDIR}/MetaKitBuild"
+	    mk_source_or_fail "${MK_OBJECT_DIR}${MK_SUBDIR}/.MakeKitExports"
+	    mk_source_or_fail "${MK_SOURCE_DIR}${MK_SUBDIR}/MakeKitBuild"
 	    ;;
     esac
 

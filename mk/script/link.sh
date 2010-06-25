@@ -9,7 +9,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the MetaKit project nor the names of its
+#     * Neither the name of the MakeKit project nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -138,7 +138,7 @@ create_libtool_archive()
     
     {
 	mk_quote "-L${RPATH_LIBDIR} $_LIBS"
-	echo "# Created by MetaKit"
+	echo "# Created by MakeKit"
 	echo "dependency_libs=$result"
     } > "${object%.*}.la" || mk_fail "could not write ${object%.*}.la"
 }

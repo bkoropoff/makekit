@@ -9,7 +9,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the MetaKit project nor the names of its
+#     * Neither the name of the MakeKit project nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -103,7 +103,7 @@ alias mk_unquote_list='eval set --'
 #   Parses all keyword parameters in $@ by setting the corresponding variables
 #   The non-keyword parameters remain in $@
 #
-# A command pattern for MetaKit functions uses all of these to parse
+# A command pattern for MakeKit functions uses all of these to parse
 # keyword paremeters and simultaneously avoid stepping on someone else's
 # variables:
 #
@@ -235,7 +235,7 @@ mk_msg_format()
 # is typically one of the following:
 #
 # - The name of the module being processed
-# - The subdirectory of the MetaKitBuild file being processed
+# - The subdirectory of the MakeKitBuild file being processed
 # - The name of the build command or script being run (e.g.
 #   'compile' or 'link'
 #
@@ -289,7 +289,7 @@ mk_log_verbose()
 # mk_fail
 #
 # Prints an error message and immediately exits the shell.
-# Since MetaKit avoids subshell usage as much as possible,
+# Since MakeKit avoids subshell usage as much as possible,
 # this is usually sufficient to stop a configure/make invocation
 # dead.
 #
@@ -345,7 +345,7 @@ mk_safe_source()
 #
 # Sources a file or immediately fails.  Since mk_fail logs
 # with mk_msg, the error message will usually point to a
-# particular module or MetaKitBuild file which is the culprit.
+# particular module or MakeKitBuild file which is the culprit.
 #
 ##
 mk_source_or_fail()
@@ -497,7 +497,7 @@ _mk_slashless_name()
 #
 # mk_quote
 #
-# Possibly the most important function in MetaKit, this quotes a string
+# Possibly the most important function in MakeKit, this quotes a string
 # so it can safely be read back in by the shell.  This is done by surrounding
 # the string with single quotes, and replacing all single quotes within
 # the string with the sequence '\''.  This function is called A LOT, so it

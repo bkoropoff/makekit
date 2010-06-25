@@ -4,7 +4,7 @@
   </info>
   
   <para>
-      This chapter will show you how to use <productname>MetaKit</productname>
+      This chapter will show you how to use <productname>MakeKit</productname>
       to configure and build a C language project.
   </para>
 
@@ -16,7 +16,7 @@
       as the <parameter>PROGRAM</parameter> parameter, and the list of sources files is passed
       as the <parameter>SOURCES</parameter> parameter.  Consider <xref linkend="c-hello-world"/>
       for a simple "Hello, World" program <filename>hello</filename>, it's source file
-      <filename>main.c</filename>, and the <filename>MetaKitBuild</filename> file to build it.
+      <filename>main.c</filename>, and the <filename>MakeKitBuild</filename> file to build it.
     </para>
     <example xml:id="c-hello-world">
       <title>Using <function>mk_program</function></title>
@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 	  </listitem>
 	</varlistentry>
 	<varlistentry>
-	  <term><filename>MetaKitBuild</filename></term>
+	  <term><filename>MakeKitBuild</filename></term>
 	  <listitem>
 <programlisting><![CDATA[
 make()
@@ -64,7 +64,7 @@ make()
 	<parameter>INCLUDEDIRS</parameter> parameter to <function>mk_program</function>,
 	you can specify a list of directories where the compiler should look for
 	header files.  Adding a header file <filename>include/values.h</filename>
-	to our small example project and modifying <filename>MetaKitBuild</filename>
+	to our small example project and modifying <filename>MakeKitBuild</filename>
 	to find it yields <xref linkend="c-include-dirs"/>.
       </para>
 
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 	    </listitem>
 	  </varlistentry>
 	  <varlistentry>
-	    <term><filename>MetaKitBuild</filename></term>
+	    <term><filename>MakeKitBuild</filename></term>
 	    <listitem>
 <programlisting><![CDATA[
 make()
@@ -140,7 +140,7 @@ int main(int argc, char** argv)
 	    </listitem>
 	  </varlistentry>
 	  <varlistentry>
-	    <term><filename>MetaKitBuild</filename></term>
+	    <term><filename>MakeKitBuild</filename></term>
 	    <listitem>
 <programlisting><![CDATA[
 make()
@@ -161,7 +161,7 @@ make()
   <section>
     <title>Building Libraries</title>
     <para>
-      <productname>MetaKit</productname> allows you to build two types of libraries:
+      <productname>MakeKit</productname> allows you to build two types of libraries:
     </para>
     <variablelist>
       <varlistentry>
@@ -243,7 +243,7 @@ unsigned long factorial(unsigned long i)
 	  </listitem>
 	</varlistentry>
 	<varlistentry>
-	    <term><filename>MetaKitBuild</filename></term>
+	    <term><filename>MakeKitBuild</filename></term>
 	    <listitem>
 <programlisting><![CDATA[
 make()
@@ -271,11 +271,11 @@ make()
       with <parameter>LIBDEPS</parameter>.
       <note>
 	Some systems do not allow inter-dependencies between shared libraries.  On those
-	systems, <productname>MetaKit</productname> will attempt to track the dependencies itself.
+	systems, <productname>MakeKit</productname> will attempt to track the dependencies itself.
       </note>
       Our new library was linked into <filename>hello</filename> the same way as the
       system library <filename>libm</filename>.  Note that the order of the two function
-      invocations in <filename>MetaKitBuild</filename> is significant.
+      invocations in <filename>MakeKitBuild</filename> is significant.
       Because <function>mk_program</function> was called after
       <function>mk_library</function>, it knows that <filename>libexample</filename>
       is a library we build ourselves rather than pre-existing on the system, and it adds

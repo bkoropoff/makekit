@@ -9,7 +9,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the MetaKit project nor the names of its
+#     * Neither the name of the MakeKit project nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -52,7 +52,7 @@ _mk_find_module_imports_recursive()
 {
     unset MODULES SUBDIRS
     
-    mk_safe_source "${MK_SOURCE_DIR}${1}/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    mk_safe_source "${MK_SOURCE_DIR}${1}/MakeKitBuild" || mk_fail "Could not read MakeKitBuild in ${1#/}"
 
     result="$result $MODULES"
     
@@ -120,10 +120,10 @@ _mk_process_build_configure()
     unset -f option configure make
     unset SUBDIRS
 
-    MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MetaKitBuild"
+    MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MakeKitBuild"
     MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
 
-    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${1#/}"
     
     mk_function_exists option && option
 
@@ -139,8 +139,8 @@ _mk_process_build_make()
     unset -f option configure make
     unset SUBDIRS
 
-    MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MetaKitBuild"
-    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MakeKitBuild"
+    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${1#/}"
     
     MK_SUBDIR="$1"
     mk_msg_verbose "emitting make rules"
@@ -166,7 +166,7 @@ _mk_process_build_recursive()
     _mk_process_build_configure "$1"
 
     # Write exports files
-    _mk_write_exports "${MK_OBJECT_DIR}$1/.MetaKitExports"
+    _mk_write_exports "${MK_OBJECT_DIR}$1/.MakeKitExports"
 
     for _dir in ${SUBDIRS}
     do
@@ -177,7 +177,7 @@ _mk_process_build_recursive()
 	    _mk_process_build_make "$1"
 	else
 	    _mk_process_build_recursive "$1/${_dir}"
-	    _mk_restore_exports "${MK_OBJECT_DIR}${1}/.MetaKitExports"
+	    _mk_restore_exports "${MK_OBJECT_DIR}${1}/.MakeKitExports"
 	fi
     done
 
@@ -201,7 +201,7 @@ _mk_process_build()
     done
 
     # Write exports file for build root
-    _mk_write_exports ".MetaKitExports"
+    _mk_write_exports ".MakeKitExports"
 
     # Run build functions for project
     _mk_process_build_recursive ''
@@ -398,7 +398,7 @@ _mk_make_posthooks()
 
 _mk_emit_make_header()
 {
-    _mk_emit "SHELL=${MK_SHELL} -- .MetaKitBuild"
+    _mk_emit "SHELL=${MK_SHELL} -- .MakeKitBuild"
     _mk_emit "MK_CONTEXT=MK_VERBOSE='\$(V)'; _mk_restore_context"
 }
 
@@ -433,7 +433,7 @@ _mk_emit_make_footer()
 	_mk_emit ""
     done
 
-    _mk_emit "sinclude .MetaKitDeps/*.dep"
+    _mk_emit "sinclude .MakeKitDeps/*.dep"
     _mk_emit ""
 }
 
@@ -452,7 +452,7 @@ mk_help_recursive()
     unset -f option
     unset SUBDIRS
     
-    mk_safe_source "${MK_SOURCE_DIR}${1}/MetaKitBuild" || mk_fail "Could not read MetaKitBuild in ${1#/}"
+    mk_safe_source "${MK_SOURCE_DIR}${1}/MakeKitBuild" || mk_fail "Could not read MakeKitBuild in ${1#/}"
 
     if mk_function_exists option
     then
@@ -499,7 +499,7 @@ mk_help()
 	fi
     done
 
-    if [ -f "${MK_SOURCE_DIR}/MetaKitBuild" ]
+    if [ -f "${MK_SOURCE_DIR}/MakeKitBuild" ]
     then
 	mk_help_recursive ""
     fi
@@ -544,9 +544,9 @@ _basic_options()
 }
 
 #
-# Generates .MetaKitBuild in the build directory, which is used as the shell by make
+# Generates .MakeKitBuild in the build directory, which is used as the shell by make
 #
-# This script is a concatenation of the core MetaKit functions (mk.sh),
+# This script is a concatenation of the core MakeKit functions (mk.sh),
 # all imported modules, and a short footer which executes the build command
 # passed by make (build.sh).
 # 
@@ -557,12 +557,12 @@ _basic_options()
 # - Sections from modules that are only used when running configure are removed
 #
 # Each build action begins by invoking _mk_restore_context with the name of the 
-# subdirectory which generated it.  This sources the .MetaKitExports and
-# MetaKitBuild files for that subdirectory.
+# subdirectory which generated it.  This sources the .MakeKitExports and
+# MakeKitBuild files for that subdirectory.
 #
 # The end result is that all build actions run in the same context as the
 # make() function which produced them.  This makes writing build rules
-# more convenient: you can call a helper function in your MetaKitBuild file and
+# more convenient: you can call a helper function in your MakeKitBuild file and
 # have it work as you would expect.
 # 
 _mk_emit_build_script()
@@ -585,7 +585,7 @@ _mk_emit_build_script()
 	    echo ""
 	done
 	cat "${MK_HOME}/build.sh"
-    } | awk -f "${MK_HOME}/build.awk" >.MetaKitBuild || mk_fail "could not write .MetaKitBuild"
+    } | awk -f "${MK_HOME}/build.awk" >.MakeKitBuild || mk_fail "could not write .MakeKitBuild"
 }
 
 # Save our parameters for later use
@@ -608,7 +608,7 @@ fi
 _mk_find_module_imports
 _mk_module_list ${result}
 
-MK_MSG_DOMAIN="metakit"
+MK_MSG_DOMAIN="makekit"
 
 if [ "$MK_HELP" = "yes" ]
 then

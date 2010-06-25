@@ -18,7 +18,7 @@ configure()
 
 make()
 {
-    DOCDIR="${MK_DATADIR}/doc/metakit"
+    DOCDIR="${MK_DATADIR}/doc/makekit"
     MANDIR="${MK_DATADIR}/man/man3mk"
     DEPS="*.xml chapter/*.xml appendix/*.xml"
 
@@ -52,7 +52,7 @@ make()
 	    process_xml '$@' "&index.xml" "&fo.xsl"
 	
 	mk_target \
-	    TARGET="${DOCDIR}/pdf/metakit.pdf" \
+	    TARGET="${DOCDIR}/pdf/makekit.pdf" \
 	    DEPS="fo.xml" \
 	    process_fop '$@' "&fo.xml"
 

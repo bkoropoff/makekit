@@ -9,7 +9,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the MetaKit project nor the names of its
+#     * Neither the name of the MakeKit project nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -43,9 +43,9 @@ MK_MSG_DOMAIN="compile"
 
 if [ -z "$DISABLE_DEPGEN" ]
 then
-    mk_mkdir ".MetaKitDeps"
+    mk_mkdir ".MakeKitDeps"
     _mk_slashless_name "${_object%.o}"
-    DEP_FLAGS="-MMD -MP -MF .MetaKitDeps/${result}.dep"
+    DEP_FLAGS="-MMD -MP -MF .MakeKitDeps/${result}.dep"
 fi
 
 if [ "$PIC" = "yes" ]

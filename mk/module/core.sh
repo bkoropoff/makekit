@@ -9,7 +9,7 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the MetaKit project nor the names of its
+#     * Neither the name of the MakeKit project nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -447,12 +447,12 @@ _mk_save_cache()
 	    echo "$__var=$result"
 	done
 	echo "MK_CACHE_VARS='${MK_CACHE_VARS# }'"
-    } > .MetaKitCache
+    } > .MakeKitCache
 }
 
 _mk_load_cache()
 {
-    mk_safe_source "./.MetaKitCache"
+    mk_safe_source "./.MakeKitCache"
 }
 
 option()

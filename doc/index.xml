@@ -2,12 +2,12 @@
    xmlns="http://docbook.org/ns/docbook" version="5.0"
    xmlns:xi="http://www.w3.org/2001/XInclude">
   <info>
-    <title>MetaKit Guide</title>
+    <title>MakeKit Guide</title>
     <author>
       <firstname>Brian</firstname>
       <surname>Koropoff</surname>
     </author>
-    <productname>MetaKit</productname>
+    <productname>MakeKit</productname>
   </info>
   
   <xi:include href="chapter/c-projects.xml"/>
