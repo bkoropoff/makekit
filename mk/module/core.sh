@@ -297,6 +297,9 @@ mk_target()
 	    mk_quote "${__target}"
 	    MK_SUBDIR_TARGETS="$MK_SUBDIR_TARGETS $result"
 	    ;;
+	"@${MK_OBJECT_DIR}"/*)
+	    mk_add_clean_target "$__target"
+	    ;;
     esac
 
     mk_pop_vars
@@ -391,6 +394,12 @@ mk_output_file()
     mk_pop_vars
 }
 
+mk_add_clean_target()
+{
+    mk_quote "$1"
+    MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS $result"
+}
+
 mk_add_all_target()
 {
     mk_quote "$1"
@@ -483,7 +492,7 @@ make()
 
     mk_target \
 	TARGET="@clean" \
-	mk_run_script clean
+	mk_run_script clean '$(SUBDIR)' "*$MK_CLEAN_TARGETS"
 
     mk_add_phony_target "$result"
 

@@ -305,8 +305,6 @@ _mk_write_exports()
 
 	echo "MK_EXPORTS='$MK_EXPORTS'"
     } >"$1"
-
-    MK_PRECIOUS_FILES="$MK_PRECIOUS_FILES $1"
 }
 
 _mk_restore_exports()
@@ -442,7 +440,6 @@ _mk_emit_make_footer()
 mk_add_configure_output()
 {
     MK_CONFIGURE_OUTPUTS="$MK_CONFIGURE_OUTPUTS $1"
-    MK_PRECIOUS_FILES="$MK_PRECIOUS_FILES $1"
 }
 
 mk_add_configure_input()
@@ -573,7 +570,7 @@ _mk_emit_build_script()
     {
 	echo "### section build"
 	# Set essential variables
-	for _var in MK_HOME MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_PRECIOUS_FILES
+	for _var in MK_HOME MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR
 	do
 	    mk_get "$_var"
 	    mk_quote "$result"
