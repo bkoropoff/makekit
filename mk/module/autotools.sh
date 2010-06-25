@@ -100,8 +100,13 @@ mk_autotools()
     done
 
     mk_target \
+	TARGET="$dir" \
+	DEPS="$SOURCEDIR" \
+	_mk_at_prepare_dir "&$dir" "&$SOURCEDIR"
+
+    mk_target \
 	TARGET=".${dir}_configure" \
-	DEPS="${_stage_deps}" \
+	DEPS="${_stage_deps} $result" \
 	mk_run_script \
 	at-configure \
 	%SOURCEDIR %CPPFLAGS %CFLAGS %LDFLAGS \
@@ -200,4 +205,13 @@ configure()
     mk_msg "host system string: $MK_AT_HOST_STRING"
 
     mk_export MK_AT_BUILD_STRING MK_AT_HOST_STRING
+}
+
+### section build
+
+_mk_at_prepare_dir()
+{
+    mk_msg_domain "prepare"
+    mk_msg "${2#$MK_SOURCE_DIR/}"
+    mk_mkdir "$1"
 }
