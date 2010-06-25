@@ -32,6 +32,11 @@ BEGIN {
     next
 }
 
+# Blank lines -- omit from output
+/^[\t ]*$/ {
+    next
+}
+
 # Normal line -- include in output if in included section
 {
     if (out)
