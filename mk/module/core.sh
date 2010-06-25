@@ -337,7 +337,10 @@ mk_install_files()
 
     unset _inputs
 
-    for _file in ${FILES} "$@"
+    mk_quote_list "$@"
+    mk_unquote_list "$FILES $result"
+
+    for _file
     do
 	mk_install_file \
 	    INSTALLDIR="$INSTALLDIR" \

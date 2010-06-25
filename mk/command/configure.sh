@@ -51,8 +51,13 @@ _mk_emitf()
 _mk_find_module_imports_recursive()
 {
     unset MODULES SUBDIRS
-    
-    mk_safe_source "${MK_SOURCE_DIR}${1}/MakeKitBuild" || mk_fail "Could not read MakeKitBuild in ${1#/}"
+   
+    if ! [ -e "${MK_SOURCE_DIR}${1}/MakeKitBuild" ]
+    then
+	return 0
+    fi
+
+    mk_safe_source "${MK_SOURCE_DIR}${1}/MakeKitBuild" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCE_DIR}${1}"
 
     result="$result $MODULES"
     
@@ -123,7 +128,7 @@ _mk_process_build_configure()
     MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MakeKitBuild"
     MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
 
-    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${1#/}"
+    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCE_DIR}${1}"
     
     mk_function_exists option && option
 
@@ -140,7 +145,7 @@ _mk_process_build_make()
     unset SUBDIRS
 
     MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MakeKitBuild"
-    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${1#/}"
+    mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCEDIR}${1}"
     
     MK_SUBDIR="$1"
     mk_msg_verbose "emitting make rules"
@@ -425,7 +430,7 @@ _mk_emit_make_footer()
 
     _mk_emit ""
     _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}"
-    _mk_emitf '\t@$(MK_CONTEXT) :; mk_msg "regenerating Makefile"; set -- %s; . %s; exit 0\n\n' "$MK_OPTIONS" "'${MK_HOME}/configure.sh'"
+    _mk_emitf '\t@$(MK_CONTEXT) :; mk_msg "regenerating Makefile"; set -- %s; . %s; exit 0\n\n' "$MK_OPTIONS" "'${MK_HOME}/command/configure.sh'"
 
     for _target in ${MK_CONFIGURE_OUTPUTS}
     do
@@ -452,7 +457,7 @@ mk_help_recursive()
     unset -f option
     unset SUBDIRS
     
-    mk_safe_source "${MK_SOURCE_DIR}${1}/MakeKitBuild" || mk_fail "Could not read MakeKitBuild in ${1#/}"
+    mk_safe_source "${MK_SOURCE_DIR}${1}/MakeKitBuild" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCE_DIR}${1}"
 
     if mk_function_exists option
     then

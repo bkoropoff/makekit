@@ -1,4 +1,3 @@
-#!/bin/sh
 #
 # Copyright (c) Brian Koropoff
 # All rights reserved.
@@ -29,56 +28,84 @@
 
 ##
 #
-# mkconfigure -- locates a usable shell and the mk home directory and invokes configure.sh
+# init.sh -- installs MakeKit into a project directory
 #
 ##
 
-MK_DEFAULT_HOME="@MK_DEFAULT_HOME@"
-MK_SOURCE_DIR="`dirname "$0"`"
+. "${MK_HOME}/mk.sh" || exit 1
 
-if test -d "$MK_HOME"
-then
-    :
-elif test -d "$MK_DEFAULT_HOME"
-then
-    MK_HOME="${MK_DEFAULT_HOME}"
-elif test -d "${MK_SOURCE_DIR}/mk"
-then
-    MK_HOME="${MK_SOURCE_DIR}/mk"
-else
-    echo "ERROR: could not find valid MK_HOME"
-    exit 1
-fi
+init_usage()
+{
+    echo "metakit init -- install MakeKit files into current directory"
+    echo ""
+    echo "Usage: metakit init [ options ]"
+}
 
-SHELL_CANDIDATES="\
-    $MK_SHELL \
-    /bin/dash \
-    /bin/bash \
-    /usr/bin/bash \
-    /usr/local/bin/bash \
-    /usr/xpg4/bin/sh \
-    /bin/sh"
+init_help()
+{
+    init_usage
 
-for _shell in ${SHELL_CANDIDATES}
-do
-    if [ -x "$_shell" ]
+    echo ""
+    echo "Options:"
+    echo ""
+    echo "  -h,--help         Show this help"
+    echo "  -s                Symlink files instead of copying them"
+    echo "  -f                Overwrite existing files"
+}
+
+init_parse_params()
+{
+    while [ "$#" -gt 0 ]
+    do
+	_param="$1"
+	shift
+	case "$_param" in
+	    --help|-h)
+		OPTION_HELP=yes
+		;;
+	    -s)
+		OPTION_SYMLINK=yes
+		;;
+	    -f)
+		OPTION_FORCE=yes
+		;;
+	    *)
+		init_usage
+		exit 1
+		;;
+	esac
+    done
+}
+
+do_install()
+{
+    if [ "$OPTION_FORCE" = "yes" ]
     then
-	MK_SHELL="$_shell"
-	break
+	if [ -e "$2" ]
+	then
+	    rm -rf "$2"
+	fi
     fi
-done
+    
+    [ -e "$2" ] && return 0
 
-if test -z "$MK_SHELL"
+    if [ "$OPTION_SYMLINK" = "yes" ]
+    then
+	ln -s "$1" "$2" || mk_fail "could not symlink $1 to $2"
+    else
+	cp -r "$1" "$2" || mk_fail "could not copy $1 to $2"
+    fi
+}
+
+mk_msg_domain init
+
+init_parse_params "$@"
+
+if [ "$OPTION_HELP" = "yes" ]
 then
-    echo "ERROR: could not find valid MK_SHELL"
-    exit 1
+    init_help
+    exit 0
 fi
 
-export MK_HOME MK_SHELL MK_SOURCE_DIR
-
-if [ -n "$MK_TRACE" ]
-then
-    _trace="-x"
-fi
-
-exec $MK_SHELL ${_trace} "${MK_HOME}/configure.sh" "$@"
+do_install "${MK_HOME}" "mk"
+do_install "${MK_HOME}/makekit" "configure"

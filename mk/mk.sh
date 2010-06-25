@@ -188,7 +188,7 @@ done'
     mk_pop_vars()
     {
 	_MK_VAR_SP=$(( $_MK_VAR_SP - 1 ))
-	
+
 	for ___var in ${_MK_VARS} _MK_VARS
 	do
 	    eval "$___var=\"\$_MK_VAR_${_MK_VAR_SP}_${___var}\""
