@@ -199,6 +199,19 @@ fi
 
 ##
 #
+# mk_msg_domain
+#
+# Sets the message domain for all subsequent messages
+#
+##
+mk_msg_domain()
+{
+    MK_MSG_DOMAIN="$1"
+}
+
+
+##
+#
 # mk_msg_format
 #
 # Prints a message with pretty formatting.  The user could
