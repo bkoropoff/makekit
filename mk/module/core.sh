@@ -510,6 +510,10 @@ make()
     mk_add_phony_target "$result"
 
     mk_target \
+	TARGET="@install" \
+	_mk_core_install '$(DESTDIR)'
+
+    mk_target \
 	TARGET="@.PHONY" \
 	DEPS="$MK_PHONY_TARGETS"
 
@@ -541,4 +545,29 @@ _mk_core_write_subdir_rule()
     fi
 
     unset MK_SUBDIR_TARGETS
+}
+
+### section build
+
+_mk_core_install()
+{
+    DESTDIR="${1%/}"
+
+    mk_msg_domain "install"
+   
+    mk_mkdir "${DESTDIR}"
+    
+    [ -d "${MK_STAGE_DIR}" ] || return 0
+
+    set -- "${MK_STAGE_DIR}"/*
+
+    for _top in "$@"
+    do
+	[ -e "$_top" ] && mk_run_or_fail cp -pPRf "${_top}" "${DESTDIR}/"
+    done
+
+    # Produce a list of what was installed
+    { cd "${MK_STAGE_DIR}" && find *; } | { while read -r FILE; do mk_msg "${FILE}"; done }
+
+    return 0
 }

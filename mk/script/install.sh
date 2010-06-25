@@ -29,7 +29,7 @@
 target="$1"
 source="$2"
 
-MK_MSG_DOMAIN="install"
+MK_MSG_DOMAIN="stage"
 
 mk_msg "${target#${MK_STAGE_DIR}}"
 mk_mkdir "`dirname "$target"`"
