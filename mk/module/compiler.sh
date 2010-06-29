@@ -183,26 +183,26 @@ mk_library()
     mk_pop_vars
 }
 
-mk_dso()
+mk_dlo()
 {
-    mk_push_vars INSTALL DSO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS INSTALLDIR
+    mk_push_vars INSTALL DLO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS INSTALLDIR
     mk_parse_params
     
-    _mk_verify_libdeps "$DSO${MK_DSO_EXT}" "$LIBDEPS"
-    _mk_verify_headerdeps "$DSO${MK_DSO_EXT}" "$HEADERDEPS"
+    _mk_verify_libdeps "$DLO${MK_DLO_EXT}" "$LIBDEPS"
+    _mk_verify_headerdeps "$DLO${MK_DLO_EXT}" "$HEADERDEPS"
 
     unset _deps
     
-    mk_comment "dso ${DSO} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
+    mk_comment "dlo ${DLO} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
     
     [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
 
     case "$INSTALL" in
 	no)
-	    _library="${DSO}${MK_DSO_EXT}"
+	    _library="${DLO}${MK_DLO_EXT}"
 	    ;;
 	*)
-	    _library="${INSTALLDIR}/${DSO}${MK_DSO_EXT}"
+	    _library="${INSTALLDIR}/${DLO}${MK_DLO_EXT}"
 	    ;;
     esac
     
@@ -243,7 +243,7 @@ mk_dso()
     mk_target \
 	TARGET="$_library" \
 	DEPS="$_deps" \
-	mk_run_script link MODE=dso %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
+	mk_run_script link MODE=dlo %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
     then

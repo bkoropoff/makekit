@@ -70,14 +70,14 @@ mk_moonunit()
 	return 0
     fi
 
-    mk_push_vars DSO SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS LIBDEPS HEADERDEPS GROUPS DEPS
+    mk_push_vars DLO SOURCES CPPFLAGS CFLAGS LDFLAGS HEADERS LIBDIRS INCLUDEDIRS LIBDEPS HEADERDEPS GROUPS DEPS
     mk_parse_params
 
     unset _CPPFLAGS _rsources _deps
 
-    case "$DSO" in
+    case "$DLO" in
 	*)
-	    _stub="${DSO}-stub.c"
+	    _stub="${DLO}-stub.c"
 	    ;;
     esac
 
@@ -98,9 +98,9 @@ mk_moonunit()
     
     SOURCES="$SOURCES $_stub"
 
-    mk_dso \
+    mk_dlo \
 	INSTALL="no" \
-	DSO="$DSO" \
+	DLO="$DLO" \
 	SOURCES="$SOURCES" \
 	HEADERS="$HEADERS" \
 	CPPFLAGS="$CPPFLAGS" \

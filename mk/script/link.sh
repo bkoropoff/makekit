@@ -199,7 +199,7 @@ done
 [ "${object%/*}" != "${object}" ] && mk_mkdir "${object%/*}"
 
 case "$MODE" in
-    library|dso)
+    library|dlo)
 	create_libtool_archive
 	;;
 esac
@@ -212,7 +212,7 @@ case "$MODE" in
     library)
 	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
 	;;
-    dso)
+    dlo)
 	mk_run_or_fail ${MK_CC} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
 	;;
     program)
