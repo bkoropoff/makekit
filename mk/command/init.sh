@@ -36,9 +36,9 @@
 
 init_usage()
 {
-    echo "metakit init -- install MakeKit files into current directory"
+    echo "makekit init -- install MakeKit files into current directory"
     echo ""
-    echo "Usage: metakit init [ options ]"
+    echo "Usage: makekit init [ options ]"
 }
 
 init_help()
