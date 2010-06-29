@@ -1,0 +1,179 @@
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="project-setup">
+  <info>
+    <title>Setting Up Your Project</title>
+  </info>
+  <para>
+    This chapter will walk you through the basics of setting up a
+    <productname>MakeKit</productname> project.  It will assume a C language project,
+    the finer details of which are covered in <xref linkend="c-projects"/>.
+    However, the steps here remain the same for any sort of project.
+  </para>
+
+  <section>
+    <title>Directory Layout</title>
+    <para>
+      All <productname>MakeKit</productname> rules are placed in <filename>MakeKitBuild</filename>.
+      You can opt to use a single such file in the top level directory of your project, or split
+      your build logic into smaller <filename>MakeKitBuild</filename> files in each subdirectory
+      of your project, or some intermediate arrangement.  A typical project opting for multiple
+      small files might look like the following:
+    </para>
+    <itemizedlist>
+      <title><filename>project-name/</filename></title>
+      <listitem><para><filename>MakeKitBuild</filename></para></listitem>
+      <listitem><para><filename>default.conf</filename></para></listitem>
+      <listitem>
+	<para><filename>include/</filename></para>
+	<itemizedlist>
+	  <listitem><para><filename>MakeKitBuild</filename></para></listitem>
+	  <listitem><para><filename>project-name.h</filename></para></listitem>
+	</itemizedlist>
+      </listitem>
+      <listitem>
+	<para><filename>src/</filename></para>
+	<itemizedlist>
+	  <listitem><para><filename>MakeKitBuild</filename></para></listitem>
+	  <listitem><para><filename>project-name.c</filename></para></listitem>
+	</itemizedlist>
+      </listitem>
+      <listitem>
+	<para><filename>doc/</filename></para>
+	<itemizedlist>
+	  <listitem><para><filename>MakeKitBuild</filename></para></listitem>
+	  <listitem><para><filename>readme.txt</filename></para></listitem>
+	</itemizedlist>
+      </listitem>
+    </itemizedlist>
+  </section>
+  <section>
+    <title>Build Files</title>
+    <para>
+      Once you've decided where to place your <filename>MakeKitBuild</filename> files, you'll
+      need to put something in them.  Each file is an ordinary POSIX shell script, but it should
+      adhere to a particular structure which <productname>MakeKit</productname> expects.
+      The following shows what the top-level <filename>MakeKitBuild</filename> might
+      look like for our example project layout:
+    </para>
+    <informalexample>
+<programlisting>
+SUBDIRS="include src doc" <co xml:id="co.mkb.subdirs"/>
+MODULES="core compiler" <co xml:id="co.mkb.modules"/>
+
+option() <co xml:id="co.mkb.option"/>
+{
+    mk_option \
+        OPTION="config-file" \
+        VAR="CONFIG_FILE" \
+        PARAM="path" \
+        DEFAULT="${MK_SYSCONFDIR}/project-name.conf" \
+        HELP="Configuration file path"
+}
+
+configure() <co xml:id="co.mkb.configure"/>
+{
+    mk_msg "configuration file: $CONFIG_FILE"
+
+    mk_export CONFIG_FILE
+}
+
+make() <co xml:id="co.mkb.make"/>
+{
+    mk_install_file \
+        FILE="default.conf" \
+        INSTALLFILE="${CONFIG_FILE}"
+}
+</programlisting>
+    </informalexample>
+    <calloutlist>
+      <callout arearefs="co.mkb.subdirs">
+	<para>
+	  The <varname>SUBDIRS</varname> variable specifies a list of subdirectories
+	  where <productname>MakeKit</productname> should look for further
+	  <filename>MakeKitBuild</filename> files.  This line can be omitted if
+	  there are no subdirectories to specify.
+	</para>
+      </callout>
+      <callout arearefs="co.mkb.modules">
+	<para>
+	  The <varname>MODULES</varname> variable specifies which
+	  <productname>MakeKit</productname> modules you will be using.
+          Each module adds additional functionality on top of the core
+	  build engine.  For example, the <literal>compiler</literal>
+	  module gives you access to functions for configure and building
+	  C language programs and libraries.
+	</para>
+      </callout>
+      <callout arearefs="co.mkb.option">
+	<para>
+	  The <function>option</function> function is where you can define
+	  configuration options for your project which can be passed on the
+	  command line.  Each option is declared with with <function>mk_option</function>
+	  function, which specifies the option name as passed on the command line
+	  (<parameter>OPTION</parameter>), the shell variable to store the setting in
+	  (<parameter>VAR</parameter>), a one-word description of the parameter
+	  that should be passed to the option (<parameter>PARAM</parameter>), a default
+	  value to use if the option isn't specified (<parameter>DEFAULT</parameter>),
+	  and a help message descriping the option (<parameter>HELP</parameter>).
+	  This particular example allows customizing the location of a configuration file.
+	</para>
+      </callout>
+      <callout arearefs="co.mkb.configure">
+	<para>
+	  The <function>configure</function> function is where you can perform any
+	  configuration for your project.  Typical operations performed here include
+	  processing any options which were specified and testing that the system meets
+	  any prerequisites for building.  Messages are usually printed to the user
+	  summarizing what is being done.
+	</para>
+      </callout>
+      <callout arearefs="co.mkb.make">
+	<para>
+	  The <function>make</function> function is the meat of your build system.
+	  This is where you should define the build rules for your project that produce
+	  its actual end products.  The example above installs a default configuration
+	  file into the location that was specified with the <parameter>config-file</parameter>
+	  parameter.
+	</para>
+      </callout>
+    </calloutlist>
+    <para>
+      All of these elements are optional.  It is not unusual for subdirectories that
+      act only as organizational elements to contain a <filename>MakeKitBuild</filename>
+      with only a <varname>SUBDIRS</varname> line.
+    </para>
+  </section>
+  <section>
+    <title>Installing <productname>MakeKit</productname></title>
+    <para>
+      Once your build files are in place, you're ready to install a copy of
+      <productname>MakeKit</productname> into your project directory.  This step makes
+      your build system self-contained and ready to distribute to other people.  Simply
+      run the following in your shell:
+    </para>
+<screen>
+$ makekit init
+</screen>
+    <para>
+      This will install a copy of <productname>MakeKit</productname> into the
+      <filename>mk</filename> subdirectory, and create an executable
+      <filename>configure</filename> script which can be run to configure your
+      project.
+    </para>
+    <para>
+      You can see additional options to the <command>makekit init</command> command
+      by specifying the <option>-h</option> option:
+    </para>
+<screen>
+$ makekit init -h
+makekit init -- install MakeKit files into current directory
+
+Usage: makekit init [ options ]
+
+Options:
+
+  -h,--help         Show this help
+  -s                Symlink files instead of copying them
+  -f                Overwrite existing files
+</screen>
+  </section>
+</chapter>

@@ -146,32 +146,32 @@
     </variablelist>
   </refsection>
   <refsection><info><title>Examples</title></info>
-    <programlisting>
-# Generate bar.txt from foo.txt by replacing 'apple' with 'orange'
+<programlisting><![CDATA[
+# Generate bar.txt from foo.txt by replacing "apple" with "orange"
 mk_target \
     TARGET="bar.txt" \
     DEPS="foo.txt" \
-    sed 's/apple/orange/g' '%&lt;' '&amp;foo.txt' '%&gt;' '&amp;bar.txt'
+    sed "s/apple/orange/g" "%<" "&foo.txt" "%>" "&bar.txt"
 
-# Generate "a bar.txt" from "a foo.txt" by replacing 'apple' with 'orange'
+# Generate "a bar.txt" from "a foo.txt" by replacing "apple" with "orange"
 # This shows one way of dealing with spaces in filenames
 mk_target \
     TARGET="a bar.txt" \
     DEPS="'a foo.txt'" \
-    sed 's/apple/orange/g' '%&lt;' '&amp;a foo.txt' '%&gt;' '&amp;a bar.txt'
+    sed "s/apple/orange/g" "%<" "&'a foo.txt'" "%>" "&'a bar.txt'"
 
 # An alternate approach to the above
 mk_target \
     TARGET="a bar.txt" \
     DEPS="a\ foo.txt" \
-    sed 's/apple/orange/g' '%&lt;' '&amp;a foo.txt' '%&gt;' '&amp;a bar.txt'
+    sed "s/apple/orange/g" "%<" "&a\ foo.txt" "%>" "&a\ bar.txt"
 
 # Generate all.txt by concatenating all .txt files in the directory containing MakeKitBuild
 mk_target \
     TARGET="all.txt" \
     DEPS="*.txt" \
-    cat '&amp;*.txt' '%&gt;' '&amp;all.txt'
-    </programlisting>
+    cat "&*.txt" "%>" "&all.txt"
+]]></programlisting>
   </refsection>
   <refsection><info><title>Copyright</title></info>
     <para>Copyright (c) Brian Koropoff.  All rights reserved.</para>

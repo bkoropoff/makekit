@@ -1,6 +1,6 @@
-<chapter xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="building-c-projects">
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="c-projects">
   <info>
-    <title>Building C Projects</title>
+    <title>C Language Projects</title>
   </info>
   
   <para>
@@ -168,26 +168,26 @@ make()
 	<term>Shared libraries</term>
 	<listitem>
 	  <para>
-	    A shared library is a collection of relocatable code which is combined with the
-	    program that links against it at startup by the system dynamic linker.
+	    A shared library is a collection of address-relocatable code which is combined
+	    with the program that links against it at startup by the system dynamic linker.
 	    Shared libraries are built with the <function>mk_library</function> function.
 	  </para>
 	</listitem>
       </varlistentry>
       <varlistentry>
-	<term>Dynamic shared objects</term>
+	<term>Dynamically loadable objects</term>
 	<listitem>
 	  <para>
-	    A dynamic shared object is a blob of code which is purposefully loaded
+	    A dynamically loadable object is a blob of code which is explicitly loaded
 	    and executed by a program through functions like <function>dlopen()</function>.
-	    Dynamic shared objects are typically used to implement plugins.  Although
-	    on many <productname>UNIX</productname> systems dynamic shared objects and
+	    Dynamically loadable objects are typically used to implement plugins.  Although
+	    on many <productname>UNIX</productname> systems dynamically loadable objects and
 	    shared libraries are the same type of file, some systems distinguish between
 	    the two.  For example, <productname>Mac OS X</productname> distinguishes between
-	    <filename>.dylib</filename> (shared libraries) and <filename>.so</filename>
-	    (dynamic shared objects).  Dynamic shared objects are built with the
-	    <function>mk_dso</function> function, which takes nearly identical parameters
-	    to <function>mk_library</function>.
+	    <filename>.dylib</filename> (shared libraries) and <filename>.bundle</filename>
+	    or <filename>.so</filename> (dynamically loadable objects).  To build a dynamically
+	    loadable object, use the <function>mk_dlo</function> function, which takes nearly
+	    identical parameters to <function>mk_library</function>.
 	  </para>
 	</listitem>
       </varlistentry>

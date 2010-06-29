@@ -10,6 +10,7 @@
     <productname>MakeKit</productname>
   </info>
   
+  <xi:include href="chapter/project-setup.xml"/>
   <xi:include href="chapter/c-projects.xml"/>
   <xi:include href="appendix/reference.xml"/>
 </book>

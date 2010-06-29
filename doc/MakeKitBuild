@@ -32,6 +32,11 @@ make()
 	FILE="docbook.css" \
 	INSTALLDIR="${DOCDIR}/html"
 
+    # Install callout graphics
+    mk_install_file \
+	FILE="docbook-xsl-ns/images/callouts" \
+	INSTALLFILE="${DOCDIR}/html/images/callouts"
+
     # man
     mk_target \
 	TARGET="${MANDIR}" \
