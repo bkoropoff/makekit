@@ -463,7 +463,8 @@ mk_help_recursive()
     then
 	if [ -z "$1" ]
 	then
-	    echo "Options (${MK_SOURCE_DIR#*/}):"
+	    result="$(cd ${MK_SOURCE_DIR} && basename "${PWD}")"
+	    echo "Options (${result}):"
 	else
 	    echo "Options (${1#/}):"
 	fi
@@ -482,7 +483,7 @@ mk_help_recursive()
 
 mk_help()
 {
-    echo "Usage: mkconfigure [ options ... ]"
+    echo "Usage: makekit configure [ options ... ]"
     echo "Options:"
     _basic_options
     echo ""
