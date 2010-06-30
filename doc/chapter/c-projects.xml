@@ -269,10 +269,14 @@ make()
       as <function>mk_program</function>, including <parameter>INCLUDEDIRS</parameter>.
       As with programs, libraries can specify dependencies on other shared libraries
       with <parameter>LIBDEPS</parameter>.
-      <note>
-	Some systems do not allow inter-dependencies between shared libraries.  On those
-	systems, <productname>MakeKit</productname> will attempt to track the dependencies itself.
-      </note>
+    </para>
+    <note>
+      Some systems do not allow inter-dependencies between shared libraries.  On those
+      systems, <productname>MakeKit</productname> will propagate dependencies
+      forward to any program that links against them.  The resulting program may
+      explicitly depend on libraries from which it consumes no symbols.
+    </note>
+    <para>
       Our new library was linked into <filename>hello</filename> the same way as the
       system library <filename>libm</filename>.  Note that the order of the two function
       invocations in <filename>MakeKitBuild</filename> is significant.
@@ -281,5 +285,178 @@ make()
       is a library we build ourselves rather than pre-existing on the system, and it adds
       appropriate dependencies to the generated <filename>Makefile</filename>.
     </para>
+  </section>
+  <section>
+    <title>Object Groups</title>
+    <para>
+      When a library or program grows large enough, it is often prudent to break its
+      source code up across multiple subdirectories to enhance organizational clarity
+      and separation of concerns.  Rather than maintaining a long list of source files
+      from disparate subdirectories in your invocation of <function>mk_library</function>
+      or <function>mk_program</function>, you can use the <function>mk_group</function>
+      function to compile related source files together into a single "object group"
+      file, and then reference just this file when building your program or library.
+      This feature is an analogue of "convenience libraries" available in
+      <orgname>GNU</orgname> <command>libtool</command>.
+    </para>
+    <para>
+      Imagine that the currently diminuitive <filename>libexample</filename> is destined
+      to become a vast utility library with both math and string manipulation functions.
+      In anticipation of this, we break it into two subdirectories, <filename>math</filename>
+      and <filename>string</filename>.  We will build each subdirectory as an object
+      group and then combine the two into <filename>libexample</filename> using the
+      <parameter>GROUPS</parameter> parameter to <function>mk_library</function>.
+      This yields <xref linkend="c-object-group"/>.
+    </para>
+    <example xml:id="c-object-group">
+      <title>Using <function>mk_group</function></title>
+      <variablelist>
+	<varlistentry>
+	  <term><filename>include/example.h</filename></term>
+	  <listitem>
+<programlisting><![CDATA[
+/* Math functions */
+external unsigned long factorial(unsigned long i);
+/* String functions */
+external void reverse_string(char* str);
+]]></programlisting>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><filename>math/factorial.c</filename></term>
+	  <listitem>
+<programlisting><![CDATA[
+#include "example.h"
+
+unsigned long factorial(unsigned long i)
+{
+    return i == 1 ? 1 : i * factorial(i - 1);
+}
+]]></programlisting>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term><filename>math/MakeKitBuild</filename></term>
+	    <listitem>
+<programlisting><![CDATA[
+make()
+{
+    mk_group \
+        GROUP=math.og \
+        SOURCES="*.c" \
+        INCLUDEDIRS="../include"
+}
+]]></programlisting>
+	    </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><filename>string/reverse.c</filename></term>
+	  <listitem>
+<programlisting><![CDATA[
+#include <string.h>
+#include "example.h"
+
+unsigned void reverse_string(char* str)
+{
+    char* front = NULL;
+    char* back = NULL;
+    char tmp = 0;
+
+    for (front = str, back = str + strlen(str) - 1;
+         back > front;
+         front++, back--)
+    {
+        tmp = *front;
+        *front = *back;
+        *back = tmp;
+    }
+}
+]]></programlisting>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term><filename>string/MakeKitBuild</filename></term>
+	    <listitem>
+<programlisting><![CDATA[
+make()
+{
+    mk_group \
+        GROUP=string.og \
+        SOURCES="*.c" \
+        INCLUDEDIRS="../include"
+}
+]]></programlisting>
+	    </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><filename>main.c</filename></term>
+	  <listitem>
+<programlisting><![CDATA[
+#include <stdio.h>
+#include <math.h>
+#include "values.h"
+#include "example.h"
+
+int main(int argc, char** argv)
+{
+    char reverse[] = MESSAGE;
+
+    reverse_string(reverse);
+
+    printf("%s\n", MESSAGE);
+    printf("Reversed: %s\n", reverse);
+    printf("The square root of 2.0 is %f\n", sqrt(2.0));
+    printf("5! is %lu\n", factorial(5));
+}
+]]></programlisting>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term><filename>MakeKitBuild</filename></term>
+	    <listitem>
+<programlisting><![CDATA[
+SUBDIRS="math string"
+
+make()
+{
+    mk_library \
+        LIB=example \
+        GROUPS="math/math.og string/string.og"
+
+    mk_program \
+        PROGRAM=hello \
+	SOURCES="main.c" \
+        INCLUDEDIRS="include" \
+        LIBDEPS="m example"
+}
+]]></programlisting>
+	    </listitem>
+	</varlistentry>
+      </variablelist>
+    </example>
+    <para>
+      The <function>mk_group</function> function accepts nearly the same set of optional parameters as
+      <function>mk_library</function>; in fact, you can even use <parameter>GROUPS</parameter>
+      to combine several object groups together into one.
+    </para>
+    <note>
+      It is recommended that you name your object groups with the <filename>.og</filename>
+      extension as a convention, but any valid filename is permitted.
+    </note>
+    <para>
+      This particular example also demonstrates a useful shortcut enabled by keeping source
+      files neatly separated into subdirectories: filename patterns.  The invocations of
+      <function>mk_group</function> in the <filename>math</filename> and <filename>string</filename>
+      subdirectories can include all C source files with <literal>*.c</literal>.  In general,
+      <productname>MakeKit</productname> supports filename patterns whenever specifying
+      source files.
+    </para>
+    <important>
+      Filename patterns only work against files that exist at the time that
+      <filename>configure</filename> is run.  For example, the top-level
+      <filename>MakeKitBuild</filename> in <xref linkend="c-object-group"/>
+      could not pick up all object groups using <literal>*/*.og</literal>.
+      With few exceptions, if you build it, you can't match it.
+    </important>
   </section>
 </chapter>
