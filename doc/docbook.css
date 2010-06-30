@@ -206,7 +206,7 @@ body p b.application {
     -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
     border-radius: 6px;
-    max-width: 80ex;
+    max-width: 100ex;
 }
 
 a[href]:hover {
@@ -285,3 +285,7 @@ div.warning h3 {
     font-variant: small-caps
 }
 
+.command
+{
+    font-family: monospace;
+}
