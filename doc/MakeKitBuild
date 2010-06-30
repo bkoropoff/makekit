@@ -1,14 +1,14 @@
 configure()
 {
     mk_check_program xsltproc || mk_msg "missing xsltproc -- documentation will not be generated"
-    mk_check_program fop || mk_msg "missing Apache FOP -- PDF documentation will not be generated"
+    #mk_check_program fop || mk_msg "missing Apache FOP -- PDF documentation will not be generated"
 
     mk_resolve_file "docbook-xsl-ns"
     mk_export XSL_DIR="${MK_ROOT_DIR}/$result"
 
     mk_output_file html.xsl
     mk_output_file man.xsl
-    mk_output_file fo.xsl
+    #mk_output_file fo.xsl
 }
 
 make()
@@ -46,19 +46,19 @@ make()
     mk_add_all_target "$result"
 
     # pdf (needs Apache fop)
-    [ -z "$FOP" ] && return 0
+    #[ -z "$FOP" ] && return 0
 
-    mk_target \
-	TARGET="fo.xml" \
-	DEPS="$DEPS fo.xsl" \
-	process_xml '$@' "&index.xml" "&fo.xsl"
+    #mk_target \
+    #	TARGET="fo.xml" \
+    #	DEPS="$DEPS fo.xsl" \
+    #	process_xml '$@' "&index.xml" "&fo.xsl"
     
-    mk_target \
-	TARGET="${DOCDIR}/pdf/makekit.pdf" \
-	DEPS="fo.xml" \
-	process_fop '$@' "&fo.xml"
+    #mk_target \
+    #   TARGET="${DOCDIR}/pdf/makekit.pdf" \
+    #   DEPS="fo.xml" \
+    #   process_fop '$@' "&fo.xml"
     
-    mk_add_all_target "$result"
+    #mk_add_all_target "$result"
 }
 
 process_xml()
