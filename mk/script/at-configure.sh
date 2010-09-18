@@ -62,7 +62,7 @@ _include_dir="${_stage_dir}${_includedir}"
 _lib_dir="${_stage_dir}${_libdir}"
 
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$DIR" && \
-mk_run_or_fail "${_src_dir}/configure" \
+mk_run_quiet_or_fail "${_src_dir}/configure" \
     CC="$MK_CC" \
     CPPFLAGS="-I${_include_dir} $_cppflags $CPPFLAGS" \
     CFLAGS="$MK_CFLAGS $CFLAGS" \
@@ -76,5 +76,5 @@ mk_run_or_fail "${_src_dir}/configure" \
     --sysconfdir="${_sysconfdir}" \
     --localstatedir="${_localstatedir}" \
     "$@"
-cd "${MK_ROOT_DIR}" && mk_run_or_fail touch "$_stamp"
+cd "${MK_ROOT_DIR}" && mk_run_quiet_or_fail touch "$_stamp"
 mk_msg "end ${__msg#/}"

@@ -41,14 +41,25 @@ mk_run_or_fail()
     mk_quote_list "$@"
     mk_msg_verbose "+ $result"
     
-    ___output=`"$@" 2>&1`
-    ___ret="$?"
-    
-    if [ "$___ret" -ne 0 ]
+    if ! "$@"
     then
 	mk_msg "FAILED: $result"
-	echo "$___output"
 	exit 1
+    fi
+}
+
+mk_run_quiet_or_fail()
+{
+    mk_quote_list "$@"
+    mk_msg_verbose "+(q) $result"
+    
+    __log="`"$@" 2>&1`"
+
+    if [ "$?" -ne 0 ]
+    then
+        echo "$__log" >&2
+        mk_msg "$FAILED: $result"
+        exit 1
     fi
 }
 
