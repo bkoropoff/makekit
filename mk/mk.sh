@@ -130,6 +130,10 @@ do
       local "$1"
       shift
     ;;
+    --)
+      shift
+      break
+    ;;
     *)
       break
     ;;
@@ -148,6 +152,10 @@ do
     *"="*)
       mk_set "${1%%=*}" "${1#*=}"
       shift
+    ;;
+    --)
+      shift
+      break
     ;;
     *)
       break
