@@ -214,4 +214,5 @@ _mk_at_prepare_dir()
     mk_msg_domain "prepare"
     mk_msg "${2#$MK_SOURCE_DIR/}"
     mk_mkdir "$1"
+    mk_run_or_fail touch "$1"
 }
