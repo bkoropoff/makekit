@@ -34,7 +34,7 @@ __msg="${MK_SUBDIR}/$SOURCEDIR ($MK_SYSTEM)"
 
 mk_msg "begin ${__msg#/}"
 
-mk_mkdir "${MK_OBJECT_DIR}${MK_SUBDIR}/$DIR"
+mk_mkdir "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR"
 mk_mkdir "${MK_STAGE_DIR}"
 
 if [ "${MK_SYSTEM%/*}" = "build" ]
@@ -61,7 +61,7 @@ _stage_dir="`cd ${MK_STAGE_DIR} && pwd`"
 _include_dir="${_stage_dir}${_includedir}"
 _lib_dir="${_stage_dir}${_libdir}"
 
-cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$DIR" && \
+cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" && \
 mk_run_quiet_or_fail "${_src_dir}/configure" \
     CC="$MK_CC" \
     CPPFLAGS="-I${_include_dir} $_cppflags $CPPFLAGS" \

@@ -34,7 +34,7 @@ mk_msg "begin ${__msg#/}"
 _stamp="$1"
 mk_mkdir "${MK_STAGE_DIR}"
 _stage_dir="`cd "${MK_STAGE_DIR}" && pwd`"
-cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$DIR" || mk_fail "could not change directory"
+cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" || mk_fail "could not change directory"
 mk_run_quiet_or_fail ${MAKE} ${MFLAGS}
 if [ "$INSTALL" != "no" ]
 then

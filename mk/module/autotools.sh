@@ -79,13 +79,10 @@ mk_autotools()
     mk_push_vars \
 	SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
 	CPPFLAGS CFLAGS LDFLAGS INSTALL TARGETS SELECT \
-	dir prefix
+	BUILDDIR prefix
     mk_parse_params
     
     unset _stage_deps
-    
-    _mk_slashless_name "${SOURCEDIR}/${MK_SYSTEM}"
-    dir="$result"
     
     mk_comment "autotools source component $SOURCEDIR ($MK_SYSTEM)"
 
@@ -99,28 +96,29 @@ mk_autotools()
 	_stage_deps="$_stage_deps '${MK_INCLUDEDIR}/${_header}'"
     done
 
-    mk_target \
-	TARGET="$dir" \
-	DEPS="$SOURCEDIR" \
-	_mk_at_prepare_dir "&$dir" "&$SOURCEDIR"
+    _mk_slashless_name "${SOURCEDIR}/${MK_SYSTEM}"
+    BUILDDIR="$result"
+
+    mk_resolve_target "$BUILDDIR"
+    mk_add_clean_target "$result"
 
     mk_target \
-	TARGET=".${dir}_configure" \
-	DEPS="${_stage_deps} $result" \
+	TARGET=".${BUILDDIR}_configure" \
+	DEPS="${_stage_deps}" \
 	mk_run_script \
 	at-configure \
-	%SOURCEDIR %CPPFLAGS %CFLAGS %LDFLAGS \
+	%SOURCEDIR %BUILDDIR %CPPFLAGS %CFLAGS %LDFLAGS \
 	DIR="$dir" '$@' "$@"
 
     __configure_stamp="$result"
 
     mk_target \
-	TARGET=".${dir}_build" \
+	TARGET=".${BUILDDIR}_build" \
 	DEPS="'$__configure_stamp'" \
 	mk_run_script \
 	at-build \
-	%SYSTEM %SOURCEDIR %INSTALL %SELECT \
-	DIR="$dir" MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
+	%SYSTEM %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
+	MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
 
     __build_stamp="$result"
 
@@ -205,14 +203,4 @@ configure()
     mk_msg "host system string: $MK_AT_HOST_STRING"
 
     mk_export MK_AT_BUILD_STRING MK_AT_HOST_STRING
-}
-
-### section build
-
-_mk_at_prepare_dir()
-{
-    mk_msg_domain "prepare"
-    mk_msg "${2#$MK_SOURCE_DIR/}"
-    mk_mkdir "$1"
-    mk_run_or_fail touch "$1"
 }
