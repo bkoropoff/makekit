@@ -40,12 +40,12 @@ DEPENDS="core platform path"
 #
 mk_compile()
 {
-    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC
+    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC OPREFIX
     mk_parse_params
     
     case "$SOURCE" in
         *.c)
-	    _object="${SOURCE%.c}-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.o"
+	    _object="${OPREFIX}${SOURCE%.c}-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.o"
 	    ;;
 	*)
 	    mk_fail "Unsupported file type: $SOURCE"
@@ -123,6 +123,10 @@ _mk_library()
 	    ;;
     esac
     
+    # Create object prefix based on library name
+    _mk_slashless_name "lib-$LIB-"
+    _oprefix="$result"
+
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
@@ -136,7 +140,8 @@ _mk_library()
 	    CPPFLAGS="$CPPFLAGS" \
 	    CFLAGS="$CFLAGS" \
 	    PIC="yes" \
-	    DEPS="$DEPS"
+	    DEPS="$DEPS" \
+	    OPREFIX="$_oprefix"
 	
 	mk_quote "$result"
 	_deps="$_deps $result"
@@ -205,7 +210,11 @@ mk_dlo()
 	    _library="${INSTALLDIR}/${DLO}${MK_DLO_EXT}"
 	    ;;
     esac
-    
+
+    # Create object prefix based on dlo name
+    _mk_slashless_name "dlo-$DLO-"
+    _oprefix="$result"
+
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}"
     
@@ -219,7 +228,8 @@ mk_dlo()
 	    CPPFLAGS="$CPPFLAGS" \
 	    CFLAGS="$CFLAGS" \
 	    PIC="yes" \
-	    DEPS="$DEPS"
+	    DEPS="$DEPS" \
+	    OPREFIX="$_oprefix"
 	
 	mk_quote "$result"
 	_deps="$_deps $result"
@@ -265,7 +275,11 @@ mk_group()
     unset _deps
     
     mk_comment "group ${GROUP} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
-    
+
+    # Create object prefix based on group name
+    _mk_slashless_name "group-$GROUP-"
+    _oprefix="$result"
+
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
@@ -279,7 +293,8 @@ mk_group()
 	    CPPFLAGS="$CPPFLAGS" \
 	    CFLAGS="$CFLAGS" \
 	    PIC="yes" \
-	    DEPS="$DEPS"
+	    DEPS="$DEPS" \
+	    OPREFIX="$oprefix"
 	
 	mk_quote "$result"
 	_deps="$_deps $result"
@@ -348,6 +363,10 @@ mk_program()
     fi
     
     mk_comment "program ${PROGRAM} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
+
+    # Create object prefix based on program name
+    _mk_slashless_name "program-$PROGRAM-"
+    _oprefix="$result"
     
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
@@ -362,7 +381,8 @@ mk_program()
 	    CPPFLAGS="$CPPFLAGS" \
 	    CFLAGS="$CFLAGS" \
 	    PIC="yes" \
-	    DEPS="$DEPS"
+	    DEPS="$DEPS" \
+	    OPREFIX="$_oprefix"
 	
 	mk_quote "$result"
 	_deps="$_deps $result"
