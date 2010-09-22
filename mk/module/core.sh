@@ -210,6 +210,7 @@ mk_skip_subdir()
     __skip="$1"
     
     mk_unquote_list "$SUBDIRS"
+    SUBDIRS=""
     for __subdir in "$@"
     do
 	[ "$__subdir" = "$__skip" ] || SUBDIRS="$SUBDIRS $__subdir"
