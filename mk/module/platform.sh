@@ -310,7 +310,7 @@ configure()
 	MK_SYSTEM_VARS
 
     mk_declare_system_var \
-	MK_OS MK_DISTRO MK_DISTRO_VERSION MK_ARCH MK_ISAS \
+	MK_OS MK_DISTRO MK_DISTRO_VERSION MK_ARCH MK_ISAS MK_ISA \
 	MK_DLO_EXT MK_LIB_EXT
 
     for _isa in ${MK_BUILD_ISAS}
@@ -320,6 +320,7 @@ configure()
 	mk_set_system_var SYSTEM="build/$_isa" MK_DISTRO_VERSION "$MK_BUILD_DISTRO_VERSION"
 	mk_set_system_var SYSTEM="build/$_isa" MK_ARCH "$MK_BUILD_ARCH"
 	mk_set_system_var SYSTEM="build/$_isa" MK_ISAS "$MK_BUILD_ISAS"
+	mk_set_system_var SYSTEM="build/$_isa" MK_ISA "$_isa"
     done
 
     for _isa in ${MK_HOST_ISAS}
@@ -329,6 +330,7 @@ configure()
 	mk_set_system_var SYSTEM="host/$_isa" MK_DISTRO_VERSION "$MK_HOST_DISTRO_VERSION"
 	mk_set_system_var SYSTEM="host/$_isa" MK_ARCH "$MK_HOST_ARCH"
 	mk_set_system_var SYSTEM="host/$_isa" MK_ISAS "$MK_HOST_ISAS"
+	mk_set_system_var SYSTEM="host/$_isa" MK_ISA "$_isa"
     done
 
     for _sys in build host
