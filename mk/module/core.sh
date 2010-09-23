@@ -572,7 +572,7 @@ _mk_core_install()
    
     [ -d "${MK_STAGE_DIR}" ] || return 0
 
-    find "${MK_STAGE_DIR}" -type f -o -type s |
+    find "${MK_STAGE_DIR}" -type f -o -type l |
     while read -r _file
     do
 	_file="${_file#$MK_STAGE_DIR}"
