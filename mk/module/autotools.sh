@@ -161,6 +161,13 @@ mk_autotools()
 	    DEPS="'$__build_stamp'"
     done
 
+    # Add convenience rule for building just this component
+    mk_target \
+	TARGET="@${MK_SUBDIR:+${MK_SUBDIR#/}/}$SOURCEDIR" \
+	DEPS="$__build_stamp"
+
+    mk_add_phony_target "$result"
+
     if ! [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/configure" ]
     then
 	if [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/autogen.sh" ]
