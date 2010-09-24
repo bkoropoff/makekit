@@ -88,12 +88,18 @@ mk_autotools()
 
     for _lib in ${LIBDEPS}
     do
-	_stage_deps="$_stage_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+        then
+	    _stage_deps="$_stage_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+        fi
     done
     
     for _header in ${HEADERDEPS}
     do
-	_stage_deps="$_stage_deps '${MK_INCLUDEDIR}/${_header}'"
+        if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
+        then
+	    _stage_deps="$_stage_deps '${MK_INCLUDEDIR}/${_header}'"
+        fi
     done
 
     _mk_slashless_name "${SOURCEDIR}/${MK_SYSTEM}"
