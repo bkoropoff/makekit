@@ -306,8 +306,7 @@ mk_target()
 
     case "$__target" in
 	"@${MK_STAGE_DIR}"/*)
-	    mk_quote "${__target}"
-	    MK_SUBDIR_TARGETS="$MK_SUBDIR_TARGETS $result"
+	    mk_add_subdir_target "$__target"
 	    ;;
 	"@${MK_OBJECT_DIR}"/*)
 	    mk_add_clean_target "$__target"
@@ -425,6 +424,12 @@ mk_add_phony_target()
 {
     mk_quote "$1"
     MK_PHONY_TARGETS="$MK_PHONY_TARGETS $result"
+}
+
+mk_add_subdir_target()
+{
+    mk_quote "$1"
+    MK_SUBDIR_TARGETS="$MK_SUBDIR_TARGETS $result"
 }
 
 mk_check_cache()
