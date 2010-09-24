@@ -116,10 +116,10 @@ _mk_library()
     
     case "$INSTALL" in
 	no)
-	    _library="lib${LIB}${MK_LIB_EXT}"
+	    _library="lib${LIB}${EXT}"
 	    ;;
 	*)
-	    _library="$MK_LIBDIR/lib${LIB}${MK_LIB_EXT}"
+	    _library="$MK_LIBDIR/lib${LIB}${EXT}"
 	    ;;
     esac
     
@@ -165,7 +165,7 @@ _mk_library()
     mk_target \
 	TARGET="$_library" \
 	DEPS="${_deps}" \
-	mk_run_script link MODE=library %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %VERSION '$@' "*${OBJECTS} ${_objects}"
+	mk_run_script link MODE=library %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %VERSION %EXT '$@' "*${OBJECTS} ${_objects}"
     
     if [ "$INSTALL" != "no" ]
     then
@@ -175,11 +175,12 @@ _mk_library()
 
 mk_library()
 {
-    mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS
+    mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS EXT
+    EXT="${MK_LIB_EXT}"
     mk_parse_params
     
-    _mk_verify_libdeps "lib$LIB${MK_LIB_EXT}" "$LIBDEPS"
-    _mk_verify_headerdeps "lib$LIB${MK_LIB_EXT}" "$HEADERDEPS"
+    _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS"
+    _mk_verify_headerdeps "lib$LIB${EXT}" "$HEADERDEPS"
 
     _mk_library "$@"
     
@@ -190,11 +191,12 @@ mk_library()
 
 mk_dlo()
 {
-    mk_push_vars INSTALL DLO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS INSTALLDIR
+    mk_push_vars INSTALL DLO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS INSTALLDIR EXT
+    EXT="${MK_DLO_EXT}"
     mk_parse_params
     
-    _mk_verify_libdeps "$DLO${MK_DLO_EXT}" "$LIBDEPS"
-    _mk_verify_headerdeps "$DLO${MK_DLO_EXT}" "$HEADERDEPS"
+    _mk_verify_libdeps "$DLO${EXT}" "$LIBDEPS"
+    _mk_verify_headerdeps "$DLO${EXT}" "$HEADERDEPS"
 
     unset _deps
     
@@ -204,10 +206,10 @@ mk_dlo()
 
     case "$INSTALL" in
 	no)
-	    _library="${DLO}${MK_DLO_EXT}"
+	    _library="${DLO}${EXT}"
 	    ;;
 	*)
-	    _library="${INSTALLDIR}/${DLO}${MK_DLO_EXT}"
+	    _library="${INSTALLDIR}/${DLO}${EXT}"
 	    ;;
     esac
 
@@ -253,7 +255,7 @@ mk_dlo()
     mk_target \
 	TARGET="$_library" \
 	DEPS="$_deps" \
-	mk_run_script link MODE=dlo %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
+	mk_run_script link MODE=dlo %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
     then

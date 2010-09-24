@@ -134,13 +134,13 @@ create_libtool_archive()
 {
     # Create a fake .la file that can be used by combine_libtool_flags
     # This should be expanded upon for full compatibility with libtool
-    mk_msg_verbose "${object%.*}.la"
+    mk_msg_verbose "${object%${EXT}}.la"
     
     {
 	mk_quote "-L${RPATH_LIBDIR} $_LIBS"
 	echo "# Created by MakeKit"
 	echo "dependency_libs=$result"
-    } > "${object%.*}.la" || mk_fail "could not write ${object%.*}.la"
+    } > "${object%${EXT}}.la" || mk_fail "could not write ${object%${EXT}}.la"
 }
 
 object="$1"
