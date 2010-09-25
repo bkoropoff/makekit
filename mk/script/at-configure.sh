@@ -60,6 +60,13 @@ _src_dir="`cd ${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR} && pwd`"
 _stage_dir="`cd ${MK_STAGE_DIR} && pwd`"
 _include_dir="${_stage_dir}${_includedir}"
 _lib_dir="${_stage_dir}${_libdir}"
+_libpath=""
+
+case "$MK_OS" in
+    linux|freebsd)
+        export "LD_LIBRARY_PATH=$_lib_dir"
+        ;;
+esac
 
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" && \
 mk_run_quiet_or_fail "${_src_dir}/configure" \

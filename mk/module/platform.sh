@@ -185,7 +185,7 @@ option()
 	i?86|i86pc)
 	    _default_MK_BUILD_ARCH="x86"
 	    ;;
-	x86_64)
+	x86_64|amd64)
 	    _default_MK_BUILD_ARCH="x86_64"
 	    ;;
 	*)
