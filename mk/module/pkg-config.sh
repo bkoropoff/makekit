@@ -20,6 +20,9 @@ mk_pkg_config()
 	ldflags="`$PKG_CONFIG --libs-only-other "$@"`"
 	[ "$?" -eq 0 ] || mk_fail "pkg-config failed"
 
+	ldflags="$ldflags `$PKG_CONFIG --libs-only-L "$@"`"
+	[ "$?" -eq 0 ] || mk_fail "pkg-config failed"
+
 	__libs="`$PKG_CONFIG --libs-only-l "$@"`"
 	[ "$?" -eq 0 ] || mk_fail "pkg-config failed"
 	
