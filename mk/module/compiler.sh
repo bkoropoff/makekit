@@ -681,9 +681,9 @@ mk_try_compile()
     mk_parse_params
     
     {
-	for _include in ${HEADERDEPS}
+	for _header in ${HEADERDEPS}
 	do
-	    echo "#include <${_include}>"
+            mk_might_have_header "$_header" && echo "#include <${_header}>"
 	done
 	
 	cat <<EOF
@@ -712,6 +712,7 @@ mk_check_header()
     _mk_define_name "HAVE_$HEADER"
     _defname="$result"
     _varname="$_defname"
+    mk_declare_system_var "$_varname"
 
     if _mk_contains "$HEADER" ${MK_INTERNAL_HEADERS}
     then
@@ -723,7 +724,7 @@ mk_check_header()
 	{
             for _header in ${HEADERDEPS}
             do
-                echo "#include <${_header}>"
+                mk_might_have_header "$_header" && echo "#include <${_header}>"
             done
 
 	    echo "#include <${HEADER}>"
@@ -747,6 +748,7 @@ EOF
 	mk_cache "$_varname" "$_result"
     fi
 
+    mk_set "$_varname" "$_result"
     mk_msg "header $HEADER: $_result ($MK_SYSTEM)"
     
     case "$_result" in
@@ -764,6 +766,20 @@ EOF
 	    return 1
 	    ;;
     esac
+}
+
+mk_have_header()
+{
+    _mk_define_name "HAVE_$1"
+    mk_get "$result"
+    [ "$result" = "external" -o "$result" = "internal" ]
+}
+
+mk_might_have_header()
+{
+    _mk_define_name "HAVE_$1"
+    mk_get "$result"
+    [ "$result" != "no" ]
 }
 
 mk_check_function()
@@ -796,9 +812,9 @@ mk_check_function()
 	_result="$result"
     else
 	{
-	    for _include in ${HEADERDEPS}
+	    for _header in ${HEADERDEPS}
 	    do
-		echo "#include <${_include}>"
+                mk_might_have_header "$_header" && echo "#include <${_header}>"
 	    done
 	    
 	    echo ""
@@ -864,6 +880,8 @@ mk_check_library()
     _defname="$result"
     _varname="$_defname"
 
+    mk_declare_system_var "$_varname"
+
     if _mk_contains "$LIB" ${MK_INTERNAL_LIBS}
     then
 	_result="internal"
@@ -889,7 +907,8 @@ EOF
 	
 	mk_cache "$_varname" "$_result"
     fi
-    
+
+    mk_set "$_varname" "$_result"    
     mk_msg "library $LIB: $_result ($MK_SYSTEM)"
 
     _varname="${_varname#HAVE_}"
@@ -925,9 +944,9 @@ _mk_check_type()
 	_result="$result"
     else
 	{
-	    for _include in ${HEADERDEPS}
+	    for _header in ${HEADERDEPS}
 	    do
-		echo "#include <${_include}>"
+                mk_might_have_header "$_header" && echo "#include <${_header}>"
 	    done
 	    
 	    echo ""
@@ -996,9 +1015,9 @@ _mk_check_sizeof()
 	_result="$result"
     else
 	{
-	    for _include in ${HEADERDEPS}
+	    for _header in ${HEADERDEPS}
 	    do
-		echo "#include <${_include}>"
+                mk_might_have_header "$_header" && echo "#include <${_header}>"
 	    done
 	    
 	    echo ""
