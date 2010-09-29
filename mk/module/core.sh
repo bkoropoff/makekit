@@ -405,6 +405,8 @@ mk_output_file()
     mk_add_configure_output "${_output}"
     mk_add_configure_input "${_input}"
 
+    result="@$_output"
+
     mk_pop_vars
 }
 
