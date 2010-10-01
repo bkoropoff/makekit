@@ -1313,8 +1313,9 @@ configure()
 	done
     done
 
-    # Register a hook to finish up the current config header at
-    # the end of each configure() function
-    mk_add_configure_posthook _mk_close_config_header
+    # Each invocation of mk_config_header closes and finishes up
+    # the previous header.  In order to close the final config
+    # header in the project, we register a completion hook as well.
+    mk_add_complete_hook _mk_close_config_header
 }
 

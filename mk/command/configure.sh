@@ -369,6 +369,14 @@ mk_add_make_posthook()
     fi
 }
 
+mk_add_complete_hook()
+{
+    if ! _mk_contains "$1" "$_MK_COMPLETE_HOOKS"
+    then
+	_MK_COMPLETE_HOOKS="$_MK_COMPLETE_HOOKS $1"
+    fi
+}
+
 _mk_configure_prehooks()
 {
     for _hook in ${_MK_CONFIGURE_PREHOOKS}
@@ -398,6 +406,14 @@ _mk_make_posthooks()
     for _hook in ${_MK_MAKE_POSTHOOKS}
     do
 	"$_hook"
+    done
+}
+
+_mk_complete_hooks()
+{
+    for _hook in ${_MK_COMPLETE_HOOKS}
+    do
+        "$_hook"
     done
 }
 
@@ -640,6 +656,9 @@ _mk_emit_make_header
 
 # Process build files
 _mk_process_build
+
+# Run completion hooks
+_mk_complete_hooks
 
 # Emit Makefile footer
 _mk_emit_make_footer
