@@ -1206,6 +1206,13 @@ mk_check_headers()
 
 option()
 {
+    if [ "$MK_DEBUG" = yes ]
+    then
+        _default_OPTFLAGS="-O0 -g"
+    else
+        _default_OPTFLAGS="-O2 -g"
+    fi
+
     mk_option \
 	VAR="CC" \
 	PARAM="program" \
@@ -1225,7 +1232,7 @@ option()
     mk_option \
 	VAR="CFLAGS" \
 	PARAM="flags" \
-	DEFAULT="" \
+	DEFAULT="$_default_OPTFLAGS" \
 	HELP="Default C compiler flags"
 
     MK_DEFAULT_CFLAGS="$CFLAGS"
@@ -1233,7 +1240,7 @@ option()
     mk_option \
 	VAR="LDFLAGS" \
 	PARAM="flags" \
-	DEFAULT="" \
+	DEFAULT="$_default_OPTFLAGS" \
 	HELP="Default linker flags"
 
     MK_DEFAULT_LDFLAGS="$LDFLAGS"
