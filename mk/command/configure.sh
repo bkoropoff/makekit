@@ -558,18 +558,18 @@ _basic_options()
 	HELP="Build tool install directory"
 	
     mk_option \
-	VAR=MK_HELP \
-	OPTION=help \
-	PARAM='yes|no' \
-	DEFAULT='no' \
-	HELP="Show this help"
-
-    mk_option \
         VAR=MK_SHOW_VARS \
         OPTION=show-vars \
         PARAM='yes|no' \
         DEFAULT='no' \
         HELP="Always show options as variable names in help output"
+
+    mk_option \
+	VAR=MK_HELP \
+	OPTION=help \
+	PARAM='yes|no' \
+	DEFAULT='no' \
+	HELP="Show this help"
 }
 
 _mk_sort_params()
