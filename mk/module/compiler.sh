@@ -623,7 +623,7 @@ _mk_build_test()
     __test="${2%.*}"
     
     case "${1}" in
-	compile)
+	compile|compile-keep)
 	    (
 		eval "exec ${MK_LOG_FD}>&-"
 		MK_LOG_FD=""
@@ -634,7 +634,10 @@ _mk_build_test()
 		    "${__test}.o" "${__test}.c"
 	    ) >&${MK_LOG_FD} 2>&1	    
 	    _ret="$?"
-	    rm -f "${__test}.o"
+            if [ "${1}" != "compile-keep" ]
+            then
+	        rm -f "${__test}.o"
+            fi
 	    ;;
 	link-program|run-program)
 	    (
@@ -1024,6 +1027,31 @@ mk_check_types()
     mk_pop_vars
 }
 
+mk_check_static_predicate()
+{
+    mk_push_vars EXPR
+    mk_parse_params
+
+    {
+        _mk_c_check_prologue
+        cat <<EOF
+int main(int argc, char** argv)
+{
+     int __array[($EXPR) ? 1 : -1] = {0};
+
+     return __array[0];
+}
+EOF
+    } > .check.c
+
+    _mk_build_test 'compile' .check.c
+    _res="$?"
+
+    mk_pop_vars
+
+    return "$_res"
+}
+
 _mk_check_sizeof()
 {
     _mk_define_name "SIZEOF_$TYPE"
@@ -1034,33 +1062,27 @@ _mk_check_sizeof()
     then
 	_result="$result"
     else
-	{
-            _mk_c_check_prologue
-	    for _header in ${HEADERDEPS}
-	    do
-                mk_might_have_header "$_header" && echo "#include <${_header}>"
-	    done
-	    
-	    echo ""
-	    
-	    cat <<EOF
-int main(int argc, char** argv)
-{ 
-    printf("%lu\n", (unsigned long) sizeof($TYPE));
-    return 0;
-}
-EOF
-	} > .check.c
-	mk_log "running run test for sizeof($TYPE)"
-	if _mk_build_test 'run-program' .check.c >".result"
-	then
-	    read _result <.result
-	    rm -f .result
-	else
-	    rm -f .result
-	    mk_fail "could not determine sizeof($TYPE)"
-	fi
-	
+        # Algorithm to derive the size of a type even
+        # when cross-compiling.  mk_check_static_predicate()
+        # lets us evaluate a boolean expression involving
+        # compile-time constants.  Using this, we can perform
+        # a binary search for the correct size of the type.
+        upper="1024"
+        lower="0"
+        
+        while [ "$upper" -ne "$lower" ]
+        do
+            mid="$((($upper + $lower)/2))"
+            if mk_check_static_predicate EXPR="sizeof($TYPE) <= $mid"
+            then
+                upper="$mid"
+            else
+                lower="$(($mid + 1))"
+            fi
+        done
+        
+        _result="$upper"
+        unset upper lower mid
 	mk_cache "$_varname" "$_result"
     fi
 
@@ -1101,41 +1123,45 @@ mk_check_endian()
     then
 	_result="$result"
     else
+        # Check for endianness in a (hacky) manner that supports
+        # cross-compiling. This is done by compiling a C file that
+        # contains arrays of 16-bit integers that happen to form
+        # ASCII strings under particular byte orders.  The strings
+        # are then searched for in the resulting object file.
+        #
+        # The character sequences were designed to be extremely unlikely
+        # to occur otherwise.
 	{
-            _mk_c_check_prologue
 	    cat <<EOF
 #include <stdio.h>
 
+/* Spells "aArDvArKsOaP" on big-endian systems */
+static const unsigned short aardvark[] =
+{0x6141, 0x7244, 0x7641, 0x724b, 0x734f, 0x6150};
+/* Spells "zEbRaBrUsH" on little-endian systems */
+static const unsigned short zebra[] = 
+{0x457a, 0x5262, 0x4261, 0x5572, 0x4873};
+
 int main(int argc, char** argv)
 { 
-    union
-    {
-      int a;
-      char b[sizeof(int)];
-    } u;
-
-    u.a = 1;
-
-    if (u.b[0] == 1)
-    {
-        printf("little\n");
-    }
-    else
-    {
-        printf("big\n");
-    }
-
-    return 0;
+    return (int) aardvark[0] + zebra[0];
 }
 EOF
 	} > .check.c
-	mk_log "running run test for endianness"
-	if _mk_build_test 'run-program' .check.c >.result
+	if _mk_build_test 'compile-keep' .check.c
 	then
-	    read _result <.result
-	    rm -f .result
+            if grep "aArDvArKsOaP" .check.o >/dev/null
+            then
+                _result="big"
+            elif grep "zEbRaBrUsH" .check.o >/dev/null
+            then
+                _result="little"
+            else
+                rm -f .check.o
+                mk_fail "could not determine endianness"
+            fi
 	else
-	    rm -f .result
+            rm -f .check.o
 	    mk_fail "could not determine endianness"
 	fi
 	
