@@ -58,7 +58,7 @@ mk_run_quiet_or_fail()
     if [ "$?" -ne 0 ]
     then
         echo "$__log" >&2
-        mk_msg "$FAILED: $result"
+        mk_msg "FAILED: $result"
         exit 1
     fi
 }
