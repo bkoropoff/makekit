@@ -161,10 +161,13 @@ COMBINED_LIBDEPS="$LIBDEPS"
 COMBINED_LDFLAGS="$LDFLAGS -L${LINK_LIBDIR}"
 COMBINED_LIBDIRS="$LIBDIRS"
 
+# Group suffix
+_gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+
 for _group in ${GROUPS}
 do
     unset OBJECTS LIBDEPS LIBDIRS LDFLAGS
-    mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/$_group" || mk_fail "Could not read group $_group"
+    mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/$_group${_gsuffix}" || mk_fail "Could not read group $_group"
 
     GROUP_OBJECTS="$GROUP_OBJECTS ${OBJECTS}"
     COMBINED_LIBDEPS="$COMBINED_LIBDEPS $LIBDEPS"

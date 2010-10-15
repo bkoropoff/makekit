@@ -420,6 +420,12 @@ mk_add_clean_target()
     MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS $result"
 }
 
+mk_add_scrub_target()
+{
+    mk_quote "$1"
+    MK_SCRUB_TARGETS="$MK_SCRUB_TARGET $result"
+}
+
 mk_add_all_target()
 {
     mk_quote "$1"
@@ -532,7 +538,7 @@ make()
     mk_target \
 	TARGET="@scrub" \
 	DEPS="@clean" \
-	mk_run_script scrub
+	mk_run_script scrub "*$MK_SCRUB_TARGETS"
 
     mk_add_phony_target "$result"
 

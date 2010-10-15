@@ -130,6 +130,9 @@ _mk_library()
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
+    # Group suffix
+    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+
     mk_unquote_list "$result"
     for _source in "$@"
     do
@@ -151,7 +154,7 @@ _mk_library()
     mk_unquote_list "${GROUPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group'"
+	_deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
@@ -217,6 +220,9 @@ mk_dlo()
     _mk_slashless_name "dlo-$DLO-"
     _oprefix="$result"
 
+    # Group suffix
+    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}"
     
@@ -241,7 +247,7 @@ mk_dlo()
     mk_unquote_list "${GROUPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group'"
+	_deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
@@ -282,6 +288,9 @@ mk_group()
     _mk_slashless_name "group-$GROUP-"
     _oprefix="$result"
 
+    # Group suffix
+    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
@@ -306,7 +315,7 @@ mk_group()
     mk_unquote_list "${GROUPDEPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group'"
+	_deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
@@ -318,7 +327,7 @@ mk_group()
     done
     
     mk_target \
-	TARGET="$GROUP" \
+	TARGET="$GROUP${_gsuffix}" \
 	DEPS="$_deps" \
 	mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
     
@@ -370,6 +379,9 @@ mk_program()
     _mk_slashless_name "program-$PROGRAM-"
     _oprefix="$result"
     
+    # Group suffix
+    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
@@ -394,7 +406,7 @@ mk_program()
     mk_unquote_list "${GROUPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group'"
+	_deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
