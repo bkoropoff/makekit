@@ -70,6 +70,15 @@ _mk_find_module_imports_recursive()
     done
 }
 
+_mk_set_defaults()
+{
+    unset -f defaults
+    mk_source_or_fail "${MK_SOURCE_DIR}/MakeKitBuild"
+    mk_function_exists defaults && defaults
+    
+    [ -z "$PROJECT_NAME" ] && PROJECT_NAME="$(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")"
+}
+
 _mk_find_module_imports()
 {
     result=""
@@ -162,7 +171,7 @@ _mk_process_build_recursive()
 
     if [ -z "$MK_MSG_DOMAIN" ]
     then
-	MK_MSG_DOMAIN="$(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")"
+	MK_MSG_DOMAIN="$PROJECT_NAME"
     fi
 
     mk_mkdir "${MK_OBJECT_DIR}$1"
@@ -479,8 +488,7 @@ mk_help_recursive()
     then
 	if [ -z "$1" ]
 	then
-	    result="$(cd ${MK_SOURCE_DIR} && basename "${PWD}")"
-	    echo "Options (${result}):"
+	    echo "Options (${PROJECT_NAME}):"
 	else
 	    echo "Options (${1#/}):"
 	fi
@@ -672,6 +680,9 @@ fi
 # Find all required modules
 _mk_find_module_imports
 _mk_module_list ${result}
+
+# Allow top-level MakeKitBuild to set default settings
+_mk_set_defaults
 
 MK_MSG_DOMAIN="makekit"
 
