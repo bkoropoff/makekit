@@ -159,8 +159,16 @@ done'
     {
 	for ___var in "$@" _MK_VARS
 	do
-	    eval "_MK_VAR_${_MK_VAR_SP}_${___var}=\"\$${___var}\""
-	    unset "$___var"
+            case "$___var" in
+                *=*)
+                    eval "_MK_VAR_${_MK_VAR_SP}_${___var%%=*}=\"\$${___var%%=*}\""
+                    mk_set "${___var%%=*}" "${___var#*=}"
+                    ;;
+                *)
+                    eval "_MK_VAR_${_MK_VAR_SP}_${___var}=\"\$${___var}\""
+	            unset "$___var"
+                    ;;
+            esac
 	done
 	
 	_MK_VARS="$*"
