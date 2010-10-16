@@ -715,15 +715,3 @@ exec 4>&-
 
 # Generate build script
 _mk_emit_build_script
-
-# Dispense wisdom
-if _mk_find_resource "fortunes"
-then
-    _fortunes="$result"
-    _line="`tail -n $(_mk_random 1 $(wc -l "$_fortunes")) "$_fortunes" | head -n 1`"
-    _line="`eval echo "\"$_line\""`"
-    echo ""
-    echo "---"
-    echo "$_line"
-    echo "---"
-fi
