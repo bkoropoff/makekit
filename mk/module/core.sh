@@ -422,8 +422,8 @@ mk_add_clean_target()
 
 mk_add_scrub_target()
 {
-    mk_quote "$1"
-    MK_SCRUB_TARGETS="$MK_SCRUB_TARGET $result"
+    mk_quote "${1#@}"
+    MK_SCRUB_TARGETS="$MK_SCRUB_TARGETS $result"
 }
 
 mk_add_all_target()
@@ -519,6 +519,15 @@ option()
 
 configure()
 {
+    # Default clean targets
+    MK_CLEAN_TARGETS="${MK_RUN_DIR}"
+
+    # Default scrub targets
+    MK_SCRUB_TARGETS="${MK_STAGE_DIR}"
+
+    # Default nuke targets (scrub targets implicitly included)
+    MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps"
+
     # Add a post-make() hook to write out a rule
     # to build all staging targets in that subdirectory
     mk_add_make_posthook _mk_core_write_subdir_rule
@@ -557,7 +566,7 @@ make()
 
     mk_target \
 	TARGET="@nuke" \
-	mk_run_script nuke
+	mk_run_script nuke "*$MK_SCRUB_TARGETS" "*$MK_NUKE_TARGETS"
 
     mk_add_phony_target "$result"
 
