@@ -1165,14 +1165,14 @@ EOF
         } > .check.c
         if _mk_build_test 'compile-keep' .check.c
         then
-            if grep "aArDvArKsOaP" .check.o >/dev/null
+            if strings .check.o | grep "aArDvArKsOaP" >/dev/null
             then
                 _result="big"
-            elif grep "zEbRaBrUsH" .check.o >/dev/null
+            elif strings .check.o | grep "zEbRaBrUsH" >/dev/null
             then
                 _result="little"
             else
-                rm -f .check.o
+                #rm -f .check.o
                 mk_fail "could not determine endianness"
             fi
         else
