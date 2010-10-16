@@ -37,11 +37,11 @@ _ALL_LDFLAGS="$LDFLAGS"
 MK_MSG_DOMAIN="group"
 
 # Group suffix
-_gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+_gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 _name="${object#${MK_OBJECT_DIR}/}"
 _name="${_name%$_gsuffix}"
 
-mk_msg "$_name ($MK_SYSTEM)"
+mk_msg "$_name ($MK_CANONICAL_SYSTEM)"
 
 for _group in ${GROUPDEPS}
 do

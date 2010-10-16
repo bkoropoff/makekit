@@ -45,28 +45,28 @@ mk_compile()
     
     case "$SOURCE" in
         *.c)
-	    _object="${OPREFIX}${SOURCE%.c}-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.o"
-	    ;;
-	*)
-	    mk_fail "Unsupported file type: $SOURCE"
-	    ;;
+            _object="${OPREFIX}${SOURCE%.c}-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.o"
+            ;;
+        *)
+            mk_fail "Unsupported file type: $SOURCE"
+            ;;
     esac
     
     for _header in ${HEADERDEPS}
     do
-	if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
-	then
-	    DEPS="$DEPS '${MK_INCLUDEDIR}/${_header}'"
-	fi
+        if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
+        then
+            DEPS="$DEPS '${MK_INCLUDEDIR}/${_header}'"
+        fi
     done
     
     mk_resolve_target "${SOURCE}"
     _res="$result"
     
     mk_target \
-	TARGET="$_object" \
-	DEPS="$DEPS '$SOURCE'" \
-	mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %PIC '$@' "$_res"
+        TARGET="$_object" \
+        DEPS="$DEPS '$SOURCE'" \
+        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %PIC '$@' "$_res"
     
     mk_pop_vars
 }
@@ -115,12 +115,12 @@ _mk_library()
     mk_comment "library ${LIB} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
     
     case "$INSTALL" in
-	no)
-	    _library="lib${LIB}${EXT}"
-	    ;;
-	*)
-	    _library="$MK_LIBDIR/lib${LIB}${EXT}"
-	    ;;
+        no)
+            _library="lib${LIB}${EXT}"
+            ;;
+        *)
+            _library="$MK_LIBDIR/lib${LIB}${EXT}"
+            ;;
     esac
     
     # Create object prefix based on library name
@@ -131,48 +131,48 @@ _mk_library()
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
     # Group suffix
-    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 
     mk_unquote_list "$result"
     for _source in "$@"
     do
-	mk_compile \
-	    SOURCE="$_source" \
-	    HEADERDEPS="$HEADERDEPS" \
-	    INCLUDEDIRS="$INCLUDEDIRS" \
-	    CPPFLAGS="$CPPFLAGS" \
-	    CFLAGS="$CFLAGS" \
-	    PIC="yes" \
-	    DEPS="$DEPS" \
-	    OPREFIX="$_oprefix"
-	
-	mk_quote "$result"
-	_deps="$_deps $result"
-	_objects="$_objects $result"
+        mk_compile \
+            SOURCE="$_source" \
+            HEADERDEPS="$HEADERDEPS" \
+            INCLUDEDIRS="$INCLUDEDIRS" \
+            CPPFLAGS="$CPPFLAGS" \
+            CFLAGS="$CFLAGS" \
+            PIC="yes" \
+            DEPS="$DEPS" \
+            OPREFIX="$_oprefix"
+        
+        mk_quote "$result"
+        _deps="$_deps $result"
+        _objects="$_objects $result"
     done
     
     mk_unquote_list "${GROUPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group${_gsuffix}'"
+        _deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
     do
-	if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
-	then
-	    _deps="$_deps '$MK_LIBDIR/lib${_lib}${MK_LIB_EXT}'"
-	fi
+        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+        then
+            _deps="$_deps '$MK_LIBDIR/lib${_lib}${MK_LIB_EXT}'"
+        fi
     done
     
     mk_target \
-	TARGET="$_library" \
-	DEPS="${_deps}" \
-	mk_run_script link MODE=library %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %VERSION %EXT '$@' "*${OBJECTS} ${_objects}"
+        TARGET="$_library" \
+        DEPS="${_deps}" \
+        mk_run_script link MODE=library %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %VERSION %EXT '$@' "*${OBJECTS} ${_objects}"
     
     if [ "$INSTALL" != "no" ]
     then
-	mk_add_all_target "$result"
+        mk_add_all_target "$result"
     fi
 }
 
@@ -208,12 +208,12 @@ mk_dlo()
     [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
 
     case "$INSTALL" in
-	no)
-	    _library="${DLO}${EXT}"
-	    ;;
-	*)
-	    _library="${INSTALLDIR}/${DLO}${EXT}"
-	    ;;
+        no)
+            _library="${DLO}${EXT}"
+            ;;
+        *)
+            _library="${INSTALLDIR}/${DLO}${EXT}"
+            ;;
     esac
 
     # Create object prefix based on dlo name
@@ -221,7 +221,7 @@ mk_dlo()
     _oprefix="$result"
 
     # Group suffix
-    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}"
@@ -229,43 +229,43 @@ mk_dlo()
     mk_unquote_list "$result"
     for _source in "$@"
     do
-	mk_compile \
-	    SOURCE="$_source" \
-	    HEADERDEPS="$HEADERDEPS" \
-	    INCLUDEDIRS="$INCLUDEDIRS" \
-	    CPPFLAGS="$CPPFLAGS" \
-	    CFLAGS="$CFLAGS" \
-	    PIC="yes" \
-	    DEPS="$DEPS" \
-	    OPREFIX="$_oprefix"
-	
-	mk_quote "$result"
-	_deps="$_deps $result"
-	OBJECTS="$OBJECTS $result"
+        mk_compile \
+            SOURCE="$_source" \
+            HEADERDEPS="$HEADERDEPS" \
+            INCLUDEDIRS="$INCLUDEDIRS" \
+            CPPFLAGS="$CPPFLAGS" \
+            CFLAGS="$CFLAGS" \
+            PIC="yes" \
+            DEPS="$DEPS" \
+            OPREFIX="$_oprefix"
+        
+        mk_quote "$result"
+        _deps="$_deps $result"
+        OBJECTS="$OBJECTS $result"
     done
     
     mk_unquote_list "${GROUPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group${_gsuffix}'"
+        _deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
     do
-	if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
-	then
-	    _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
-	fi
+        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+        then
+            _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+        fi
     done
     
     mk_target \
-	TARGET="$_library" \
-	DEPS="$_deps" \
-	mk_run_script link MODE=dlo %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT '$@' "*${OBJECTS}"
+        TARGET="$_library" \
+        DEPS="$_deps" \
+        mk_run_script link MODE=dlo %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
     then
-	mk_add_all_target "$result"
+        mk_add_all_target "$result"
     fi
     
     mk_pop_vars
@@ -274,7 +274,7 @@ mk_dlo()
 mk_group()
 {
     mk_push_vars GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS \
-	HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS
+        HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS
     mk_parse_params
     
     _mk_verify_libdeps "$GROUP" "$LIBDEPS"
@@ -289,7 +289,7 @@ mk_group()
     _oprefix="$result"
 
     # Group suffix
-    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
@@ -297,39 +297,39 @@ mk_group()
     mk_unquote_list "$result"
     for _source in "$@"
     do
-	mk_compile \
-	    SOURCE="$_source" \
-	    HEADERDEPS="$HEADERDEPS" \
-	    INCLUDEDIRS="$INCLUDEDIRS" \
-	    CPPFLAGS="$CPPFLAGS" \
-	    CFLAGS="$CFLAGS" \
-	    PIC="yes" \
-	    DEPS="$DEPS" \
-	    OPREFIX="$oprefix"
-	
-	mk_quote "$result"
-	_deps="$_deps $result"
-	OBJECTS="$OBJECTS $result"
+        mk_compile \
+            SOURCE="$_source" \
+            HEADERDEPS="$HEADERDEPS" \
+            INCLUDEDIRS="$INCLUDEDIRS" \
+            CPPFLAGS="$CPPFLAGS" \
+            CFLAGS="$CFLAGS" \
+            PIC="yes" \
+            DEPS="$DEPS" \
+            OPREFIX="$oprefix"
+        
+        mk_quote "$result"
+        _deps="$_deps $result"
+        OBJECTS="$OBJECTS $result"
     done
     
     mk_unquote_list "${GROUPDEPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group${_gsuffix}'"
+        _deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
     do
-	if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
-	then
-	    _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
-	fi
+        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+        then
+            _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+        fi
     done
     
     mk_target \
-	TARGET="$GROUP${_gsuffix}" \
-	DEPS="$_deps" \
-	mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
+        TARGET="$GROUP${_gsuffix}" \
+        DEPS="$_deps" \
+        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
     
     mk_pop_vars
 }
@@ -337,8 +337,8 @@ mk_group()
 mk_program()
 {
     mk_push_vars \
-	PROGRAM SOURCES OBJECTS GROUPS CPPFLAGS CFLAGS \
-	LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL
+        PROGRAM SOURCES OBJECTS GROUPS CPPFLAGS CFLAGS \
+        LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL
     mk_parse_params
     
     _mk_verify_libdeps "$PROGRAM" "$LIBDEPS"
@@ -348,29 +348,29 @@ mk_program()
     
     if [ -z "$INSTALLDIR" ]
     then
-	    # Default to installing programs in bin dir
-	if [ "${MK_SYSTEM%/*}" = "build" ]
-	then
-	    INSTALLDIR="@${MK_RUN_BINDIR}"
-	else
-	    INSTALLDIR="$MK_BINDIR"
-	fi
+            # Default to installing programs in bin dir
+        if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
+        then
+            INSTALLDIR="@${MK_RUN_BINDIR}"
+        else
+            INSTALLDIR="$MK_BINDIR"
+        fi
     fi
     
     case "$INSTALL" in
-	no)
-	    _executable="${PROGRAM}"
-	    ;;
-	*)
-	    _executable="${INSTALLDIR}/${PROGRAM}"
-	    ;;
+        no)
+            _executable="${PROGRAM}"
+            ;;
+        *)
+            _executable="${INSTALLDIR}/${PROGRAM}"
+            ;;
     esac
     
-    if [ "${MK_SYSTEM%/*}" = "build" ]
+    if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
     then
-	_libdir="@${MK_RUNMK_LIBDIR}"
+        _libdir="@${MK_RUNMK_LIBDIR}"
     else
-	_libdir="$MK_LIBDIR"
+        _libdir="$MK_LIBDIR"
     fi
     
     mk_comment "program ${PROGRAM} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
@@ -380,7 +380,7 @@ mk_program()
     _oprefix="$result"
     
     # Group suffix
-    _gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
@@ -388,48 +388,48 @@ mk_program()
     mk_unquote_list "$result"
     for _source in "$@"
     do
-	mk_compile \
-	    SOURCE="$_source" \
-	    HEADERDEPS="$HEADERDEPS" \
-	    INCLUDEDIRS="$INCLUDEDIRS" \
-	    CPPFLAGS="$CPPFLAGS" \
-	    CFLAGS="$CFLAGS" \
-	    PIC="yes" \
-	    DEPS="$DEPS" \
-	    OPREFIX="$_oprefix"
-	
-	mk_quote "$result"
-	_deps="$_deps $result"
-	OBJECTS="$OBJECTS $result"
+        mk_compile \
+            SOURCE="$_source" \
+            HEADERDEPS="$HEADERDEPS" \
+            INCLUDEDIRS="$INCLUDEDIRS" \
+            CPPFLAGS="$CPPFLAGS" \
+            CFLAGS="$CFLAGS" \
+            PIC="yes" \
+            DEPS="$DEPS" \
+            OPREFIX="$_oprefix"
+        
+        mk_quote "$result"
+        _deps="$_deps $result"
+        OBJECTS="$OBJECTS $result"
     done
     
     mk_unquote_list "${GROUPS}"
     for _group in "$@"
     do
-	_deps="$_deps '$_group${_gsuffix}'"
+        _deps="$_deps '$_group${_gsuffix}'"
     done
     
     for _lib in ${LIBDEPS}
     do
-	if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
-	then
-	    _deps="$_deps '${_libdir}/lib${_lib}${MK_LIB_EXT}'"
-	fi
+        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+        then
+            _deps="$_deps '${_libdir}/lib${_lib}${MK_LIB_EXT}'"
+        fi
     done
     
     mk_target \
-	TARGET="$_executable" \
-	DEPS="$_deps" \
-	mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS '$@' "*${OBJECTS}"
+        TARGET="$_executable" \
+        DEPS="$_deps" \
+        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
     then
-	if [ "${MK_SYSTEM%/*}" = "build" ]
-	then
-	    MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
-	else
-	    mk_add_all_target "$result"
-	fi
+        if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
+        then
+            MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
+        else
+            mk_add_all_target "$result"
+        fi
     fi
     
     mk_pop_vars
@@ -449,10 +449,10 @@ mk_headers()
     
     for _header in ${HEADERDEPS}
     do
-	if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
-	then
-	    DEPS="$DEPS '${MK_INCLUDEDIR}/${_header}'"
-	fi
+        if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
+        then
+            DEPS="$DEPS '${MK_INCLUDEDIR}/${_header}'"
+        fi
     done
     
     mk_expand_pathnames "${HEADERS} $*"
@@ -460,27 +460,27 @@ mk_headers()
     mk_unquote_list "$result"
     for _header in "$@"
     do
-	mk_resolve_target "$_header"
-	
-	mk_target \
-	    TARGET="${INSTALLDIR}/${_header}" \
-	    DEPS="'$_header' $DEPS" \
-	    mk_run_script install '$@' "${result}"
+        mk_resolve_target "$_header"
         
-	mk_add_all_target "$result"
+        mk_target \
+            TARGET="${INSTALLDIR}/${_header}" \
+            DEPS="'$_header' $DEPS" \
+            mk_run_script install '$@' "${result}"
         
-	_rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
-	
-	if [ "$_rel" != "$INSTALLDIR" ]
-	then
-	    _rel="$_rel/$_header"
-	else
-	    _rel="$_header"
-	fi
-	
-	MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
+        mk_add_all_target "$result"
         
-	_all_headers="$_all_headers $result"
+        _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
+        
+        if [ "$_rel" != "$INSTALLDIR" ]
+        then
+            _rel="$_rel/$_header"
+        else
+            _rel="$_header"
+        fi
+        
+        MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
+        
+        _all_headers="$_all_headers $result"
     done
     
     DEPS="$DEPS $_all_headers"
@@ -490,25 +490,25 @@ mk_headers()
     mk_unquote_list "$result"
     for _header in "$@"
     do
-	mk_resolve_target "$_header"
-	
-	mk_target \
-	    TARGET="${INSTALLDIR}/${_header}" \
-	    DEPS="'$_header' $DEPS" \
-	    mk_run_script install '$@' "${result}"
+        mk_resolve_target "$_header"
         
-	mk_add_all_target "$result"
+        mk_target \
+            TARGET="${INSTALLDIR}/${_header}" \
+            DEPS="'$_header' $DEPS" \
+            mk_run_script install '$@' "${result}"
         
-	_rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
-	
-	if [ "$_rel" != "$INSTALLDIR" ]
-	then
-	    _rel="$_rel/$_header"
-	else
-	    _rel="$_header"
-	fi
-	
-	MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
+        mk_add_all_target "$result"
+        
+        _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
+        
+        if [ "$_rel" != "$INSTALLDIR" ]
+        then
+            _rel="$_rel/$_header"
+        else
+            _rel="$_header"
+        fi
+        
+        MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
     done
     
     mk_pop_vars
@@ -535,21 +535,21 @@ mk_define()
     
     if [ -n "$MK_CONFIG_HEADER" ]
     then
-	_name="$1"
+        _name="$1"
         
-	_mk_define_name "$MK_SYSTEM"
-	cond="_MK_$result"
+        _mk_define_name "$MK_SYSTEM"
+        cond="_MK_$result"
         
-	if [ "$#" -eq '2' ]
-	then
-	    result="$2"
-	else
-	    mk_get "$_name"
-	fi
-	
-	mk_write_config_header "#if defined($cond)"
-	mk_write_config_header "#define $_name $result"
-	mk_write_config_header "#endif"
+        if [ "$#" -eq '2' ]
+        then
+            result="$2"
+        else
+            mk_get "$_name"
+        fi
+        
+        mk_write_config_header "#if defined($cond)"
+        mk_write_config_header "#define $_name $result"
+        mk_write_config_header "#endif"
     fi
     
     mk_pop_vars
@@ -559,15 +559,15 @@ mk_define_always()
 {
     if [ -n "$MK_CONFIG_HEADER" ]
     then
-	_name="$1"
+        _name="$1"
         
-	if [ "$#" -eq '2' ]
-	then
-	    result="$2"
-	else
-	    mk_get "$_name"
-	fi
-	mk_write_config_header "#define $_name $result"
+        if [ "$#" -eq '2' ]
+        then
+            result="$2"
+        else
+            mk_get "$_name"
+        fi
+        mk_write_config_header "#define $_name $result"
     fi
 }
 
@@ -580,21 +580,21 @@ _mk_close_config_header()
 {
     if [ -n "${MK_LAST_CONFIG_HEADER}" ]
     then
-	cat >&5 <<EOF
+        cat >&5 <<EOF
 
 #endif
 EOF
-	exec 5>&-
-	
-	if [ -f "${MK_LAST_CONFIG_HEADER}" ] && diff "${MK_LAST_CONFIG_HEADER}" "${MK_LAST_CONFIG_HEADER}.new" >/dev/null 2>&1
-	then
-	    # The config header has not changed, so don't touch the timestamp on the file */
-	    rm -f "${MK_LAST_CONFIG_HEADER}.new"
-	else
-	    mv "${MK_LAST_CONFIG_HEADER}.new" "${MK_LAST_CONFIG_HEADER}"
-	fi
-	
-	MK_LAST_CONFIG_HEADER=""
+        exec 5>&-
+        
+        if [ -f "${MK_LAST_CONFIG_HEADER}" ] && diff "${MK_LAST_CONFIG_HEADER}" "${MK_LAST_CONFIG_HEADER}.new" >/dev/null 2>&1
+        then
+            # The config header has not changed, so don't touch the timestamp on the file */
+            rm -f "${MK_LAST_CONFIG_HEADER}.new"
+        else
+            mv "${MK_LAST_CONFIG_HEADER}.new" "${MK_LAST_CONFIG_HEADER}"
+        fi
+        
+        MK_LAST_CONFIG_HEADER=""
     fi
 }
     
@@ -635,60 +635,60 @@ _mk_build_test()
     __test="${2%.*}"
     
     case "${1}" in
-	compile|compile-keep)
-	    (
-		eval "exec ${MK_LOG_FD}>&-"
-		MK_LOG_FD=""
-		mk_run_script compile \
-		    DISABLE_DEPGEN=yes \
-		    CPPFLAGS="$CPPFLAGS" \
-		    CFLAGS="$CFLAGS" \
-		    "${__test}.o" "${__test}.c"
-	    ) >&${MK_LOG_FD} 2>&1	    
-	    _ret="$?"
-            if [ "${1}" != "compile-keep" ]
-            then
-	        rm -f "${__test}.o"
-            fi
-	    ;;
-	link-program|run-program)
-	    (
+        compile|compile-keep)
+            (
                 eval "exec ${MK_LOG_FD}>&-"
-		MK_LOG_FD=""
+                MK_LOG_FD=""
                 mk_run_script compile \
                     DISABLE_DEPGEN=yes \
-		    CPPFLAGS="$CPPFLAGS" \
-		    CFLAGS="$CFLAGS" \
-		    "${__test}.o" "${__test}.c"
+                    CPPFLAGS="$CPPFLAGS" \
+                    CFLAGS="$CFLAGS" \
+                    "${__test}.o" "${__test}.c"
+            ) >&${MK_LOG_FD} 2>&1            
+            _ret="$?"
+            if [ "${1}" != "compile-keep" ]
+            then
+                rm -f "${__test}.o"
+            fi
+            ;;
+        link-program|run-program)
+            (
+                eval "exec ${MK_LOG_FD}>&-"
+                MK_LOG_FD=""
+                mk_run_script compile \
+                    DISABLE_DEPGEN=yes \
+                    CPPFLAGS="$CPPFLAGS" \
+                    CFLAGS="$CFLAGS" \
+                    "${__test}.o" "${__test}.c"
                 mk_run_script link \
-		    MODE=program \
-		    LIBDEPS="$LIBDEPS" \
-		    LDFLAGS="$LDFLAGS" \
-		    "${__test}" "${__test}.o"
-	    ) >&${MK_LOG_FD} 2>&1
-	    _ret="$?"
-	    if [ "$_ret" -eq 0 -a "$1" = "run-program" ]
-	    then
-		./"${__test}"
-		_ret="$?"
-	    fi
-	    rm -f "${__test}"
-	    rm -f "${__test}.o"
-	    ;;
-	*)
-	    mk_fail "Unsupported build type: ${1}"
-	    ;;
+                    MODE=program \
+                    LIBDEPS="$LIBDEPS" \
+                    LDFLAGS="$LDFLAGS" \
+                    "${__test}" "${__test}.o"
+            ) >&${MK_LOG_FD} 2>&1
+            _ret="$?"
+            if [ "$_ret" -eq 0 -a "$1" = "run-program" ]
+            then
+                ./"${__test}"
+                _ret="$?"
+            fi
+            rm -f "${__test}"
+            rm -f "${__test}.o"
+            ;;
+        *)
+            mk_fail "Unsupported build type: ${1}"
+            ;;
     esac
 
     if [ "$_ret" -ne 0 ]
     then
-	{
-	    echo ""
-	    echo "Failed code:"
-	    echo ""
-	    cat "${__test}.c" | awk 'BEGIN { no = 1; } { printf("%3d  %s\n", no, $0); no++; }'
-	    echo ""
-	} >&${MK_LOG_FD}
+        {
+            echo ""
+            echo "Failed code:"
+            echo ""
+            cat "${__test}.c" | awk 'BEGIN { no = 1; } { printf("%3d  %s\n", no, $0); no++; }'
+            echo ""
+        } >&${MK_LOG_FD}
     fi
 
     rm -f "${__test}.c"
@@ -712,12 +712,12 @@ mk_try_compile()
     
     {
         _mk_c_check_prologue
-	for _header in ${HEADERDEPS}
-	do
+        for _header in ${HEADERDEPS}
+        do
             mk_might_have_header "$_header" && echo "#include <${_header}>"
-	done
-	
-	cat <<EOF
+        done
+        
+        cat <<EOF
 int main(int argc, char** argv)
 {
 ${CODE}
@@ -747,56 +747,56 @@ mk_check_header()
 
     if _mk_contains "$HEADER" ${MK_INTERNAL_HEADERS}
     then
-	_result="internal"
+        _result="internal"
     elif mk_check_cache "$_varname"
     then
-	_result="$result"
+        _result="$result"
     else
-	{
+        {
             _mk_c_check_prologue
             for _header in ${HEADERDEPS}
             do
                 mk_might_have_header "$_header" && echo "#include <${_header}>"
             done
 
-	    echo "#include <${HEADER}>"
-	    echo ""
-	    
-	    cat <<EOF
+            echo "#include <${HEADER}>"
+            echo ""
+            
+            cat <<EOF
 int main(int argc, char** argv)
 {
     return 0;
 }
 EOF
-	} > .check.c
-	mk_log "running compile test for header: $HEADER"
-	if _mk_build_test compile ".check.c"
-	then
-	    _result="external"
-	else
-	    _result="no"
-	fi
-	
-	mk_cache "$_varname" "$_result"
+        } > .check.c
+        mk_log "running compile test for header: $HEADER"
+        if _mk_build_test compile ".check.c"
+        then
+            _result="external"
+        else
+            _result="no"
+        fi
+        
+        mk_cache "$_varname" "$_result"
     fi
 
-    mk_set "$_varname" "$_result"
+    mk_set_all_isas "$_varname" "$_result"
     mk_msg "header $HEADER: $_result ($MK_SYSTEM)"
     
     case "$_result" in
-	external|internal)
-	    mk_define "$_defname" "1"
-	    mk_pop_vars
-	    return 0
-	    ;;
-	no)
-	    if [ "$FAIL" = "yes" ]
-	    then
-		mk_fail "missing header: $HEADER"
-	    fi
-	    mk_pop_vars
-	    return 1
-	    ;;
+        external|internal)
+            mk_define "$_defname" "1"
+            mk_pop_vars
+            return 0
+            ;;
+        no)
+            if [ "$FAIL" = "yes" ]
+            then
+                mk_fail "missing header: $HEADER"
+            fi
+            mk_pop_vars
+            return 1
+            ;;
     esac
 }
 
@@ -823,81 +823,82 @@ mk_check_function()
 
     if [ -n "$PROTOTYPE" ]
     then
-	_parts="`echo "$PROTOTYPE" | sed 's/^\(.*[^a-zA-Z_]\)\([a-zA-Z_][a-zA-Z0-9_]*\) *(\([^)]*\)).*$/\1|\2|\3/g'`"
-	_ret="${_parts%%|*}"
-	_parts="${_parts#*|}"
-	FUNCTION="${_parts%%|*}"
-	_args="${_parts#*|}"
-	_checkname="$PROTOTYPE"
-	_mk_define_name "HAVE_$PROTOTYPE"
-	_defname="$result"
+        _parts="`echo "$PROTOTYPE" | sed 's/^\(.*[^a-zA-Z_]\)\([a-zA-Z_][a-zA-Z0-9_]*\) *(\([^)]*\)).*$/\1|\2|\3/g'`"
+        _ret="${_parts%%|*}"
+        _parts="${_parts#*|}"
+        FUNCTION="${_parts%%|*}"
+        _args="${_parts#*|}"
+        _checkname="$PROTOTYPE"
+        _mk_define_name "HAVE_$PROTOTYPE"
+        _defname="$result"
     else
-	_checkname="$FUNCTION()"
-	_mk_define_name "HAVE_$FUNCTION"
-	_defname="$result"
+        _checkname="$FUNCTION()"
+        _mk_define_name "HAVE_$FUNCTION"
+        _defname="$result"
     fi
     
     _varname="$_defname"
     
     if mk_check_cache "$_varname"
     then
-	_result="$result"
+        _result="$result"
     else
-	{
+        {
             _mk_c_check_prologue
-	    for _header in ${HEADERDEPS}
-	    do
+            for _header in ${HEADERDEPS}
+            do
                 mk_might_have_header "$_header" && echo "#include <${_header}>"
-	    done
-	    
-	    echo ""
-	    
-	    if [ -n "$PROTOTYPE" ]
-	    then
-		cat <<EOF
+            done
+            
+            echo ""
+            
+            if [ -n "$PROTOTYPE" ]
+            then
+                cat <<EOF
 int main(int argc, char** argv)
 {
     $_ret (*__func)($_args) = &$FUNCTION;
     return __func ? 0 : 1;
 }
 EOF
-	    else
-		cat <<EOF
+            else
+                cat <<EOF
 int main(int argc, char** argv)
 {
     void* __func = &$FUNCTION;
     return __func ? 0 : 1;
 }
 EOF
-	    fi
-	} >.check.c
-	mk_log "running link test for function: $_checkname"
-	if _mk_build_test 'link-program' ".check.c"
-	then
-	    _result="yes"
-	else
-	    _result="no"
-	fi
+            fi
+        } >.check.c
+        mk_log "running link test for function: $_checkname"
+        if _mk_build_test 'link-program' ".check.c"
+        then
+            _result="yes"
+        else
+            _result="no"
+        fi
 
-	mk_cache "$_varname" "$_result"
+        mk_cache "$_varname" "$_result"
     fi
 
     mk_msg "function $_checkname: $_result ($MK_SYSTEM)"
+    mk_set_all_isas "$_varname" "$_result"
     
     case "$_result" in
-	yes)
-	    mk_define "$_defname" "1"
-	    mk_pop_vars
-	    return 0
-	    ;;
-	no)
-	    if [ "$FAIL" = "yes" ]
-	    then
-		mk_fail "missing function: $FUNCTION"
-	    fi
-	    mk_pop_vars
-	    return 1
-	    ;;
+        yes)
+            mk_define "$_defname" "1"
+            mk_pop_vars
+            return 0
+            ;;
+        no)
+            if [ "$FAIL" = "yes" ]
+            then
+                mk_fail "missing function: $FUNCTION"
+            fi
+            mk_pop_vars
+            return 1
+            ;;
     esac
 }
 
@@ -917,53 +918,53 @@ mk_check_library()
 
     if _mk_contains "$LIB" ${MK_INTERNAL_LIBS}
     then
-	_result="internal"
+        _result="internal"
     elif mk_check_cache "$_varname"
     then
-	_result="$result"
+        _result="$result"
     else
-	{
+        {
             _mk_c_check_prologue
-	    cat <<EOF
+            cat <<EOF
 int main(int argc, char** argv)
 {
     return 0;
 }
 EOF
-	} >.check.c
-	mk_log "running link test for library: $LIB"
-	if _mk_build_test 'link-program' ".check.c"
-	then
-	    _result="external"
-	else
-	    _result="no"
-	fi
-	
-	mk_cache "$_varname" "$_result"
+        } >.check.c
+        mk_log "running link test for library: $LIB"
+        if _mk_build_test 'link-program' ".check.c"
+        then
+            _result="external"
+        else
+            _result="no"
+        fi
+        
+        mk_cache "$_varname" "$_result"
     fi
 
-    mk_set "$_varname" "$_result"    
+    mk_set_all_isas "$_varname" "$_result"    
     mk_msg "library $LIB: $_result ($MK_SYSTEM)"
 
     _varname="${_varname#HAVE_}"
     mk_declare_system_var "$_varname"
     
     case "$_result" in
-	external|internal)
-	    mk_set "$_varname" "$LIB"
-	    mk_define "$_defname" 1
-	    mk_pop_vars
-	    return 0
-	    ;;
-	no)
-	    if [ "$FAIL" = "yes" ]
-	    then
-		mk_fail "missing library: $LIB"
-	    fi
-	    mk_set "$_varname" ""
-	    mk_pop_vars
-	    return 1
-	    ;;
+        external|internal)
+            mk_set_all_isas "$_varname" "$LIB"
+            mk_define "$_defname" 1
+            mk_pop_vars
+            return 0
+            ;;
+        no)
+            if [ "$FAIL" = "yes" ]
+            then
+                mk_fail "missing library: $LIB"
+            fi
+            mk_set_all_isas "$_varname" ""
+            mk_pop_vars
+            return 1
+            ;;
     esac
 }
 
@@ -975,38 +976,39 @@ _mk_check_type()
 
     if mk_check_cache "$_varname"
     then
-	_result="$result"
+        _result="$result"
     else
-	{
+        {
             _mk_c_check_prologue
-	    for _header in ${HEADERDEPS}
-	    do
+            for _header in ${HEADERDEPS}
+            do
                 mk_might_have_header "$_header" && echo "#include <${_header}>"
-	    done
-	    
-	    echo ""
-	    
-	    cat <<EOF
+            done
+            
+            echo ""
+            
+            cat <<EOF
 int main(int argc, char** argv)
 { 
     return (int) sizeof($TYPE);
 }
 EOF
-	} > .check.c
-	mk_log "running run test for sizeof($TYPE)"
-	if _mk_build_test 'compile' .check.c
-	then
+        } > .check.c
+        mk_log "running run test for sizeof($TYPE)"
+        if _mk_build_test 'compile' .check.c
+        then
             _result="yes"
-	else
+        else
             _result="no"
-	fi
-	
-	mk_cache "$_varname" "$_result"
+        fi
+        
+        mk_cache "$_varname" "$_result"
     fi
 
     [ "$_result" = "yes" ] && mk_define "$_defname" 1
     
     mk_msg "type $TYPE: $_result ($MK_SYSTEM)"
+    mk_set_all_isas "$_varname" "$_result"
 }
 
 mk_check_type()
@@ -1016,7 +1018,7 @@ mk_check_type()
 
     if [ -z "$TYPE" ]
     then
-	TYPE="$1"
+        TYPE="$1"
     fi
 
     CFLAGS="$CFLAGS -Wall -Werror"
@@ -1072,7 +1074,7 @@ _mk_check_sizeof()
 
     if mk_check_cache "$_varname"
     then
-	_result="$result"
+        _result="$result"
     else
         # Algorithm to derive the size of a type even
         # when cross-compiling.  mk_check_static_predicate()
@@ -1095,12 +1097,13 @@ _mk_check_sizeof()
         
         _result="$upper"
         unset upper lower mid
-	mk_cache "$_varname" "$_result"
+        mk_cache "$_varname" "$_result"
     fi
 
     mk_define "$_defname" "$_result"
 
     mk_msg "sizeof($TYPE): $_result ($MK_SYSTEM)"
+    mk_set "$_varname" "$_result"
 }
 
 mk_check_sizeof()
@@ -1110,7 +1113,7 @@ mk_check_sizeof()
 
     if [ -z "$TYPE" ]
     then
-	TYPE="$1"
+        TYPE="$1"
     fi
 
     CFLAGS="$CFLAGS -Wall -Werror"
@@ -1133,7 +1136,7 @@ mk_check_endian()
     
     if mk_check_cache "$_varname"
     then
-	_result="$result"
+        _result="$result"
     else
         # Check for endianness in a (hacky) manner that supports
         # cross-compiling. This is done by compiling a C file that
@@ -1143,25 +1146,25 @@ mk_check_endian()
         #
         # The character sequences were designed to be extremely unlikely
         # to occur otherwise.
-	{
-	    cat <<EOF
+        {
+            cat <<EOF
 #include <stdio.h>
 
 /* Spells "aArDvArKsOaP" on big-endian systems */
 static const unsigned short aardvark[] =
-{0x6141, 0x7244, 0x7641, 0x724b, 0x734f, 0x6150};
+{0x6141, 0x7244, 0x7641, 0x724b, 0x734f, 0x6150, 0x0};
 /* Spells "zEbRaBrUsH" on little-endian systems */
 static const unsigned short zebra[] = 
-{0x457a, 0x5262, 0x4261, 0x5572, 0x4873};
+{0x457a, 0x5262, 0x4261, 0x5572, 0x4873, 0x0};
 
 int main(int argc, char** argv)
 { 
-    return (int) aardvark[0] + zebra[0];
+    return (int) aardvark[argc] + zebra[argc];
 }
 EOF
-	} > .check.c
-	if _mk_build_test 'compile-keep' .check.c
-	then
+        } > .check.c
+        if _mk_build_test 'compile-keep' .check.c
+        then
             if grep "aArDvArKsOaP" .check.o >/dev/null
             then
                 _result="big"
@@ -1172,20 +1175,21 @@ EOF
                 rm -f .check.o
                 mk_fail "could not determine endianness"
             fi
-	else
+        else
             rm -f .check.o
-	    mk_fail "could not determine endianness"
-	fi
-	
-	mk_cache "$_varname" "$_result"
+            mk_fail "could not determine endianness"
+        fi
+        
+        mk_cache "$_varname" "$_result"
     fi
 
     if [ "$_result" = "big" ]
     then
-	mk_define WORDS_BIGENDIAN 1
+        mk_define WORDS_BIGENDIAN 1
     fi
     
     mk_msg "endianness: $_result ($MK_SYSTEM)"
+    mk_set "$_varname" "$_result"
     
     mk_pop_vars
 }
@@ -1197,14 +1201,14 @@ mk_check_functions()
     
     for _name in ${FUNCTIONS} "$@"
     do
-	mk_check_function \
-	    FAIL="$FAIL" \
-	    FUNCTION="$_name" \
-	    HEADERDEPS="$HEADERDEPS" \
-	    CPPFLAGS="$CPPFLAGS" \
-	    LDFLAGS="$LDFLAGS" \
-	    CFLAGS="$CFLAGS" \
-	    LIBDEPS="$LIBDEPS"
+        mk_check_function \
+            FAIL="$FAIL" \
+            FUNCTION="$_name" \
+            HEADERDEPS="$HEADERDEPS" \
+            CPPFLAGS="$CPPFLAGS" \
+            LDFLAGS="$LDFLAGS" \
+            CFLAGS="$CFLAGS" \
+            LIBDEPS="$LIBDEPS"
     done
 
     mk_pop_vars
@@ -1217,13 +1221,13 @@ mk_check_libraries()
     
     for _name in ${LIBS} "$@"
     do
-	mk_check_library \
-	    FAIL="$FAIL" \
-	    LIB="$_name" \
-	    CPPFLAGS="$CPPFLAGS" \
-	    LDFLAGS="$LDFLAGS" \
-	    CFLAGS="$CFLAGS" \
-	    LIBDEPS="$LIBDEPS"
+        mk_check_library \
+            FAIL="$FAIL" \
+            LIB="$_name" \
+            CPPFLAGS="$CPPFLAGS" \
+            LDFLAGS="$LDFLAGS" \
+            CFLAGS="$CFLAGS" \
+            LIBDEPS="$LIBDEPS"
     done
 
     mk_pop_vars
@@ -1236,12 +1240,12 @@ mk_check_headers()
     
     for _name in ${HEADERS} "$@"
     do
-	mk_check_header \
-	    HEADER="$_name" \
+        mk_check_header \
+            HEADER="$_name" \
             HEADERDEPS="$HEADERDEPS" \
-	    FAIL="$FAIL" \
-	    CPPFLAGS="$CPPFLAGS" \
-	    CFLAGS="$CFLAGS"
+            FAIL="$FAIL" \
+            CPPFLAGS="$CPPFLAGS" \
+            CFLAGS="$CFLAGS"
     done
 
     mk_pop_vars
@@ -1257,34 +1261,34 @@ option()
     fi
 
     mk_option \
-	VAR="CC" \
-	PARAM="program" \
-	DEFAULT="gcc" \
-	HELP="Default C compiler"
+        VAR="CC" \
+        PARAM="program" \
+        DEFAULT="gcc" \
+        HELP="Default C compiler"
 
     MK_DEFAULT_CC="$CC"
 
     mk_option \
-	VAR="CPPFLAGS" \
-	PARAM="flags" \
-	DEFAULT="" \
-	HELP="Default C preprocessor flags"
+        VAR="CPPFLAGS" \
+        PARAM="flags" \
+        DEFAULT="" \
+        HELP="Default C preprocessor flags"
 
     MK_DEFAULT_CPPFLAGS="$CPPFLAGS"
 
     mk_option \
-	VAR="CFLAGS" \
-	PARAM="flags" \
-	DEFAULT="$_default_OPTFLAGS" \
-	HELP="Default C compiler flags"
+        VAR="CFLAGS" \
+        PARAM="flags" \
+        DEFAULT="$_default_OPTFLAGS" \
+        HELP="Default C compiler flags"
 
     MK_DEFAULT_CFLAGS="$CFLAGS"
 
     mk_option \
-	VAR="LDFLAGS" \
-	PARAM="flags" \
-	DEFAULT="$_default_OPTFLAGS" \
-	HELP="Default linker flags"
+        VAR="LDFLAGS" \
+        PARAM="flags" \
+        DEFAULT="$_default_OPTFLAGS" \
+        HELP="Default linker flags"
 
     MK_DEFAULT_LDFLAGS="$LDFLAGS"
 
@@ -1292,53 +1296,53 @@ option()
 
     for _sys in build host
     do
-	_mk_define_name "MK_${_sys}_ISAS"
-	mk_get "$result"
-	
-	for _isa in ${result}
-	do
-	    _mk_define_name "$_sys/${_isa}"
-	    _def="$result"
+        _mk_define_name "MK_${_sys}_ISAS"
+        mk_get "$result"
+        
+        for _isa in ${result}
+        do
+            _mk_define_name "$_sys/${_isa}"
+            _def="$result"
 
-	    _mk_define_name "MK_${_sys}_ARCH"
-	    mk_get "$result"
-	    
-	    case "${MK_DEFAULT_CC}-${result}-${_isa}" in
-		*gcc*-x86*-x86_32)
-		    _default_cc="$MK_DEFAULT_CC -m32"
-		    ;;
-		*gcc*-x86*-x86_64)
-		    _default_cc="$MK_DEFAULT_CC -m64"
-		    ;;
-		*)
-		    _default_cc="$MK_DEFAULT_CC"
-		    ;;
-	    esac
-	    
-	    mk_option \
-		VAR="${_def}_CC" \
+            _mk_define_name "MK_${_sys}_ARCH"
+            mk_get "$result"
+            
+            case "${MK_DEFAULT_CC}-${result}-${_isa}" in
+                *gcc*-x86*-x86_32)
+                    _default_cc="$MK_DEFAULT_CC -m32"
+                    ;;
+                *gcc*-x86*-x86_64)
+                    _default_cc="$MK_DEFAULT_CC -m64"
+                    ;;
+                *)
+                    _default_cc="$MK_DEFAULT_CC"
+                    ;;
+            esac
+            
+            mk_option \
+                VAR="${_def}_CC" \
                 PARAM="program" \
-		DEFAULT="$_default_cc" \
-		HELP="C compiler ($_sys/$_isa)"
-	    
-	    mk_option \
-		VAR="${_def}_CPPFLAGS" \
+                DEFAULT="$_default_cc" \
+                HELP="C compiler ($_sys/$_isa)"
+            
+            mk_option \
+                VAR="${_def}_CPPFLAGS" \
                 PARAM="flags" \
-		DEFAULT="$MK_DEFAULT_CPPFLAGS" \
-		HELP="C preprocessor flags ($_sys/$_isa)"
-	    
-	    mk_option \
-		VAR="${_def}_CFLAGS" \
+                DEFAULT="$MK_DEFAULT_CPPFLAGS" \
+                HELP="C preprocessor flags ($_sys/$_isa)"
+            
+            mk_option \
+                VAR="${_def}_CFLAGS" \
                 PARAM="flags" \
-		DEFAULT="$MK_DEFAULT_CFLAGS" \
-		HELP="C compiler flags ($_sys/$_isa)"
-	    
-	    mk_option \
-		VAR="${_def}_LDFLAGS" \
+                DEFAULT="$MK_DEFAULT_CFLAGS" \
+                HELP="C compiler flags ($_sys/$_isa)"
+            
+            mk_option \
+                VAR="${_def}_LDFLAGS" \
                 PARAM="flags" \
-		DEFAULT="$MK_DEFAULT_LDFLAGS" \
-		HELP="Linker flags ($_sys/$_isa)"
-	done
+                DEFAULT="$MK_DEFAULT_LDFLAGS" \
+                HELP="Linker flags ($_sys/$_isa)"
+        done
     done
 }
 
@@ -1355,30 +1359,30 @@ configure()
 
     for _sys in build host
     do
-	_mk_define_name "MK_${_sys}_ISAS"
-	mk_get "$result"
-	
-	for _isa in ${result}
-	do
-	    _mk_define_name "$_sys/$_isa"
-	    _def="$result"
+        _mk_define_name "MK_${_sys}_ISAS"
+        mk_get "$result"
+        
+        for _isa in ${result}
+        do
+            _mk_define_name "$_sys/$_isa"
+            _def="$result"
 
-	    mk_get "${_def}_CC"
-	    mk_msg "C compiler ($_sys/$_isa): $result"
-	    mk_set_system_var SYSTEM="$_sys/$_isa" MK_CC "$result"
+            mk_get "${_def}_CC"
+            mk_msg "C compiler ($_sys/$_isa): $result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CC "$result"
 
-	    mk_get "${_def}_CPPFLAGS"
-	    mk_msg "C preprocessor flags ($_sys/$_isa): $result"
-	    mk_set_system_var SYSTEM="$_sys/$_isa" MK_CPPFLAGS "$result"
+            mk_get "${_def}_CPPFLAGS"
+            mk_msg "C preprocessor flags ($_sys/$_isa): $result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CPPFLAGS "$result"
 
-	    mk_get "${_def}_CFLAGS"
-	    mk_msg "C compiler flags ($_sys/$_isa): $result"
-	    mk_set_system_var SYSTEM="$_sys/$_isa" MK_CFLAGS "$result"
+            mk_get "${_def}_CFLAGS"
+            mk_msg "C compiler flags ($_sys/$_isa): $result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CFLAGS "$result"
 
-	    mk_get "${_def}_LDFLAGS"
-	    mk_msg "linker flags ($_sys/$_isa): $result"
-	    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LDFLAGS "$result"
-	done
+            mk_get "${_def}_LDFLAGS"
+            mk_msg "linker flags ($_sys/$_isa): $result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_LDFLAGS "$result"
+        done
     done
 
     # Each invocation of mk_config_header closes and finishes up

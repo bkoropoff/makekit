@@ -162,7 +162,7 @@ COMBINED_LDFLAGS="$LDFLAGS -L${LINK_LIBDIR}"
 COMBINED_LIBDIRS="$LIBDIRS"
 
 # Group suffix
-_gsuffix="-${MK_SYSTEM%/*}-${MK_SYSTEM#*/}.og"
+_gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 
 for _group in ${GROUPS}
 do
@@ -209,7 +209,7 @@ esac
 
 version_pre
 
-mk_msg "${object#${MK_STAGE_DIR}} ($MK_SYSTEM)"
+mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
 
 case "$MODE" in
     library)

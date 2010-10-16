@@ -446,7 +446,7 @@ mk_add_subdir_target()
 
 mk_check_cache()
 {
-    _mk_define_name "CACHED_$MK_SYSTEM"
+    _mk_define_name "CACHED_$MK_CANONICAL_SYSTEM"
     if mk_is_set "${1}__${result}"
     then
 	mk_get "${1}__${result}"
@@ -462,11 +462,24 @@ mk_check_cache()
 
 mk_cache()
 {
-    _mk_define_name "CACHED_$MK_SYSTEM"
-    MK_CACHE_VARS="$MK_CACHE_VARS ${1}__${result}"
-    mk_set "${1}__${result}" "$2"
-    mk_set "$1" "$2"
-    mk_declare_system_var "$1"
+	__systems=""
+	if [ "${MK_SYSTEM%/*}" = "$MK_SYSTEM" ]
+    then
+        for __isa in ${MK_ISAS}
+    	do
+    		 __systems="$MK_SYSTEM/$__isa"
+	    done
+	else
+        __systems="$MK_CANONICAL_SYSTEM"
+    fi      
+	for __system in ${__systems}
+	do
+        _mk_define_name "CACHED_$MK_CANONICAL_SYSTEM"
+        MK_CACHE_VARS="$MK_CACHE_VARS ${1}__${result}"
+        mk_set "${1}__${result}" "$2"
+        mk_declare_system_var "$1"
+        mk_set_system_var SYSTEM="$__system" "$1" "$2"
+	done        
 }
 
 _mk_save_cache()
