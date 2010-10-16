@@ -284,27 +284,25 @@ _mk_print_option()
 
     if [ -n "$OPTION" -a "$MK_SHOW_VARS" = "no" ]
     then
-	_form="  --${OPTION}=${PARAM}"
+	_form="--${OPTION}=${PARAM}"
     else
-	_form="  ${VAR}=${PARAM}"
+	_form="${VAR}=${PARAM}"
     fi
     _doc="$HELP"
+
+    printf "%s\n" "$_form"
+    printf "%s\n" "$_doc"
     
     if mk_is_set "$VAR"
     then
 	mk_get "$VAR"
-	_doc="$_doc [$result]"
+	printf "%s\n" "[$result]"
     elif [ -n "$DEFAULT" ]
     then
-	_doc="$_doc [$DEFAULT]"
+	printf "%s\n" "[$DEFAULT]"
     fi
     
-    if [ "${#_form}" -gt 40 ]
-    then
-	printf "%s\n%-40s%s\n" "$_form" "" "$_doc"
-    else
-	printf "%-40s%s\n" "$_form" "$_doc"
-    fi
+    printf "###\n"
 }
 
 _mk_write_exports()
@@ -493,7 +491,6 @@ mk_help_recursive()
 	    echo "Options (${1#/}):"
 	fi
 	option
-	echo ""
     fi
     
     for _dir in ${SUBDIRS}
@@ -508,31 +505,32 @@ mk_help_recursive()
 mk_help()
 {
     echo "Usage: makekit configure [ option | @settings_file ] ..."
-    echo "Options:"
-    _basic_options
-    echo ""
 
-    for _file in ${MK_MODULE_FILES}
-    do
-	_module="${_file##*/}"
-	_module="${_module%.sh}"
+    {
+        echo "Options:"
+        _basic_options
 
-	unset -f option
-	
-	mk_source_or_fail "${_file}"
-
-	if mk_function_exists "option"
-	then
-	    echo "Options ($_module):"
-	    option
-	    echo ""
-	fi
-    done
-
-    if [ -f "${MK_SOURCE_DIR}/MakeKitBuild" ]
-    then
-	mk_help_recursive ""
-    fi
+        for _file in ${MK_MODULE_FILES}
+        do
+	    _module="${_file##*/}"
+	    _module="${_module%.sh}"
+            
+	    unset -f option
+	    
+	    mk_source_or_fail "${_file}"
+            
+	    if mk_function_exists "option"
+	    then
+	        echo "Options ($_module):"
+	        option
+	    fi
+        done
+        
+        if [ -f "${MK_SOURCE_DIR}/MakeKitBuild" ]
+        then
+	    mk_help_recursive ""
+        fi
+    } | awk -f "${MK_HOME}/help.awk"
 }
 
 _basic_options()
