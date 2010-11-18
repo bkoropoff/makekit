@@ -877,15 +877,15 @@ mk_check_function()
         FUNCTION="${_parts%%|*}"
         _args="${_parts#*|}"
         _checkname="$PROTOTYPE"
-        _mk_define_name "HAVE_$PROTOTYPE"
+        _mk_define_name "$PROTOTYPE"
         _defname="$result"
     else
         _checkname="$FUNCTION()"
-        _mk_define_name "HAVE_$FUNCTION"
+        _mk_define_name "$FUNCTION"
         _defname="$result"
     fi
     
-    _varname="$_defname"
+    _varname="HAVE_$_defname"
     
     if mk_check_cache "$_varname"
     then
@@ -935,7 +935,8 @@ EOF
     
     case "$_result" in
         yes)
-            mk_define "$_defname" "1"
+            mk_define "HAVE_$_defname" "1"
+            mk_define "HAVE_DECL_$_defname" "1"
             mk_pop_vars
             return 0
             ;;
@@ -944,6 +945,7 @@ EOF
             then
                 mk_fail "missing function: $FUNCTION"
             fi
+            mk_define "HAVE_DECL_$_defname" "0"
             mk_pop_vars
             return 1
             ;;
