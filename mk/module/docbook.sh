@@ -123,7 +123,7 @@ mk_docbook_man()
     mk_parse_params
 
     mk_target \
-	TARGET="docbook-man" \
+	TARGET="${SOURCE}.docbook-man" \
 	DEPS="$DEPS $SOURCE" \
 	_mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET"
     man_output="$result"
@@ -136,11 +136,11 @@ mk_docbook_man()
         section="${section%$__tail}"
         
         mk_target \
-            TARGET="docbook-man/$manfile" \
+            TARGET="$man_output/$manfile" \
             DEPS="$man_output"
 
         mk_install_file \
-            FILE="docbook-man/$manfile" \
+            FILE="$man_output/$manfile" \
             INSTALLFILE="$INSTALLDIR/man${section}/${manfile}"
     done
 
