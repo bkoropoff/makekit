@@ -146,18 +146,55 @@ _mk_process_symfile()
     esac   
 }
 
+_mk_library_process_version()
+{
+    if [ "$VERSION" != "no" ]
+    then
+	_rest="${VERSION}."
+	MAJOR="${_rest%%.*}"
+	_rest="${_rest#*.}"
+	MINOR="${_rest%%.*}"
+	_rest="${_rest#*.}"
+	MICRO="${_rest%%.*}"
+    fi
+
+    SONAME=""
+    LINKS="lib${LIB}${EXT}"
+    
+    if [ -n "$MAJOR" ]
+    then
+	SONAME="lib${LIB}${EXT}.${MAJOR}"
+        mk_quote "$SONAME"
+        LINKS="$result $LINKS"
+    fi
+    
+    if [ -n "$MINOR" ]
+    then
+        mk_quote "lib${LIB}${EXT}.${MAJOR}.${MINOR}"
+	LINKS="$result $LINKS"
+    fi
+    
+    if [ -n "$MICRO" ]
+    then
+        mk_quote "lib${LIB}${EXT}.${MAJOR}.${MINOR}.${MICRO}"
+	LINKS="$result $LINKS"
+    fi
+}
+
 _mk_library()
 {
     unset _deps _objects
     
     mk_comment "library ${LIB} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
-    
+
+    mk_unquote_list "$LINKS"
+
     case "$INSTALL" in
         no)
-            _library="lib${LIB}${EXT}"
+            _library="$1"
             ;;
         *)
-            _library="$MK_LIBDIR/lib${LIB}${EXT}"
+            _library="$MK_LIBDIR/$1"
             ;;
     esac
     
@@ -206,18 +243,37 @@ _mk_library()
     mk_target \
         TARGET="$_library" \
         DEPS="${_deps}" \
-        mk_run_script link MODE=library %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %VERSION %EXT '$@' "*${OBJECTS} ${_objects}"
+        mk_run_script link \
+        MODE=library \
+        LA="lib${LIB}.la" \
+        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %SONAME %EXT \
+        '$@' "*${OBJECTS} ${_objects}"
     
     if [ "$INSTALL" != "no" ]
     then
         mk_add_all_target "$result"
     fi
+
+    mk_unquote_list "$LINKS"
+    _last="$1"
+    shift
+
+    for _link
+    do
+        mk_symlink \
+            TARGET="$_last" \
+            LINK="${MK_LIBDIR}/$_link"
+        _last="$_link"
+    done
 }
 
 mk_library()
 {
-    mk_push_vars INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS EXT SYMFILE
-    EXT="${MK_LIB_EXT}"
+    mk_push_vars \
+        INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS \
+        HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS \
+        SYMFILE SONAME LINKS \
+        EXT="${MK_LIB_EXT}"
     mk_parse_params
     
     _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS"
@@ -227,6 +283,8 @@ mk_library()
     then
         _mk_process_symfile
     fi
+
+    _mk_library_process_version
     
     _mk_library "$@"
 
@@ -506,17 +564,15 @@ mk_headers()
     mk_expand_pathnames "${HEADERS} $*"
     
     mk_unquote_list "$result"
+
+    mk_stage \
+        DESTDIR="$INSTALLDIR" \
+        DEPS="$DEPS" \
+        "$@"
+    DEPS="$DEPS $result"
+
     for _header in "$@"
     do
-        mk_resolve_target "$_header"
-        
-        mk_target \
-            TARGET="${INSTALLDIR}/${_header}" \
-            DEPS="'$_header' $DEPS" \
-            mk_run_script install '$@' "${result}"
-        
-        mk_add_all_target "$result"
-        
         _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
         
         if [ "$_rel" != "$INSTALLDIR" ]
@@ -527,26 +583,18 @@ mk_headers()
         fi
         
         MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_rel"
-        
-        _all_headers="$_all_headers $result"
     done
-    
-    DEPS="$DEPS $_all_headers"
-    
-    mk_expand_pathnames "${MASTER}"
-    
+
+    mk_expand_pathnames "${MASTER}"   
     mk_unquote_list "$result"
+
+    mk_stage \
+        DESTDIR="$INSTALLDIR" \
+        DEPS="$DEPS" \
+        "$@"
+
     for _header in "$@"
     do
-        mk_resolve_target "$_header"
-        
-        mk_target \
-            TARGET="${INSTALLDIR}/${_header}" \
-            DEPS="'$_header' $DEPS" \
-            mk_run_script install '$@' "${result}"
-        
-        mk_add_all_target "$result"
-        
         _rel="${INSTALLDIR#$MK_INCLUDEDIR/}"
         
         if [ "$_rel" != "$INSTALLDIR" ]
