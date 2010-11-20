@@ -100,14 +100,10 @@ mk_docbook_html()
     mk_add_all_target "$result"
 
     # Install CSS file
-    [ -n "$CSS" ] && mk_install_file \
-	FILE="$CSS" \
-	INSTALLDIR="${INSTALLDIR}"
+    [ -n "$CSS" ] && mk_stage SOURCE="$CSS" DESTDIR="${INSTALLDIR}"
 
     # Install image files
-    [ -n "$IMAGES" ] && mk_install_file \
-	FILE="$IMAGES" \
-	INSTALLFILE="${INSTALLDIR}/images"
+    [ -n "$IMAGES" ] && mk_stage SOURCE="$IMAGES" DEST="${INSTALLDIR}/images"
 
     mk_pop_vars
 }
@@ -129,7 +125,7 @@ mk_docbook_man()
     man_output="$result"
 
     mk_unquote_list "$MANPAGES"
-    for manfile in "$@"
+    for manfile
     do
         section="${manfile##*.}"
         __tail="${section#?}"
@@ -139,9 +135,9 @@ mk_docbook_man()
             TARGET="$man_output/$manfile" \
             DEPS="$man_output"
 
-        mk_install_file \
-            FILE="$man_output/$manfile" \
-            INSTALLFILE="$INSTALLDIR/man${section}/${manfile}"
+        mk_stage \
+            SOURCE="$man_output/$manfile" \
+            DESTDIR="$INSTALLDIR/man${section}"
     done
 
     mk_pop_vars
