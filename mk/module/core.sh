@@ -467,7 +467,9 @@ mk_output_file()
     # There ought to be a better way to do this...
     mk_run_or_fail cp "$_input" "${_output}.new"
     # Now overwrites its contents
-    mk_run_or_fail awk -f ".awk.$$" < "$_input" > "${_output}.new"
+    # We don't use mk_run_or_fail because it can log
+    # output if MK_VERBOSE is set
+    awk -f ".awk.$$" < "$_input" > "${_output}.new" || mk_fail "could not run awk"
     mk_run_or_fail rm -f ".awk.$$"
 
     if [ -f "${_output}" ] && diff "${_output}" "${_output}.new" >/dev/null 2>&1
