@@ -367,7 +367,11 @@ mk_dlo()
     mk_target \
         TARGET="$_library" \
         DEPS="$_deps" \
-        mk_run_script link MODE=dlo %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT '$@' "*${OBJECTS}"
+        mk_run_script link \
+        MODE=dlo \
+        LA="${LIB}.la" \
+        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT \
+        '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
     then
