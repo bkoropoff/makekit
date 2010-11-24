@@ -184,9 +184,7 @@ _mk_build_rpm()
         --define "_libdir ${MK_LIBDIR}" \
         --define "_libexecdir ${MK_LIBEXECDIR}" \
         --define "_localstatedir ${MK_LOCALSTATEDIR}" \
-#       --define "_sharedstatedir ${MK_SHAREDSTATEDIR}" \
         --define "_mandir ${MK_MANDIR}" \
-#       --define "_infodir ${MK_INFODIR}" \
         --buildroot="${MK_ROOT_DIR}/${MK_STAGE_DIR}" \
         -bb "$3"
     mk_run_or_fail mv "${2}/RPMS"/*/*.rpm "${MK_PACKAGE_RPM_DIR}/$1/."
