@@ -36,6 +36,16 @@ DEPENDS="platform program"
 
 ### section common
 
+mk_get_export()
+{
+    # $1 = directory (relative to MK_SUBDIR)
+    # $2 = variable
+    result=$(mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/$1/.MakeKitExports" && 
+             mk_get "$2" &&
+             echo "$result")
+    [ "$?" -eq 0 ] || mk_fail "could not read ${MK_OBJECT_DIR}${MK_SUBDIR}/$1/.MakeKitExports"
+}
+
 mk_run_or_fail()
 {
     mk_quote_list "$@"
