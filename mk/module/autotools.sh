@@ -77,9 +77,9 @@ _mk_at_system_string()
 mk_autotools()
 {
     mk_push_vars \
-	SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
-	CPPFLAGS CFLAGS LDFLAGS INSTALL TARGETS SELECT \
-	BUILDDIR prefix
+        SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
+        CPPFLAGS CFLAGS LDFLAGS INSTALL TARGETS SELECT \
+        BUILDDIR prefix
     mk_parse_params
     
     unset _stage_deps
@@ -98,7 +98,9 @@ mk_autotools()
     do
         if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
         then
-	    _stage_deps="$_stage_deps '${MK_INCLUDEDIR}/${_header}'"
+            mk_resolve_header "$_header"
+            mk_quote "$result"
+	    _stage_deps="$_stage_deps $result"
         fi
     done
 
@@ -131,8 +133,10 @@ mk_autotools()
     # Add dummy rules for target built by this component
     for _header in ${HEADERS}
     do
+        mk_resolve_header "$_header"
+        
 	mk_target \
-	    TARGET="${MK_INCLUDEDIR}/${_header}" \
+	    TARGET="$result" \
 	    DEPS="'$__build_stamp'"
 
 	mk_add_all_target "$result"

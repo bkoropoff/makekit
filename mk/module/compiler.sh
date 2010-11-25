@@ -36,6 +36,21 @@ DEPENDS="core platform path"
 ### section configure
 
 #
+# Utility functions
+#
+mk_resolve_header()
+{
+    case "$1" in
+        /*)
+            result="@$1"
+            ;;
+        *)
+            result="@${MK_STAGE_DIR}${MK_INCLUDEDIR}/$1"
+            ;;
+    esac
+}
+
+#
 # Helper functions for make() stage
 #
 mk_compile()
@@ -56,7 +71,9 @@ mk_compile()
     do
         if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
         then
-            DEPS="$DEPS '${MK_INCLUDEDIR}/${_header}'"
+            mk_resolve_header "$_header"
+            mk_quote "$result"
+            DEPS="$DEPS $result"
         fi
     done
     
