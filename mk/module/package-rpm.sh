@@ -115,12 +115,16 @@ EOF
     {
         # RPM requires the directory
         # to actually exist beforehand.
-        # This is kind of hacky, but just
-        # create it now.
+        # Add a rule to create the directory and
+        # add it to the dependency list
         for _i
         do
-            mk_resolve_file "$_i"
-            mk_mkdir "$result"
+            mk_target \
+                TARGET="$_i" \
+                mk_mkdir "&$_i"
+            
+            mk_quote "$result"
+            RPM_DEPS="$RPM_DEPS $result"
         done
 
         for _i in "$@"
