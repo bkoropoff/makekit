@@ -167,12 +167,12 @@ _mk_library_process_version()
 {
     if [ "$VERSION" != "no" ]
     then
-	_rest="${VERSION}."
-	MAJOR="${_rest%%.*}"
-	_rest="${_rest#*.}"
-	MINOR="${_rest%%.*}"
-	_rest="${_rest#*.}"
-	MICRO="${_rest%%.*}"
+        _rest="${VERSION}."
+        MAJOR="${_rest%%.*}"
+        _rest="${_rest#*.}"
+        MINOR="${_rest%%.*}"
+        _rest="${_rest#*.}"
+        MICRO="${_rest%%.*}"
     fi
 
     SONAME=""
@@ -180,7 +180,7 @@ _mk_library_process_version()
     
     if [ -n "$MAJOR" ]
     then
-	SONAME="lib${LIB}${EXT}.${MAJOR}"
+        SONAME="lib${LIB}${EXT}.${MAJOR}"
         mk_quote "$SONAME"
         LINKS="$result $LINKS"
     fi
@@ -188,13 +188,13 @@ _mk_library_process_version()
     if [ -n "$MINOR" ]
     then
         mk_quote "lib${LIB}${EXT}.${MAJOR}.${MINOR}"
-	LINKS="$result $LINKS"
+        LINKS="$result $LINKS"
     fi
     
     if [ -n "$MICRO" ]
     then
         mk_quote "lib${LIB}${EXT}.${MAJOR}.${MINOR}.${MICRO}"
-	LINKS="$result $LINKS"
+        LINKS="$result $LINKS"
     fi
 }
 
