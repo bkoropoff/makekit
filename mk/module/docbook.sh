@@ -94,7 +94,7 @@ mk_docbook_html()
 
     mk_target \
 	TARGET="${INSTALLDIR}" \
-	DEPS="$DEPS $SOURCE" \
+	DEPS="$DEPS $SOURCE $STYLESHEET" \
 	_mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET"
 
     mk_add_all_target "$result"
