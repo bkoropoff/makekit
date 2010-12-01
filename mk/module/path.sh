@@ -32,6 +32,8 @@
 #
 ##
 
+### section configure
+
 DEPENDS="platform"
 
 option()
