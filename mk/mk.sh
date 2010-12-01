@@ -761,7 +761,6 @@ mk_expand_absolute_pathnames()
             mk_quote "${___item#.}"
             ___result="$___result $result"
         done
-        IFS=""
     done
 
     # Go back home
