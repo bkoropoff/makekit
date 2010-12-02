@@ -757,9 +757,12 @@ mk_expand_absolute_pathnames()
         # Now iterate over each match
         for ___item in "$@"
         do
-            # Strip the leading . we added
-            mk_quote "${___item#.}"
-            ___result="$___result $result"
+            if [ -e "$___item" ]
+            then
+                # Strip the leading . we added
+                mk_quote "${___item#.}"
+                ___result="$___result $result"
+            fi
         done
     done
 
