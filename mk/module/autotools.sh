@@ -187,9 +187,8 @@ mk_autotools()
         mk_target \
             TARGET="@${MK_SUBDIR:+${MK_SUBDIR#/}/}$SOURCEDIR" \
             DEPS="$__build_stamp"
+        mk_add_phony_target "$result"
     fi
-
-    mk_add_phony_target "$result"
 
     if ! [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/configure" ]
     then
