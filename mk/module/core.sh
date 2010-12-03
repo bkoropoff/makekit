@@ -145,7 +145,7 @@ mk_safe_rm()
 
 mk_warn()
 {
-    if [ -n "$MK_FAIL_ON_WARN" ]
+    if [ "$MK_FAIL_ON_WARN" = "yes" ]
     then
         mk_fail "$@"
     else
@@ -377,6 +377,7 @@ mk_target()
 
 mk_install_file()
 {
+    mk_warn "mk_install_file is deprecated; use mk_stage"
     mk_push_vars FILE INSTALLFILE INSTALLDIR MODE
     mk_parse_params
 
@@ -400,6 +401,7 @@ mk_install_file()
 
 mk_install_files()
 {
+    mk_warn "mk_install_files is deprecated; use mk_stage"
     mk_push_vars INSTALLDIR FILES MODE
     mk_parse_params
 
