@@ -55,6 +55,8 @@ option()
 
 configure()
 {
+    mk_declare -e MK_PACKAGE_RPM_DIR
+
     if mk_check_program PROGRAM=rpmbuild && [ "$MK_PACKAGE_RPM" = "yes" ]
     then
         mk_msg "RPM package building: enabled"
@@ -127,11 +129,14 @@ EOF
         unset RPM_SUBPACKAGE RPM_SUBINSTALLFILE RPM_SUBDIRFILE
     }
 
-    mk_package_files()
+    mk_package_targets()
     {
-        for _i in "$@"
+        mk_quote_list "$@"
+        RPM_DEPS="$RPM_DEPS $result"
+        
+        for _i
         do
-            echo "$_i"
+            echo "${_i#@$MK_STAGE_DIR}"
         done >> "${RPM_RES_SPECFILE}"
     }
     
@@ -166,7 +171,7 @@ mk_rpm_done()
 
     mk_target \
         TARGET="@${MK_PACKAGE_RPM_DIR}/${RPM_PACKAGE}" \
-        DEPS="$RPM_DEPS @all" \
+        DEPS="$RPM_DEPS" \
         _mk_build_rpm "${RPM_PACKAGE}" "&${RPM_PKGDIR}" "&${RPM_SPECFILE}"
     master="$result"
 

@@ -74,6 +74,38 @@
 
 DEPENDS="core"
 
+mk_package_patterns()
+{
+    mk_push_vars SUBDIRS="@" SELECT PATTERN TARGET
+    mk_parse_params
+
+    if [ "$#" = 0 ]
+    then
+        SELECT="*"
+    else
+        for PATTERN
+        do
+            case "$PATTERN" in
+                /*)
+                    mk_quote "@${MK_STAGE_DIR}${PATTERN}"
+                    SELECT="$SELECT $result"
+                    ;;
+                *)
+                    mk_quote "$PATTERN"
+                    SELECT="$SELECT $result"
+                    ;;
+            esac
+        done
+    fi
+
+    mk_unquote_list "$SUBDIRS"
+    mk_get_stage_targets SELECT="$SELECT" "$@"
+    mk_unquote_list "$result"
+    mk_package_targets "$@"
+    
+    mk_pop_vars
+}
+
 option()
 {
     mk_option \
