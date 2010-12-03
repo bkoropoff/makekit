@@ -855,6 +855,8 @@ mk_check_header()
     mk_push_vars HEADER HEADERDEPS CPPFLAGS CFLAGS
     mk_parse_params
 
+    [ -z "$HEADER" ] && HEADER="$1"
+
     CFLAGS="$CFLAGS -Wall -Werror"
 
     if _mk_contains "$HEADER" ${MK_INTERNAL_HEADERS}
@@ -950,6 +952,7 @@ mk_check_function()
 
     CFLAGS="$CFLAGS -Wall -Werror"
 
+    [ -z "$FUNCTION" ] && FUNCTION="$1"
     [ -z "$PROTOTYPE" ] && PROTOTYPE="$FUNCTION"
     
     case "$PROTOTYPE" in
@@ -1056,6 +1059,8 @@ mk_check_library()
     mk_push_vars LIBDEPS LIB CPPFLAGS LDFLAGS CFLAGS
     mk_parse_params
 
+    [ -z "$LIB" ] && LIB="$1"
+
     CFLAGS="$CFLAGS -Wall -Werror"
     LIBDEPS="$LIBDEPS $LIB"
     
@@ -1159,10 +1164,7 @@ mk_check_type()
     mk_push_vars TYPE HEADERDEPS CPPFLAGS CFLAGS
     mk_parse_params
 
-    if [ -z "$TYPE" ]
-    then
-        TYPE="$1"
-    fi
+    [ -z "$TYPE" ] && TYPE="$1"
 
     CFLAGS="$CFLAGS -Wall -Werror"
 
@@ -1262,10 +1264,7 @@ mk_check_sizeof()
     mk_push_vars TYPE HEADERDEPS CPPFLAGS LDFLAGS CFLAGS LIBDEPS
     mk_parse_params
 
-    if [ -z "$TYPE" ]
-    then
-        TYPE="$1"
-    fi
+    [ -z "$TYPE" ] && TYPE="$1"
 
     CFLAGS="$CFLAGS -Wall -Werror"
     HEADERDEPS="$HEADERDEPS stdio.h"
