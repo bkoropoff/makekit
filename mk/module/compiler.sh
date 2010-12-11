@@ -53,37 +53,58 @@ mk_resolve_header()
 #
 # Helper functions for make() stage
 #
-mk_compile()
+
+_mk_compile()
 {
-    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS PIC OPREFIX
-    mk_parse_params
+    _object="${SOURCE%.*}${OSUFFIX}-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.o"
     
-    case "$SOURCE" in
-        *.c)
-            _object="${OPREFIX}${SOURCE%.c}-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.o"
-            ;;
-        *)
-            mk_fail "Unsupported file type: $SOURCE"
-            ;;
-    esac
-    
+    unset _header_deps
+
     for _header in ${HEADERDEPS}
     do
         if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
         then
             mk_resolve_header "$_header"
             mk_quote "$result"
-            DEPS="$DEPS $result"
+            _header_deps="$_header_deps $result"
         fi
     done
     
     mk_resolve_target "${SOURCE}"
     _res="$result"
+    mk_quote "$_res"
     
     mk_target \
         TARGET="$_object" \
-        DEPS="$DEPS '$SOURCE'" \
-        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %PIC '$@' "$_res"
+        DEPS="$DEPS $_header_deps $result" \
+        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %LANG %PIC '$@' "$_res"
+}
+
+_mk_compile_detect()
+{
+    # Invokes _mk_compile after autodetecting LANG
+    case "${SOURCE##*.}" in
+        c)
+            LANG="c"
+                ;;
+        cpp|cxx|cc|CC|C)
+            LANG="c++"
+            ;;
+        *)
+            mk_fail "unsupport source file type: .${SOURCE##*.}"
+            ;;
+    esac
+
+    _mk_compile
+}
+
+
+mk_compile()
+{
+    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC OSUFFIX LANG
+    mk_parse_params
+    
+    _mk_compile_detect
     
     mk_pop_vars
 }
@@ -216,8 +237,8 @@ _mk_library()
     esac
     
     # Create object prefix based on library name
-    _mk_slashless_name "lib-$LIB-"
-    _oprefix="$result"
+    _mk_slashless_name "-$LIB"
+    OSUFFIX="$result"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
@@ -226,44 +247,40 @@ _mk_library()
     _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 
     mk_unquote_list "$result"
-    for _source in "$@"
+    for SOURCE
     do
-        mk_compile \
-            SOURCE="$_source" \
-            HEADERDEPS="$HEADERDEPS" \
-            INCLUDEDIRS="$INCLUDEDIRS" \
-            CPPFLAGS="$CPPFLAGS" \
-            CFLAGS="$CFLAGS" \
-            PIC="yes" \
-            DEPS="$DEPS" \
-            OPREFIX="$_oprefix"
-        
+        _mk_compile_detect
         mk_quote "$result"
         _deps="$_deps $result"
         _objects="$_objects $result"
+        [ "$LANG" = "c++" ] && IS_CXX=true
     done
     
     mk_unquote_list "${GROUPS}"
-    for _group in "$@"
+    for result
     do
-        _deps="$_deps '$_group${_gsuffix}'"
+        mk_quote "$result$_gsuffix"
+        _deps="$_deps $result"
     done
     
-    for _lib in ${LIBDEPS}
+    for result in ${LIBDEPS}
     do
-        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+        if _mk_contains "$result" ${MK_INTERNAL_LIBS}
         then
-            _deps="$_deps '$MK_LIBDIR/lib${_lib}${MK_LIB_EXT}'"
+            mk_quote "$MK_LIBDIR/lib${result}${MK_LIB_EXT}"
+            _deps="$_deps $result"
         fi
     done
     
+    ${IS_CXX} && LANG="c++"
+
     mk_target \
         TARGET="$_library" \
         DEPS="${_deps}" \
         mk_run_script link \
         MODE=library \
         LA="lib${LIB}.la" \
-        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %SONAME %EXT \
+        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %SONAME %EXT %LANG \
         '$@' "*${OBJECTS} ${_objects}"
     
     if [ "$INSTALL" != "no" ]
@@ -287,11 +304,12 @@ _mk_library()
 mk_library()
 {
     mk_push_vars \
-        INSTALL LIB SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS \
+        INSTALL LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
         HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS \
-        SYMFILE SONAME LINKS \
-        EXT="${MK_LIB_EXT}"
+        SYMFILE SONAME LINKS LANG=c IS_CXX=false EXT="${MK_LIB_EXT}" PIC=yes
     mk_parse_params
+
+    [ "$LANG" = "c++" ] && IS_CXX=true
     
     _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS"
     _mk_verify_headerdeps "lib$LIB${EXT}" "$HEADERDEPS"
@@ -312,9 +330,14 @@ mk_library()
 
 mk_dlo()
 {
-    mk_push_vars INSTALL DLO SOURCES GROUPS CPPFLAGS CFLAGS LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION OBJECTS DEPS INSTALLDIR EXT SYMFILE
-    EXT="${MK_DLO_EXT}"
+    mk_push_vars \
+        INSTALL DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
+        LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION \
+        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE LANG=c \
+        IS_CXX=false OSUFFIX PIC=yes
     mk_parse_params
+
+    [ "$LANG" = "c++" ] && IS_CXX=true
     
     _mk_verify_libdeps "$DLO${EXT}" "$LIBDEPS"
     _mk_verify_headerdeps "$DLO${EXT}" "$HEADERDEPS"
@@ -340,31 +363,23 @@ mk_dlo()
     esac
 
     # Create object prefix based on dlo name
-    _mk_slashless_name "dlo-$DLO-"
-    _oprefix="$result"
+    _mk_slashless_name "-$DLO"
+    OSUFFIX="$result"
 
     # Group suffix
     _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}"
-    
     mk_unquote_list "$result"
-    for _source in "$@"
+    for SOURCE
     do
-        mk_compile \
-            SOURCE="$_source" \
-            HEADERDEPS="$HEADERDEPS" \
-            INCLUDEDIRS="$INCLUDEDIRS" \
-            CPPFLAGS="$CPPFLAGS" \
-            CFLAGS="$CFLAGS" \
-            PIC="yes" \
-            DEPS="$DEPS" \
-            OPREFIX="$_oprefix"
+        _mk_compile_detect
         
         mk_quote "$result"
         _deps="$_deps $result"
         OBJECTS="$OBJECTS $result"
+        [ "$LANG" = "c++" ] && IS_CXX=true
     done
     
     mk_unquote_list "${GROUPS}"
@@ -381,13 +396,15 @@ mk_dlo()
         fi
     done
     
+    ${IS_CXX} && LANG="c++"
+
     mk_target \
         TARGET="$_library" \
         DEPS="$_deps" \
         mk_run_script link \
         MODE=dlo \
         LA="${LIB}.la" \
-        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT \
+        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT %LANG \
         '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
@@ -400,10 +417,14 @@ mk_dlo()
 
 mk_group()
 {
-    mk_push_vars GROUP SOURCES CPPFLAGS CFLAGS LDFLAGS LIBDEPS \
-        HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS
+    mk_push_vars \
+        GROUP SOURCES SOURCE CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
+        HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS \
+        LANG=c IS_CXX=false PIC=yes
     mk_parse_params
     
+    [ "$LANG" = "c++" ] && IS_CXX=true
+
     _mk_verify_libdeps "$GROUP" "$LIBDEPS"
     _mk_verify_headerdeps "$GROUP" "$HEADERDEPS"
 
@@ -412,33 +433,25 @@ mk_group()
     mk_comment "group ${GROUP} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
 
     # Create object prefix based on group name
-    _mk_slashless_name "group-$GROUP-"
-    _oprefix="$result"
-
-    # Group suffix
-    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
+    _mk_slashless_name "-$GROUP"
+    OSUFFIX="$result"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
     mk_unquote_list "$result"
-    for _source in "$@"
+    for SOURCE in "$@"
     do
-        mk_compile \
-            SOURCE="$_source" \
-            HEADERDEPS="$HEADERDEPS" \
-            INCLUDEDIRS="$INCLUDEDIRS" \
-            CPPFLAGS="$CPPFLAGS" \
-            CFLAGS="$CFLAGS" \
-            PIC="yes" \
-            DEPS="$DEPS" \
-            OPREFIX="$oprefix"
-        
+        _mk_compile_detect     
         mk_quote "$result"
         _deps="$_deps $result"
         OBJECTS="$OBJECTS $result"
+        [ "$LANG" = "c++" ] && IS_CXX=true
     done
     
+    # Group suffix
+    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
+
     mk_unquote_list "${GROUPDEPS}"
     for _group in "$@"
     do
@@ -453,10 +466,12 @@ mk_group()
         fi
     done
     
+    ${IS_CXX} && LANG="c++"
+
     mk_target \
         TARGET="$GROUP${_gsuffix}" \
         DEPS="$_deps" \
-        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS '$@' "*${OBJECTS}"
+        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS %LANG '$@' "*${OBJECTS}"
     
     mk_pop_vars
 }
@@ -464,10 +479,13 @@ mk_group()
 mk_program()
 {
     mk_push_vars \
-        PROGRAM SOURCES OBJECTS GROUPS CPPFLAGS CFLAGS \
-        LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL
+        PROGRAM SOURCES SOURCE OBJECTS GROUPS CPPFLAGS CFLAGS CXXFLAGS \
+        LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL \
+        LANG=c IS_CXX=false PIC=yes OSUFFIX
     mk_parse_params
     
+    [ "$LANG" = "c++" ] && IS_CXX=true
+
     _mk_verify_libdeps "$PROGRAM" "$LIBDEPS"
     _mk_verify_headerdeps "$PROGRAM" "$HEADERDEPS"
 
@@ -503,8 +521,8 @@ mk_program()
     mk_comment "program ${PROGRAM} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
 
     # Create object prefix based on program name
-    _mk_slashless_name "program-$PROGRAM-"
-    _oprefix="$result"
+    _mk_slashless_name "-$PROGRAM"
+    OSUFFIX="$result"
     
     # Group suffix
     _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
@@ -513,21 +531,13 @@ mk_program()
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
     mk_unquote_list "$result"
-    for _source in "$@"
+    for SOURCE
     do
-        mk_compile \
-            SOURCE="$_source" \
-            HEADERDEPS="$HEADERDEPS" \
-            INCLUDEDIRS="$INCLUDEDIRS" \
-            CPPFLAGS="$CPPFLAGS" \
-            CFLAGS="$CFLAGS" \
-            PIC="yes" \
-            DEPS="$DEPS" \
-            OPREFIX="$_oprefix"
-        
+        _mk_compile_detect
         mk_quote "$result"
         _deps="$_deps $result"
         OBJECTS="$OBJECTS $result"
+        [ "$LANG" = "c++" ] && IS_CXX=yes
     done
     
     mk_unquote_list "${GROUPS}"
@@ -543,11 +553,13 @@ mk_program()
             _deps="$_deps '${_libdir}/lib${_lib}${MK_LIB_EXT}'"
         fi
     done
+
+    ${IS_CXX} && LANG="c++"
     
     mk_target \
         TARGET="$_executable" \
         DEPS="$_deps" \
-        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS '$@' "*${OBJECTS}"
+        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS %LANG '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
     then
@@ -757,6 +769,7 @@ _mk_build_test()
                 eval "exec ${MK_LOG_FD}>&-"
                 MK_LOG_FD=""
                 mk_run_script compile \
+                    LANG="$MK_CHECK_LANG" \
                     DISABLE_DEPGEN=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
@@ -773,11 +786,13 @@ _mk_build_test()
                 eval "exec ${MK_LOG_FD}>&-"
                 MK_LOG_FD=""
                 mk_run_script compile \
+                    LANG="$MK_CHECK_LANG" \
                     DISABLE_DEPGEN=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
                     "${__test}.o" "${__test}.c"
                 mk_run_script link \
+                    LANG="$MK_CHECK_LANG" \
                     MODE=program \
                     LIBDEPS="$LIBDEPS" \
                     LDFLAGS="$LDFLAGS" \
@@ -1373,6 +1388,11 @@ EOF
     mk_pop_vars
 }
 
+mk_check_lang()
+{
+    MK_CHECK_LANG="$1"
+}
+
 option()
 {
     if [ "$MK_DEBUG" = yes ]
@@ -1391,6 +1411,14 @@ option()
     MK_DEFAULT_CC="$CC"
 
     mk_option \
+        VAR="CXX" \
+        PARAM="program" \
+        DEFAULT="g++" \
+        HELP="Default C++ compiler"
+
+    MK_DEFAULT_CXX="$CXX"
+
+    mk_option \
         VAR="CPPFLAGS" \
         PARAM="flags" \
         DEFAULT="" \
@@ -1407,6 +1435,14 @@ option()
     MK_DEFAULT_CFLAGS="$CFLAGS"
 
     mk_option \
+        VAR="CXXFLAGS" \
+        PARAM="flags" \
+        DEFAULT="$_default_OPTFLAGS" \
+        HELP="Default C++ compiler flags"
+
+    MK_DEFAULT_CFLAGS="$CXXFLAGS"
+
+    mk_option \
         VAR="LDFLAGS" \
         PARAM="flags" \
         DEFAULT="$_default_OPTFLAGS" \
@@ -1414,7 +1450,7 @@ option()
 
     MK_DEFAULT_LDFLAGS="$LDFLAGS"
 
-    unset CC CPPFLAGS CFLAGS LDFLAGS
+    unset CC CXX CPPFLAGS CFLAGS CXXFLAGS LDFLAGS
 
     for _sys in build host
     do
@@ -1432,12 +1468,15 @@ option()
             case "${MK_DEFAULT_CC}-${result}-${_isa}" in
                 *gcc*-x86*-x86_32)
                     _default_cc="$MK_DEFAULT_CC -m32"
+                    _default_cxx="$MK_DEFAULT_CXX -m32"
                     ;;
                 *gcc*-x86*-x86_64)
                     _default_cc="$MK_DEFAULT_CC -m64"
+                    _default_cxx="$MK_DEFAULT_CXX -m64"
                     ;;
                 *)
                     _default_cc="$MK_DEFAULT_CC"
+                    _default_cxx="$MK_DEFAULT_CXX"
                     ;;
             esac
             
@@ -1446,6 +1485,12 @@ option()
                 PARAM="program" \
                 DEFAULT="$_default_cc" \
                 HELP="C compiler ($_sys/$_isa)"
+
+            mk_option \
+                VAR="${_def}_CXX" \
+                PARAM="program" \
+                DEFAULT="$_default_cxx" \
+                HELP="C++ compiler ($_sys/$_isa)"
             
             mk_option \
                 VAR="${_def}_CPPFLAGS" \
@@ -1458,6 +1503,12 @@ option()
                 PARAM="flags" \
                 DEFAULT="$MK_DEFAULT_CFLAGS" \
                 HELP="C compiler flags ($_sys/$_isa)"
+
+            mk_option \
+                VAR="${_def}_CXXFLAGS" \
+                PARAM="flags" \
+                DEFAULT="$MK_DEFAULT_CXXFLAGS" \
+                HELP="C++ compiler flags ($_sys/$_isa)"
             
             mk_option \
                 VAR="${_def}_LDFLAGS" \
@@ -1471,12 +1522,14 @@ option()
 configure()
 {
     mk_export MK_CONFIG_HEADER=""
-    mk_declare_system_var MK_CC MK_CPPFLAGS MK_CFLAGS MK_LDFLAGS
+    mk_declare_system_var MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS
     mk_declare_system_var EXPORT=no MK_INTERNAL_LIBS
 
     mk_msg "default C compiler: $MK_DEFAULT_CC"
+    mk_msg "default C++ compiler: $MK_DEFAULT_CXX"
     mk_msg "default C preprocessor flags: $MK_DEFAULT_CPPFLAGS"
     mk_msg "default C compiler flags: $MK_DEFAULT_CFLAGS"
+    mk_msg "default C++ compiler flags: $MK_DEFAULT_CXXFLAGS"
     mk_msg "default linker flags: $MK_DEFAULT_LDFLAGS"
 
     for _sys in build host
@@ -1493,12 +1546,20 @@ configure()
             mk_msg "C compiler ($_sys/$_isa): $result"
             mk_set_system_var SYSTEM="$_sys/$_isa" MK_CC "$result"
 
+            mk_get "${_def}_CXX"
+            mk_msg "C++ compiler ($_sys/$_isa): $result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CXX "$result"
+
             mk_get "${_def}_CPPFLAGS"
             mk_msg "C preprocessor flags ($_sys/$_isa): $result"
             mk_set_system_var SYSTEM="$_sys/$_isa" MK_CPPFLAGS "$result"
 
             mk_get "${_def}_CFLAGS"
             mk_msg "C compiler flags ($_sys/$_isa): $result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CFLAGS "$result"
+
+            mk_get "${_def}_CXXFLAGS"
+            mk_msg "C++ compiler flags ($_sys/$_isa): $result"
             mk_set_system_var SYSTEM="$_sys/$_isa" MK_CFLAGS "$result"
 
             mk_get "${_def}_LDFLAGS"
@@ -1511,4 +1572,11 @@ configure()
     # the previous header.  In order to close the final config
     # header in the project, we register a completion hook as well.
     mk_add_complete_hook _mk_close_config_header
+
+    mk_add_configure_prehook _mk_compiler_preconfigure
+}
+
+_mk_compiler_preconfigure()
+{
+    MK_CHECK_LANG="c"
 }
