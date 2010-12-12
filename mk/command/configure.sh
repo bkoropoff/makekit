@@ -151,10 +151,11 @@ _mk_process_build_configure()
 _mk_process_build_make()
 {
     unset -f option configure make
-    unset SUBDIRS
+    _backup_SUBDIRS="$SUBDIRS"
 
     MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MakeKitBuild"
     mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCEDIR}${1}"
+    SUBDIRS="$_backup_SUBDIRS"
     
     MK_SUBDIR="$1"
     mk_msg_verbose "emitting make rules"
@@ -165,7 +166,7 @@ _mk_process_build_make()
 
 _mk_process_build_recursive()
 {
-    mk_push_vars MK_MSG_DOMAIN MK_CURRENT_FILE _preorder_make
+    mk_push_vars MK_MSG_DOMAIN MK_CURRENT_FILE SUBDIRS _preorder_make
 
     MK_MSG_DOMAIN="${1#/}"
 
