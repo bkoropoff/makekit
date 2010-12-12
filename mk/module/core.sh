@@ -154,6 +154,11 @@ mk_warn()
     fi
 }
 
+mk_deprecated()
+{
+    [ "$MK_WARN_DEPRECATED" = "yes" ] && mk_warn "$@"
+}
+
 mk_run_script()
 {
     if _mk_find_resource "script/${1}.sh"
@@ -377,7 +382,7 @@ mk_target()
 
 mk_install_file()
 {
-    mk_warn "mk_install_file is deprecated; use mk_stage"
+    mk_deprecated "mk_install_file is deprecated; use mk_stage"
     mk_push_vars FILE INSTALLFILE INSTALLDIR MODE
     mk_parse_params
 
@@ -401,7 +406,7 @@ mk_install_file()
 
 mk_install_files()
 {
-    mk_warn "mk_install_files is deprecated; use mk_stage"
+    mk_deprecated "mk_install_files is deprecated; use mk_stage"
     mk_push_vars INSTALLDIR FILES MODE
     mk_parse_params
 
@@ -666,6 +671,13 @@ _mk_load_cache()
 
 option()
 {
+    mk_option \
+        OPTION="warn-deprecated" \
+        VAR="MK_WARN_DEPRECATED" \
+        PARAM="yes|no" \
+        DEFAULT="no" \
+        HELP="Warn about deprecated function use"
+
     mk_option \
         OPTION="fail-on-warn" \
         VAR="MK_FAIL_ON_WARN" \
