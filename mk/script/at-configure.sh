@@ -77,12 +77,19 @@ _libpath=""
 case "$MK_OS" in
     linux|freebsd)
         _ldflags="-L${_lib_dir} -Wl,-rpath-link -Wl,${_lib_dir}"
-        LD_LIBRARY_PATH="$_lib_dir:$LD_LIBRARY_PATH"
-        export LD_LIBRARY_PATH
+        if [ "$MK_CROSS_COMPILING" = "no" ]
+        then
+            LD_LIBRARY_PATH="$_lib_dir:$LD_LIBRARY_PATH"
+            export LD_LIBRARY_PATH
+        fi
         ;;
     solaris)
-        LD_LIBRARY_PATH="$_lib_dir:$LD_LIBRARY_PATH"
-        export LD_LIBRARY_PATH
+        _ldflags="-L${_lib_dir}"
+        if [ "$MK_CROSS_COMPILING" = "no" ]
+        then
+            LD_LIBRARY_PATH="$_lib_dir:$LD_LIBRARY_PATH"
+            export LD_LIBRARY_PATH
+        fi
         ;;
     *)
         _ldflags="-L${_lib_dir}"
