@@ -42,7 +42,7 @@ mk_resolve_header()
 {
     case "$1" in
         /*)
-            result="@$1"
+            result="@${MK_STAGE_DIR}$1"
             ;;
         *)
             result="@${MK_STAGE_DIR}${MK_INCLUDEDIR}/$1"
@@ -1440,7 +1440,7 @@ option()
         DEFAULT="$_default_OPTFLAGS" \
         HELP="Default C++ compiler flags"
 
-    MK_DEFAULT_CFLAGS="$CXXFLAGS"
+    MK_DEFAULT_CXXFLAGS="$CXXFLAGS"
 
     mk_option \
         VAR="LDFLAGS" \
@@ -1560,7 +1560,7 @@ configure()
 
             mk_get "${_def}_CXXFLAGS"
             mk_msg "C++ compiler flags ($_sys/$_isa): $result"
-            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CFLAGS "$result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CXXFLAGS "$result"
 
             mk_get "${_def}_LDFLAGS"
             mk_msg "linker flags ($_sys/$_isa): $result"
