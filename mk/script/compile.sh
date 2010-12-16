@@ -35,14 +35,14 @@ _mk_define_name "${MK_CANONICAL_SYSTEM%/*}"
 EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -D_MK_$result"
 INCLUDE_CPPFLAGS=""
 
-case "$LANG" in
+case "$COMPILER" in
     c)
-        COMPILER="$MK_CC"
+        CPROG="$MK_CC"
         FLAGS="$CFLAGS"
         MK_FLAGS="$MK_CFLAGS"
         ;;
     c++)
-        COMPILER="$MK_CXX"
+        CPROG="$MK_CXX"
         FLAGS="$CXXFLAGS"
         MK_FLAGS="$MK_CXXFLAGS"
         ;;
@@ -77,7 +77,7 @@ fi
 mk_msg "${_source#${MK_SOURCE_DIR}/} ($MK_CANONICAL_SYSTEM)"
 
 mk_mkdir "`dirname "$_object"`"
-mk_run_or_fail ${COMPILER} \
+mk_run_or_fail ${CPROG} \
     ${INCLUDE_CPPFLAGS} ${MK_CPPFLAGS} ${CPPFLAGS} ${EXTRA_CPPFLAGS} \
     ${MK_FLAGS} ${FLAGS} ${EXTRA_FLAGS} \
     ${DEP_FLAGS} \

@@ -85,7 +85,7 @@ shift 1
 
 IS_CXX=false
 
-[ "$LANG" = "c++" ] && IS_CXX=true
+[ "$COMPILER" = "c++" ] && IS_CXX=true
 
 if [ "${MK_SYSTEM%/*}" = "build" ]
 then
@@ -116,17 +116,17 @@ do
     COMBINED_LIBDEPS="$COMBINED_LIBDEPS $LIBDEPS"
     COMBINED_LIBDIRS="$COMBINED_LIBDIRS $LIBDIRS"
     COMBINED_LDFLAGS="$COMBINED_LDFLAGS $LDFLAGS"
-    [ "$LANG" = "c++" ] && IS_CXX=true
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
 done
 
-${IS_CXX} && LANG="c++"
+${IS_CXX} && COMPILER="c++"
 
-case "$LANG" in
+case "$COMPILER" in
     c)
-        COMPILER="$MK_CC"
+        CPROG="$MK_CC"
         ;;
     c++)
-        COMPILER="$MK_CXX"
+        CPROG="$MK_CXX"
         ;;
 esac
 
@@ -166,12 +166,12 @@ mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
 
 case "$MODE" in
     library)
-        mk_run_or_fail ${COMPILER} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_or_fail ${CPROG} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
         ;;
     dlo)
-        mk_run_or_fail ${COMPILER} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_or_fail ${CPROG} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
         ;;
     program)
-        mk_run_or_fail ${COMPILER} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} ${_LIBS}
+        mk_run_or_fail ${CPROG} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} ${_LIBS}
         ;;
 esac

@@ -55,7 +55,7 @@ done
 mk_mkdir "`dirname "$object"`"
 
 {
-    echo "LANG='$LANG'"
+    echo "COMPILER='$COMPILER'"
     mk_quote "${_ALL_OBJECTS# }"
     echo "OBJECTS=$result"
     mk_quote "${_ALL_LIBDEPS# }"

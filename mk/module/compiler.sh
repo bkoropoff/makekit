@@ -77,18 +77,18 @@ _mk_compile()
     mk_target \
         TARGET="$_object" \
         DEPS="$DEPS $_header_deps $result" \
-        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %LANG %PIC '$@' "$_res"
+        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %COMPILER %PIC '$@' "$_res"
 }
 
 _mk_compile_detect()
 {
-    # Invokes _mk_compile after autodetecting LANG
+    # Invokes _mk_compile after autodetecting COMPILER
     case "${SOURCE##*.}" in
         c)
-            LANG="c"
+            COMPILER="c"
                 ;;
         cpp|cxx|cc|CC|C)
-            LANG="c++"
+            COMPILER="c++"
             ;;
         *)
             mk_fail "unsupport source file type: .${SOURCE##*.}"
@@ -101,7 +101,7 @@ _mk_compile_detect()
 
 mk_compile()
 {
-    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC OSUFFIX LANG
+    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC OSUFFIX COMPILER
     mk_parse_params
     
     _mk_compile_detect
@@ -253,7 +253,7 @@ _mk_library()
         mk_quote "$result"
         _deps="$_deps $result"
         _objects="$_objects $result"
-        [ "$LANG" = "c++" ] && IS_CXX=true
+        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
     mk_unquote_list "${GROUPS}"
@@ -272,7 +272,7 @@ _mk_library()
         fi
     done
     
-    ${IS_CXX} && LANG="c++"
+    ${IS_CXX} && COMPILER="c++"
 
     mk_target \
         TARGET="$_library" \
@@ -280,7 +280,7 @@ _mk_library()
         mk_run_script link \
         MODE=library \
         LA="lib${LIB}.la" \
-        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %SONAME %EXT %LANG \
+        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %SONAME %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
     
     if [ "$INSTALL" != "no" ]
@@ -306,10 +306,10 @@ mk_library()
     mk_push_vars \
         INSTALL LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
         HEADERDEPS LIBDIRS INCLUDEDIRS VERSION DEPS OBJECTS \
-        SYMFILE SONAME LINKS LANG=c IS_CXX=false EXT="${MK_LIB_EXT}" PIC=yes
+        SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" PIC=yes
     mk_parse_params
 
-    [ "$LANG" = "c++" ] && IS_CXX=true
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
     
     _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS"
     _mk_verify_headerdeps "lib$LIB${EXT}" "$HEADERDEPS"
@@ -333,11 +333,11 @@ mk_dlo()
     mk_push_vars \
         INSTALL DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION \
-        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE LANG=c \
+        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE COMPILER=c \
         IS_CXX=false OSUFFIX PIC=yes
     mk_parse_params
 
-    [ "$LANG" = "c++" ] && IS_CXX=true
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
     
     _mk_verify_libdeps "$DLO${EXT}" "$LIBDEPS"
     _mk_verify_headerdeps "$DLO${EXT}" "$HEADERDEPS"
@@ -379,7 +379,7 @@ mk_dlo()
         mk_quote "$result"
         _deps="$_deps $result"
         OBJECTS="$OBJECTS $result"
-        [ "$LANG" = "c++" ] && IS_CXX=true
+        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
     mk_unquote_list "${GROUPS}"
@@ -396,7 +396,7 @@ mk_dlo()
         fi
     done
     
-    ${IS_CXX} && LANG="c++"
+    ${IS_CXX} && COMPILER="c++"
 
     mk_target \
         TARGET="$_library" \
@@ -404,7 +404,7 @@ mk_dlo()
         mk_run_script link \
         MODE=dlo \
         LA="${LIB}.la" \
-        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT %LANG \
+        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT %COMPILER \
         '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
@@ -420,10 +420,10 @@ mk_group()
     mk_push_vars \
         GROUP SOURCES SOURCE CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
         HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS \
-        LANG=c IS_CXX=false PIC=yes
+        COMPILER=c IS_CXX=false PIC=yes
     mk_parse_params
     
-    [ "$LANG" = "c++" ] && IS_CXX=true
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
 
     _mk_verify_libdeps "$GROUP" "$LIBDEPS"
     _mk_verify_headerdeps "$GROUP" "$HEADERDEPS"
@@ -446,7 +446,7 @@ mk_group()
         mk_quote "$result"
         _deps="$_deps $result"
         OBJECTS="$OBJECTS $result"
-        [ "$LANG" = "c++" ] && IS_CXX=true
+        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
     # Group suffix
@@ -466,12 +466,12 @@ mk_group()
         fi
     done
     
-    ${IS_CXX} && LANG="c++"
+    ${IS_CXX} && COMPILER="c++"
 
     mk_target \
         TARGET="$GROUP${_gsuffix}" \
         DEPS="$_deps" \
-        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS %LANG '$@' "*${OBJECTS}"
+        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS %COMPILER '$@' "*${OBJECTS}"
     
     mk_pop_vars
 }
@@ -481,10 +481,10 @@ mk_program()
     mk_push_vars \
         PROGRAM SOURCES SOURCE OBJECTS GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL \
-        LANG=c IS_CXX=false PIC=yes OSUFFIX
+        COMPILER=c IS_CXX=false PIC=yes OSUFFIX
     mk_parse_params
     
-    [ "$LANG" = "c++" ] && IS_CXX=true
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
 
     _mk_verify_libdeps "$PROGRAM" "$LIBDEPS"
     _mk_verify_headerdeps "$PROGRAM" "$HEADERDEPS"
@@ -537,7 +537,7 @@ mk_program()
         mk_quote "$result"
         _deps="$_deps $result"
         OBJECTS="$OBJECTS $result"
-        [ "$LANG" = "c++" ] && IS_CXX=yes
+        [ "$COMPILER" = "c++" ] && IS_CXX=yes
     done
     
     mk_unquote_list "${GROUPS}"
@@ -554,12 +554,12 @@ mk_program()
         fi
     done
 
-    ${IS_CXX} && LANG="c++"
+    ${IS_CXX} && COMPILER="c++"
     
     mk_target \
         TARGET="$_executable" \
         DEPS="$_deps" \
-        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS %LANG '$@' "*${OBJECTS}"
+        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS %COMPILER '$@' "*${OBJECTS}"
     
     if [ "$INSTALL" != "no" ]
     then
@@ -769,7 +769,7 @@ _mk_build_test()
                 eval "exec ${MK_LOG_FD}>&-"
                 MK_LOG_FD=""
                 mk_run_script compile \
-                    LANG="$MK_CHECK_LANG" \
+                    COMPILER="$MK_CHECK_LANG" \
                     DISABLE_DEPGEN=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
@@ -786,13 +786,13 @@ _mk_build_test()
                 eval "exec ${MK_LOG_FD}>&-"
                 MK_LOG_FD=""
                 mk_run_script compile \
-                    LANG="$MK_CHECK_LANG" \
+                    COMPILER="$MK_CHECK_LANG" \
                     DISABLE_DEPGEN=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
                     "${__test}.o" "${__test}.c"
                 mk_run_script link \
-                    LANG="$MK_CHECK_LANG" \
+                    COMPILER="$MK_CHECK_LANG" \
                     MODE=program \
                     LIBDEPS="$LIBDEPS" \
                     LDFLAGS="$LDFLAGS" \
