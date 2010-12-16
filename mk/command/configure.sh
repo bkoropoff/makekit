@@ -34,8 +34,7 @@
 
 BASIC_VARIABLES="\
     MK_HOME MK_SHELL MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR MK_STAGE_DIR \
-    MK_RUN_DIR MK_OPTIONS MK_SEARCH_DIRS MK_MODULE_LIST MK_MODULE_FILES \
-    PATH"
+    MK_RUN_DIR MK_OPTIONS MK_SEARCH_DIRS MK_MODULE_LIST MK_MODULE_FILES"
 
 . "${MK_HOME}/mk.sh" || exit 1
 
@@ -632,7 +631,7 @@ _mk_emit_build_script()
     {
         echo "### section build"
         # Set essential variables
-        for _var in MK_HOME MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR
+        for _var in MK_HOME MK_ROOT_DIR MK_SOURCE_DIR MK_OBJECT_DIR PATH
         do
             mk_get "$_var"
             mk_quote "$result"
