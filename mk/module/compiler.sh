@@ -676,7 +676,7 @@ mk_define()
             mk_get "$_name"
         fi
         
-        mk_write_config_header "#if defined($cond)"
+        mk_write_config_header "#if defined($cond) && !defined($_name)"
         mk_write_config_header "#define $_name $result"
         mk_write_config_header "#endif"
     fi
