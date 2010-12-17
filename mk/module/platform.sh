@@ -207,6 +207,16 @@ option()
         x86_64|amd64)
             _default_MK_BUILD_ARCH="x86_64"
             ;;
+        sun4u)
+            case `uname -p` in
+                sparc)
+                    _default_MK_BUILD_ARCH="sparc"
+                    ;;
+                *)
+                    mk_fail "unknown architecture: `uname -m`"
+                    ;;
+            esac
+            ;;
         *)
             mk_fail "unknown architecture: `uname -m`"
             ;;
@@ -218,6 +228,9 @@ option()
             ;;
         "linux-x86_64")
             _default_MK_BUILD_ISAS="x86_64 x86_32"
+            ;;
+        *"-sparc")
+            _default_MK_BUILD_ISAS="sparc_32 sparc_64"
             ;;
         *)
             _default_MK_BUILD_ISAS="$_default_MK_BUILD_ARCH"

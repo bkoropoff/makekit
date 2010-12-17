@@ -73,6 +73,9 @@ option()
             linux-debian-x86_64-x86_32)
                 _default_libdir="${MK_EPREFIX}/lib32"
                 ;;
+            solaris-*-sparc-sparc_64)
+                _default_libdir="${MK_EPREFIX}/lib/sparcv9"
+                ;;
             *)
                 _default_libdir="${MK_EPREFIX}/lib"
                 ;;
