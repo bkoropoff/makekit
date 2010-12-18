@@ -1474,11 +1474,11 @@ option()
                     _default_cc="$MK_DEFAULT_CC -m64"
                     _default_cxx="$MK_DEFAULT_CXX -m64"
                     ;;
-                *-sparc-sparc_32)
+                *-sparc*-sparc_32)
                     _default_cc="$MK_DEFAULT_CC -m32"
                     _default_cxx="$MK_DEFAULT_CXX -m32"
                     ;;
-                *-sparc-sparc_64)
+                *-sparc*-sparc_64)
                     _default_cc="$MK_DEFAULT_CC -m64"
                     _default_cxx="$MK_DEFAULT_CXX -m64"
                     ;;
