@@ -999,7 +999,7 @@ mk_check_function()
 int main(int argc, char** argv)
 {
     $_ret (*__func)($_args) = &$FUNCTION;
-    return __func ? 0 : 1;
+    return (char*) __func < (char*) &main ? 0 : 1;
 }
 EOF
             else
@@ -1007,7 +1007,7 @@ EOF
 int main(int argc, char** argv)
 {
     void* __func = &$FUNCTION;
-    return __func ? 0 : 1;
+    return (char*) __func < (char*) &main ? 0 : 1;
 }
 EOF
             fi
