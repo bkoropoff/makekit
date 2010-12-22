@@ -184,6 +184,21 @@ _mk_process_symfile()
     esac   
 }
 
+_mk_library_form_name()
+{
+    # $1 = name
+    # $2 = version
+    # $3 = ext
+    case "$MK_OS" in
+        darwin)
+            result="lib${1}.${2}${3}"
+            ;;
+        *)
+            result="lib${1}${3}.${2}"
+            ;;
+    esac
+}
+
 _mk_library_process_version()
 {
     if [ "$VERSION" != "no" ]
@@ -201,20 +216,23 @@ _mk_library_process_version()
     
     if [ -n "$MAJOR" ]
     then
-        SONAME="lib${LIB}${EXT}.${MAJOR}"
+        _mk_library_form_name "$LIB" "$MAJOR" "$EXT"
+        SONAME="$result"
         mk_quote "$SONAME"
         LINKS="$result $LINKS"
     fi
     
     if [ -n "$MINOR" ]
     then
-        mk_quote "lib${LIB}${EXT}.${MAJOR}.${MINOR}"
+        _mk_library_form_name "$LIB" "$MAJOR.$MINOR" "$EXT"
+        mk_quote "$result"
         LINKS="$result $LINKS"
     fi
     
     if [ -n "$MICRO" ]
     then
-        mk_quote "lib${LIB}${EXT}.${MAJOR}.${MINOR}.${MICRO}"
+        _mk_library_form_name "$LIB" "$MAJOR.$MINOR.$MICRO" "$EXT"
+        mk_quote "$result"
         LINKS="$result $LINKS"
     fi
 }

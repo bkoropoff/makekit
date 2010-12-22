@@ -52,6 +52,9 @@ _mk_at_system_string()
             mk_get "MK_${1}_DISTRO_VERSION"
             __os="solaris2.${result}"
             ;;
+        darwin)
+            __os="darwin`uname -r`"
+            ;;
         *)
             __os="unknown"
             ;;
@@ -64,7 +67,14 @@ _mk_at_system_string()
             __arch="i686-pc"
             ;;
         x86_64)
-            __arch="x86_64-unknown"
+            case "$__os" in
+                darwin*)
+                    __arch="x86_64-apple"
+                    ;;
+                *)
+                    __arch="x86_64-unknown"
+                    ;;
+            esac
             ;;
         sparc*)
             __arch="sparc-sun"
@@ -82,7 +92,7 @@ mk_autotools()
     mk_push_vars \
         SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
         CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SELECT \
-        BUILDDIR prefix dirname
+        BUILDDIR DEPS prefix dirname
     mk_parse_params
     
     unset _stage_deps
@@ -125,7 +135,7 @@ mk_autotools()
 
     mk_target \
         TARGET=".${BUILDDIR}_configure" \
-        DEPS="${_stage_deps}" \
+        DEPS="$DEPS ${_stage_deps}" \
         mk_run_script \
         at-configure \
         %SOURCEDIR %BUILDDIR %CPPFLAGS %CFLAGS %CXXFLAGS %LDFLAGS \

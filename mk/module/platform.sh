@@ -195,12 +195,30 @@ option()
         FreeBSD)
             _default_MK_BUILD_OS="freebsd"
             ;;
+        Darwin)
+            _default_MK_BUILD_OS="darwin"
+            ;;
         *)
             _default_MK_BUILD_OS="unknown"
             ;;
     esac
 
     case "$_default_MK_BUILD_OS" in
+        darwin)
+            case `uname -m` in
+                i386)
+                    if [ "`sysctl -n hw.optional.x86_64 2>/dev/null`" = "1" ]
+                    then
+                        _default_MK_BUILD_ARCH="x86_64"
+                    else
+                        _default_MK_BUILD_ARCH="x86"
+                    fi
+                    ;;
+                *)
+                    mk_fail "unknown architecture: `uname -m`"
+                    ;;
+            esac
+            ;;
         solaris)
             _isainfo="`isainfo`"
             case "$_isainfo" in
@@ -303,6 +321,18 @@ option()
             __release="`uname -r`"
             _default_MK_BUILD_DISTRO="solaris"
             _default_MK_BUILD_DISTRO_VERSION="${__release#*.}"
+            ;;
+        darwin)
+            case "`sw_vers -productName 2>/dev/null`" in
+                "Mac OS X")
+                    _default_MK_BUILD_DISTRO="macosx"
+                    _default_MK_BUILD_DISTRO_VERSION="`sw_vers -productVersion`"
+                    ;;
+                *)
+                    _default_MK_BUILD_DISTRO="unknown"
+                    _default_MK_BUILD_DISTRO_VERSION="unknown"
+                    ;;
+            esac
             ;;
         *)
             _default_MK_BUILD_DISTRO="unknown"
@@ -461,6 +491,10 @@ configure()
             case "$MK_OS-$_isa" in
                 linux-*|solaris-*|freebsd-*)
                     mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".so"
+                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
+                    ;;
+                darwin-*)
+                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".dylib"
                     mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
                     ;;
             esac

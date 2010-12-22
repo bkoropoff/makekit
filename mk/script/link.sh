@@ -102,7 +102,17 @@ COMBINED_LDFLAGS="$LDFLAGS -L${LINK_LIBDIR}"
 COMBINED_LIBDIRS="$LIBDIRS"
 
 # SONAME
-[ -n "$SONAME" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-h,$SONAME"
+if [ -n "$SONAME" ]
+then
+    case "$MK_OS" in
+        darwin)
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -install_name ${MK_LIBDIR}/${SONAME}"
+            ;;
+        *)
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-h,$SONAME"
+            ;;
+    esac
+fi
 
 # Group suffix
 _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
@@ -132,9 +142,13 @@ esac
 
 case "${MK_OS}" in
     linux|freebsd)
+        DLO_LINK="-shared"
+        LIB_LINK="-shared"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-rpath,${RPATH_LIBDIR} -Wl,-rpath-link,${LINK_LIBDIR}"
         ;;
     solaris)
+        DLO_LINK="-shared"
+        LIB_LINK="-shared"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -R${RPATH_LIBDIR}"
         
         if [ "$MODE" = "library" ]
@@ -146,6 +160,10 @@ case "${MK_OS}" in
         # The solaris linker is anal retentive about implicit shared library dependencies,
         # so use available libtool .la files to add implicit dependencies to the link command
         combine_libtool_flags
+        ;;
+    darwin)
+        DLO_LINK="-bundle -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module"
+        LIB_LINK="-dynamiclib -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module"
         ;;
 esac
 
@@ -166,10 +184,10 @@ mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
 
 case "$MODE" in
     library)
-        mk_run_or_fail ${CPROG} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_or_fail ${CPROG} ${LIB_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
         ;;
     dlo)
-        mk_run_or_fail ${CPROG} -shared -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_or_fail ${CPROG} ${DLO_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
         ;;
     program)
         mk_run_or_fail ${CPROG} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} ${_LIBS}

@@ -74,6 +74,12 @@ then
     EXTRA_FLAGS="$EXTRA_FLAGS -fPIC"
 fi
 
+case "$MK_OS" in
+    darwin)
+        EXTRA_FLAGS="$EXTRA_FLAGS -fno-common"
+        ;;
+esac
+
 mk_msg "${_source#${MK_SOURCE_DIR}/} ($MK_CANONICAL_SYSTEM)"
 
 mk_mkdir "`dirname "$_object"`"
