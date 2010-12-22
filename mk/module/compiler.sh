@@ -54,9 +54,41 @@ mk_resolve_header()
 # Helper functions for make() stage
 #
 
+_mk_is_fat()
+{
+    [ "$MK_SYSTEM" = "host" -a "$MK_HOST_MULTIARCH" = "combine" ]
+}
+
+_mk_do_fat()
+{
+    # $1 = TARGET prefix
+    # $2 = TARGET suffix
+    # ... = command
+    # sets result to quoted list of results
+
+    _fat_parts=""
+    _fat_prefix="$1"
+    _fat_suffix="$2"
+    shift 2
+
+    for _isa in ${MK_HOST_ISAS}
+    do
+        SYSTEM="host/$_isa"
+        CANONICAL_SYSTEM="$SYSTEM"
+        TARGET="$_fat_prefix.host.$_isa$_fat_suffix"
+        "$@"
+        mk_quote "$result"
+        _fat_parts="$_fat_parts $result"    
+    done
+
+    result="${_fat_parts# }"
+    unset _fat_parts _fat_prefix _fat_suffix
+}
+
+
 _mk_compile()
 {
-    _object="${SOURCE%.*}${OSUFFIX}-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.o"
+    _object="${SOURCE%.*}${OSUFFIX}.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.o"
     
     unset _header_deps
 
@@ -77,6 +109,7 @@ _mk_compile()
     mk_target \
         TARGET="$_object" \
         DEPS="$DEPS $_header_deps $result" \
+        SYSTEM="$SYSTEM" \
         mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %COMPILER %PIC '$@' "$_res"
 }
 
@@ -86,7 +119,7 @@ _mk_compile_detect()
     case "${SOURCE##*.}" in
         c)
             COMPILER="c"
-                ;;
+            ;;
         cpp|cxx|cc|CC|C)
             COMPILER="c++"
             ;;
@@ -101,9 +134,12 @@ _mk_compile_detect()
 
 mk_compile()
 {
-    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC OSUFFIX COMPILER
+    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC OSUFFIX COMPILER SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM
     mk_parse_params
     
+    mk_canonical_system "$SYSTEM"
+    CANONICAL_SYSTEM="$result"
+
     _mk_compile_detect
     
     mk_pop_vars
@@ -240,30 +276,16 @@ _mk_library_process_version()
 _mk_library()
 {
     unset _deps _objects
-    
-    mk_comment "library ${LIB} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
 
-    mk_unquote_list "$LINKS"
+    mk_comment "library ${LIB} ($SYSTEM) from ${MK_SUBDIR#/}"
 
-    case "$INSTALL" in
-        no)
-            _library="$1"
-            ;;
-        *)
-            _library="$MK_LIBDIR/$1"
-            ;;
-    esac
-    
     # Create object prefix based on library name
-    _mk_slashless_name "-$LIB"
-    OSUFFIX="$result"
+    _mk_slashless_name "$LIB"
+    OSUFFIX=".$result"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
-    # Group suffix
-    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
-
     mk_unquote_list "$result"
     for SOURCE
     do
@@ -275,9 +297,9 @@ _mk_library()
     done
     
     mk_unquote_list "${GROUPS}"
-    for result
+    for _group in "$@"
     do
-        mk_quote "$result$_gsuffix"
+        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
         _deps="$_deps $result"
     done
     
@@ -293,39 +315,26 @@ _mk_library()
     ${IS_CXX} && COMPILER="c++"
 
     mk_target \
-        TARGET="$_library" \
+        SYSTEM="$SYSTEM" \
+        TARGET="$TARGET" \
         DEPS="${_deps}" \
         mk_run_script link \
         MODE=library \
-        LA="lib${LIB}.la" \
         %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %SONAME %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
-    
-    if [ "$INSTALL" != "no" ]
-    then
-        mk_add_all_target "$result"
-    fi
-
-    mk_unquote_list "$LINKS"
-    _last="$1"
-    shift
-
-    for _link
-    do
-        mk_symlink \
-            TARGET="$_last" \
-            LINK="${MK_LIBDIR}/$_link"
-        _last="$_link"
-    done
 }
 
 mk_library()
 {
     mk_push_vars \
-        INSTALL LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
+        INSTALLDIR="$MK_LIBDIR" LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
         HEADERDEPS LIBDIRS INCLUDEDIRS VERSION=0.0.0 DEPS OBJECTS \
-        SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" PIC=yes
+        SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" PIC=yes \
+        SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM TARGET
     mk_parse_params
+
+    mk_canonical_system "$SYSTEM"
+    CANONICAL_SYSTEM="$result"
 
     [ "$COMPILER" = "c++" ] && IS_CXX=true
     
@@ -338,12 +347,106 @@ mk_library()
     fi
 
     _mk_library_process_version
+
+    if _mk_is_fat
+    then
+        _mk_do_fat "lib$LIB" "$EXT" _mk_library "$@"
+        _PARTS="$result"
+
+        mk_unquote_list "$LINKS"
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}$1"
+
+        mk_comment "library ${LIB} (host) from ${MK_SUBDIR#/}"
+
+        mk_target \
+            TARGET="$TARGET" \
+            DEPS="$_PARTS" \
+            _mk_compiler_multiarch_combine "&$TARGET" "*$_PARTS"
+    else
+        mk_unquote_list "$LINKS"
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}$1"
+
+        mk_canonical_system "$SYSTEM"
+        CANONICAL_SYSTEM="$result"
+
+        _mk_library "$@"
+    fi
+
+    mk_unquote_list "$LINKS"
+    _last="$1"
+    shift
     
-    _mk_library "$@"
+    for _link
+    do
+        mk_symlink \
+                TARGET="$_last" \
+            LINK="${MK_LIBDIR}/$_link"
+        _last="$_link"
+    done
+    
+    mk_target \
+        TARGET="${MK_LIBDIR}/lib${LIB}.la" \
+        DEPS="$result" \
+        mk_run_script link MODE=la \
+        %LIBDEPS %LIBDIRS \
+        '$@'
+
+    mk_add_all_target "$result"
 
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     
     mk_pop_vars
+}
+
+_mk_dlo()
+{
+    unset _deps _objects
+    
+    mk_comment "dlo ${DLO} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
+    
+    # Create object prefix based on dlo name
+    _mk_slashless_name "$DLO"
+    OSUFFIX=".$result"
+
+    # Perform pathname expansion on SOURCES
+    mk_expand_pathnames "${SOURCES}"
+    mk_unquote_list "$result"
+    for SOURCE
+    do
+        _mk_compile_detect
+        
+        mk_quote "$result"
+        _deps="$_deps $result"
+        _objects="$_objects $result"
+        [ "$COMPILER" = "c++" ] && IS_CXX=true
+    done
+    
+    mk_unquote_list "${GROUPS}"
+    for _group in "$@"
+    do
+        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
+        _deps="$_deps $result"
+    done
+    
+    for _lib in ${LIBDEPS}
+    do
+        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
+        then
+            _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+        fi
+    done
+    
+    ${IS_CXX} && COMPILER="c++"
+
+    mk_target \
+        SYSTEM="$SYSTEM" \
+        TARGET="$TARGET" \
+        DEPS="$_deps" \
+        mk_run_script link \
+        MODE=dlo \
+        LA="${LIB}.la" \
+        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT %COMPILER \
+        '$@' "*${OBJECTS} ${_objects}"
 }
 
 mk_dlo()
@@ -352,8 +455,13 @@ mk_dlo()
         INSTALL DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION \
         OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE COMPILER=c \
-        IS_CXX=false OSUFFIX PIC=yes
+        IS_CXX=false OSUFFIX PIC=yes SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM
     mk_parse_params
+
+    [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
+
+    mk_canonical_system "$SYSTEM"
+    CANONICAL_SYSTEM="$result"
 
     [ "$COMPILER" = "c++" ] && IS_CXX=true
     
@@ -365,66 +473,42 @@ mk_dlo()
         _mk_process_symfile
     fi
 
-    unset _deps
-    
-    mk_comment "dlo ${DLO} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
-    
-    [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
+    if _mk_is_fat
+    then
+        _mk_do_fat "$DLO" "$EXT" _mk_dlo "$@"
+        _PARTS="$result"
 
-    case "$INSTALL" in
-        no)
-            _library="${DLO}${EXT}"
-            ;;
-        *)
-            _library="${INSTALLDIR}/${DLO}${EXT}"
-            ;;
-    esac
+        case "$INSTALL" in
+            no)
+                TARGET="${DLO}${EXT}"
+                ;;
+            *)
+                TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
+                ;;
+        esac
 
-    # Create object prefix based on dlo name
-    _mk_slashless_name "-$DLO"
-    OSUFFIX="$result"
+        mk_comment "library ${LIB} (host) from ${MK_SUBDIR#/}"
 
-    # Group suffix
-    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
+        mk_target \
+            TARGET="$TARGET" \
+            DEPS="$_PARTS" \
+            _mk_compiler_multiarch_combine "&$TARGET" "*$_PARTS"
+    else
+        case "$INSTALL" in
+            no)
+                TARGET="${DLO}${EXT}"
+                ;;
+            *)
+                TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
+                ;;
+        esac
 
-    # Perform pathname expansion on SOURCES
-    mk_expand_pathnames "${SOURCES}"
-    mk_unquote_list "$result"
-    for SOURCE
-    do
-        _mk_compile_detect
-        
-        mk_quote "$result"
-        _deps="$_deps $result"
-        OBJECTS="$OBJECTS $result"
-        [ "$COMPILER" = "c++" ] && IS_CXX=true
-    done
-    
-    mk_unquote_list "${GROUPS}"
-    for _group in "$@"
-    do
-        _deps="$_deps '$_group${_gsuffix}'"
-    done
-    
-    for _lib in ${LIBDEPS}
-    do
-        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
-        then
-            _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
-        fi
-    done
-    
-    ${IS_CXX} && COMPILER="c++"
+        mk_canonical_system "$SYSTEM"
+        CANONICAL_SYSTEM="$result"
 
-    mk_target \
-        TARGET="$_library" \
-        DEPS="$_deps" \
-        mk_run_script link \
-        MODE=dlo \
-        LA="${LIB}.la" \
-        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT %COMPILER \
-        '$@' "*${OBJECTS}"
-    
+        _mk_dlo "$@"
+    fi
+
     if [ "$INSTALL" != "no" ]
     then
         mk_add_all_target "$result"
@@ -433,26 +517,15 @@ mk_dlo()
     mk_pop_vars
 }
 
-mk_group()
+_mk_group()
 {
-    mk_push_vars \
-        GROUP SOURCES SOURCE CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
-        HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS \
-        COMPILER=c IS_CXX=false PIC=yes
-    mk_parse_params
+    unset _deps _objects
     
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
-
-    _mk_verify_libdeps "$GROUP" "$LIBDEPS"
-    _mk_verify_headerdeps "$GROUP" "$HEADERDEPS"
-
-    unset _deps
-    
-    mk_comment "group ${GROUP} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
+    mk_comment "group ${GROUP} ($SYSTEM) from ${MK_SUBDIR#/}"
 
     # Create object prefix based on group name
-    _mk_slashless_name "-$GROUP"
-    OSUFFIX="$result"
+    _mk_slashless_name "$GROUP"
+    OSUFFIX=".$result"
 
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
@@ -463,17 +536,15 @@ mk_group()
         _mk_compile_detect     
         mk_quote "$result"
         _deps="$_deps $result"
-        OBJECTS="$OBJECTS $result"
+        _objects="$_objects $result"
         [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
-    # Group suffix
-    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
-
     mk_unquote_list "${GROUPDEPS}"
     for _group in "$@"
     do
-        _deps="$_deps '$_group${_gsuffix}'"
+        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
+        _deps="$_deps $result"
     done
     
     for _lib in ${LIBDEPS}
@@ -487,64 +558,66 @@ mk_group()
     ${IS_CXX} && COMPILER="c++"
 
     mk_target \
-        TARGET="$GROUP${_gsuffix}" \
+        SYSTEM="$SYSTEM" \
+        TARGET="$TARGET" \
         DEPS="$_deps" \
-        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS %COMPILER '$@' "*${OBJECTS}"
-    
+        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"    
+}
+
+mk_group()
+{
+    mk_push_vars \
+        GROUP SOURCES SOURCE CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
+        HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS \
+        COMPILER=c IS_CXX=false PIC=yes SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM
+    mk_parse_params
+
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
+
+    if _mk_is_fat
+    then
+        _mk_do_fat "$GROUP" ".og" _mk_group "$@"
+
+        mk_target \
+            TARGET="$GROUP.host.og" \
+            DEPS="$result" \
+            mk_run_or_fail touch '$@'
+    else
+        mk_canonical_system "$SYSTEM"
+        CANONICAL_SYSTEM="$result"
+        TARGET="$GROUP.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
+
+        _mk_group "$@"
+        mk_quote "$result"
+        mk_target \
+            TARGET="$GROUP.${CANONICAL_SYSTEM%/*}.og" \
+            DEPS="$result" \
+            mk_run_or_fail touch '$@'
+    fi
+
+    _mk_verify_libdeps "$GROUP" "$LIBDEPS"
+    _mk_verify_headerdeps "$GROUP" "$HEADERDEPS"
+
     mk_pop_vars
 }
 
-mk_program()
+_mk_program()
 {
-    mk_push_vars \
-        PROGRAM SOURCES SOURCE OBJECTS GROUPS CPPFLAGS CFLAGS CXXFLAGS \
-        LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR INSTALL \
-        COMPILER=c IS_CXX=false PIC=yes OSUFFIX
-    mk_parse_params
+    unset _deps _objects
     
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
-
-    _mk_verify_libdeps "$PROGRAM" "$LIBDEPS"
-    _mk_verify_headerdeps "$PROGRAM" "$HEADERDEPS"
-
-    unset _deps
-    
-    if [ -z "$INSTALLDIR" ]
-    then
-            # Default to installing programs in bin dir
-        if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
-        then
-            INSTALLDIR="@${MK_RUN_BINDIR}"
-        else
-            INSTALLDIR="$MK_BINDIR"
-        fi
-    fi
-    
-    case "$INSTALL" in
-        no)
-            _executable="${PROGRAM}"
-            ;;
-        *)
-            _executable="${INSTALLDIR}/${PROGRAM}"
-            ;;
-    esac
-    
-    if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
+    if [ "${CANONICAL_SYSTEM%/*}" = "build" ]
     then
         _libdir="@${MK_RUNMK_LIBDIR}"
     else
         _libdir="$MK_LIBDIR"
     fi
     
-    mk_comment "program ${PROGRAM} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
+    mk_comment "program ${PROGRAM} ($SYSTEM) from ${MK_SUBDIR#/}"
 
     # Create object prefix based on program name
-    _mk_slashless_name "-$PROGRAM"
-    OSUFFIX="$result"
+    _mk_slashless_name "$PROGRAM"
+    OSUFFIX=".$result"
     
-    # Group suffix
-    _gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
-
     # Perform pathname expansion on SOURCES
     mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
     
@@ -554,14 +627,15 @@ mk_program()
         _mk_compile_detect
         mk_quote "$result"
         _deps="$_deps $result"
-        OBJECTS="$OBJECTS $result"
+        _objects="$_objects $result"
         [ "$COMPILER" = "c++" ] && IS_CXX=yes
     done
     
     mk_unquote_list "${GROUPS}"
     for _group in "$@"
     do
-        _deps="$_deps '$_group${_gsuffix}'"
+        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
+        _deps="$_deps $result"
     done
     
     for _lib in ${LIBDEPS}
@@ -575,9 +649,54 @@ mk_program()
     ${IS_CXX} && COMPILER="c++"
     
     mk_target \
-        TARGET="$_executable" \
+        SYSTEM="$SYSTEM" \
+        TARGET="$TARGET" \
         DEPS="$_deps" \
-        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS %COMPILER '$@' "*${OBJECTS}"
+        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"
+}
+
+mk_program()
+{
+    mk_push_vars \
+        PROGRAM SOURCES SOURCE OBJECTS GROUPS CPPFLAGS CFLAGS CXXFLAGS \
+        LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR \
+        COMPILER=c IS_CXX=false PIC=yes OSUFFIX SYSTEM="$MK_SYSTEM" \
+        CANONICAL_SYSTEM EXT=""
+    mk_parse_params
+
+    if [ -z "$INSTALLDIR" ]
+    then
+        # Default to installing programs in bin dir
+        if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
+        then
+            INSTALLDIR="@${MK_RUN_BINDIR}"
+        else
+            INSTALLDIR="$MK_BINDIR"
+        fi
+    fi
+
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
+
+    _mk_verify_libdeps "$PROGRAM" "$LIBDEPS"
+    _mk_verify_headerdeps "$PROGRAM" "$HEADERDEPS"
+
+    if _mk_is_fat
+    then
+        _mk_do_fat "$PROGRAM" "$EXT" _mk_program "$@"
+
+        TARGET="$INSTALLDIR/$PROGRAM$EXT"
+
+        mk_target \
+            TARGET="$TARGET" \
+            DEPS="$result" \
+            _mk_compiler_multiarch_combine "&$TARGET" "*$result"
+    else
+        mk_canonical_system "$SYSTEM"
+        CANONICAL_SYSTEM="$result"
+        TARGET="$INSTALLDIR/$PROGRAM$EXT"
+
+        _mk_program "$@"
+    fi
     
     if [ "$INSTALL" != "no" ]
     then
@@ -1480,23 +1599,39 @@ option()
             _mk_define_name "$_sys/${_isa}"
             _def="$result"
 
-            _mk_define_name "MK_${_sys}_ARCH"
+            _mk_define_name "MK_${_sys}_OS"
             mk_get "$result"
             
             case "${MK_DEFAULT_CC}-${result}-${_isa}" in
-                *-x86*-x86_32)
+                *-darwin-x86_32)
+                    _default_cc="$MK_DEFAULT_CC -arch i386"
+                    _default_cxx="$MK_DEFAULT_CXX -arch i386"
+                    ;;
+                *-darwin-x86_64)
+                    _default_cc="$MK_DEFAULT_CC -arch x86_64"
+                    _default_cxx="$MK_DEFAULT_CXX -arch x86_64"
+                    ;;
+                *-darwin-ppc32)
+                    _default_cc="$MK_DEFAULT_CC -arch ppc"
+                    _default_cxx="$MK_DEFAULT_CXX -arch ppc"
+                    ;;
+                *-darwin-ppc64)
+                    _default_cc="$MK_DEFAULT_CC -arch ppc64"
+                    _default_cxx="$MK_DEFAULT_CXX -arch ppc64"
+                    ;;
+                *-*-x86_32)
                     _default_cc="$MK_DEFAULT_CC -m32"
                     _default_cxx="$MK_DEFAULT_CXX -m32"
                     ;;
-                *-x86*-x86_64)
+                *-*-x86_64)
                     _default_cc="$MK_DEFAULT_CC -m64"
                     _default_cxx="$MK_DEFAULT_CXX -m64"
                     ;;
-                *-sparc*-sparc_32)
+                *-*-sparc_32)
                     _default_cc="$MK_DEFAULT_CC -m32"
                     _default_cxx="$MK_DEFAULT_CXX -m32"
                     ;;
-                *-sparc*-sparc_64)
+                *-*-sparc_64)
                     _default_cc="$MK_DEFAULT_CC -m64"
                     _default_cxx="$MK_DEFAULT_CXX -m64"
                     ;;
@@ -1605,4 +1740,24 @@ configure()
 _mk_compiler_preconfigure()
 {
     MK_CHECK_LANG="c"
+}
+
+### section build
+
+_mk_compiler_multiarch_combine()
+{
+    mk_msg_domain "combine"
+
+    mk_msg "${1#$MK_STAGE_DIR} (${MK_SYSTEM})"
+    
+    mk_mkdir "${1%/*}"
+
+    case "$MK_OS" in
+        darwin)
+            mk_run_or_fail lipo -create -output "$@"
+            ;;
+        *)
+            mk_fail "unsupported OS"
+            ;;
+    esac
 }

@@ -26,8 +26,6 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-MK_MSG_DOMAIN="link"
-
 combine_libtool_flags()
 {
     for _lib in ${COMBINED_LIBDEPS}
@@ -71,13 +69,11 @@ create_libtool_archive()
 {
     # Create a fake .la file that can be used by combine_libtool_flags
     # This should be expanded upon for full compatibility with libtool
-    mk_msg_verbose "$LA"
-    
     {
         mk_quote "-L${RPATH_LIBDIR} $_LIBS"
         echo "# Created by MakeKit"
         echo "dependency_libs=$result"
-    } > "${MK_STAGE_DIR}${MK_LIBDIR}/$LA" || mk_fail "could not write $LA"
+    } > "$object" || mk_fail "could not write $object"
 }
 
 object="$1"
@@ -98,8 +94,10 @@ else
 fi
 
 COMBINED_LIBDEPS="$LIBDEPS"
-COMBINED_LDFLAGS="$LDFLAGS -L${LINK_LIBDIR}"
+COMBINED_LDFLAGS="$LDFLAGS"
 COMBINED_LIBDIRS="$LIBDIRS"
+
+[ -d "$LINK_LIBDIR" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS -L${LINK_LIBDIR}"
 
 # SONAME
 if [ -n "$SONAME" ]
@@ -115,7 +113,7 @@ then
 fi
 
 # Group suffix
-_gsuffix="-${MK_CANONICAL_SYSTEM%/*}-${MK_CANONICAL_SYSTEM#*/}.og"
+_gsuffix=".${MK_CANONICAL_SYSTEM%/*}.${MK_CANONICAL_SYSTEM#*/}.og"
 
 for _group in ${GROUPS}
 do
@@ -162,8 +160,9 @@ case "${MK_OS}" in
         combine_libtool_flags
         ;;
     darwin)
-        DLO_LINK="-bundle -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module"
-        LIB_LINK="-dynamiclib -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module"
+        DLO_LINK="-bundle"
+        LIB_LINK="-dynamiclib"
+        COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module -Wl,-arch_errors_fatal"
         ;;
 esac
 
@@ -175,21 +174,24 @@ done
 [ "${object%/*}" != "${object}" ] && mk_mkdir "${object%/*}"
 
 case "$MODE" in
-    library|dlo)
-        create_libtool_archive
-        ;;
-esac
-
-mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
-
-case "$MODE" in
     library)
+        mk_msg_domain "link"
+        mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
         mk_run_or_fail ${CPROG} ${LIB_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
         ;;
     dlo)
+        mk_msg_domain "link"
+        mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
         mk_run_or_fail ${CPROG} ${DLO_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} -fPIC ${_LIBS}
         ;;
     program)
+        mk_msg_domain "link"
+        mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
         mk_run_or_fail ${CPROG} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${MK_LDFLAGS} ${_LIBS}
+        ;;
+    la)
+        mk_msg_domain "la"
+        mk_msg "${object#${MK_STAGE_DIR}} ($MK_SYSTEM)"
+        create_libtool_archive
         ;;
 esac
