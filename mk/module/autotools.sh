@@ -139,7 +139,7 @@ mk_autotools()
         mk_run_script \
         at-configure \
         %SOURCEDIR %BUILDDIR %CPPFLAGS %CFLAGS %CXXFLAGS %LDFLAGS \
-        DIR="$dir" '$@' "$@"
+        DIR="$dir" '$@' "$@" "*$_MK_AT_PASS_VARS"
 
     __configure_stamp="$result"
 
@@ -237,12 +237,26 @@ option()
         VAR=MK_AT_HOST_STRING \
         DEFAULT="$result" \
         HELP="Host system string"
+
+    mk_option \
+        OPTION="at-pass-vars" \
+        VAR=MK_AT_PASS_VARS \
+        DEFAULT="" \
+        HELP="List of additional variables to pass when configuring"
 }
 
 configure()
 {
     mk_msg "build system string: $MK_AT_BUILD_STRING"
     mk_msg "host system string: $MK_AT_HOST_STRING"
+    mk_msg "pass-through variables: $MK_AT_PASS_VARS"
 
     mk_export MK_AT_BUILD_STRING MK_AT_HOST_STRING
+
+    _MK_AT_PASS_VARS=""
+
+    for _var in ${MK_AT_PASS_VARS}
+    do
+        _MK_AT_PASS_VARS="${_MK_AT_PASS_VARS} %$_var"
+    done
 }
