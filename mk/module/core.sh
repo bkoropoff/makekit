@@ -296,7 +296,7 @@ _mk_rule()
 
     if [ -n "$__command" ]
     then
-        _mk_emitf '\n%s: %s\n\t@$(MK_CONTEXT) "%s"; mk_system "%s"; \\\n\t%s\n' "$__lhs" "${*# }" "$MK_SUBDIR" "$MK_SYSTEM" "${__command# }"
+        _mk_emitf '\n%s: %s\n\t@$(MK_CONTEXT) "%s"; mk_system "%s"; \\\n\t%s\n' "$__lhs" "${*# }" "$MK_SUBDIR" "$SYSTEM" "${__command# }"
     else
         _mk_emitf '\n%s: %s\n' "$__lhs" "${*# }"
     fi
@@ -347,7 +347,7 @@ _mk_build_command_expand()
 
 mk_target()
 {
-    mk_push_vars TARGET DEPS
+    mk_push_vars TARGET DEPS SYSTEM="$MK_SYSTEM"
     mk_parse_params
 
     __resolved=""
@@ -696,13 +696,13 @@ option()
 configure()
 {
     # Default clean targets
-    MK_CLEAN_TARGETS="${MK_RUN_DIR}"
+    MK_CLEAN_TARGETS="@${MK_RUN_DIR}"
 
     # Default scrub targets
     MK_SCRUB_TARGETS="${MK_STAGE_DIR}"
 
     # Default nuke targets (scrub targets implicitly included)
-    MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps"
+    MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps .MakeKitClean"
 
     # Add a post-make() hook to write out a rule
     # to build all relevant targets in that subdirectory
@@ -731,9 +731,15 @@ make()
 
     mk_add_phony_target "$result"
 
+    mk_unquote_list "$MK_CLEAN_TARGETS"
+    for _clean
+    do
+        echo "${_clean#@}"
+    done > .MakeKitClean || mk_fail "could not write .MakeKitClean"
+
     mk_target \
         TARGET="@clean" \
-        mk_run_script clean '$(SUBDIR)' "*$MK_CLEAN_TARGETS"
+        mk_run_script clean '$(SUBDIR)'
 
     mk_add_phony_target "$result"
 
