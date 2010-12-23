@@ -588,11 +588,6 @@ mk_group()
         TARGET="$GROUP.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
 
         _mk_group "$@"
-        mk_quote "$result"
-        mk_target \
-            TARGET="$GROUP.${CANONICAL_SYSTEM%/*}.og" \
-            DEPS="$result" \
-            mk_run_or_fail touch '$@'
     fi
 
     _mk_verify_libdeps "$GROUP" "$LIBDEPS"
