@@ -51,6 +51,9 @@ combine_libtool_flags()
                                     _mk_contains "${_dep#-l}" ${COMBINED_LIBDEPS} ||
                                     COMBINED_LIBDEPS="${COMBINED_LIBDEPS} ${_dep#-l}"
                                     ;;
+                                "-L${MK_LIBDIR}")
+                                    continue
+                                    ;;
                                 "-L"*)
                                     _mk_contains "${_dep}" ${COMBINED_LDFLAGS} ||
                                     COMBINED_LDFLAGS="$COMBINED_LDFLAGS $_dep"
