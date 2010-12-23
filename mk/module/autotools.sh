@@ -309,7 +309,7 @@ mk_autotools()
 
 option()
 {
-    _mk_at_system_string BUILD
+    _mk_at_system_string BUILD "${MK_BUILD_PRIMARY_ISA}"
 
     mk_option \
         OPTION="at-build-string" \
@@ -318,12 +318,22 @@ option()
         HELP="Build system string"
 
     for _isa in ${MK_HOST_ISAS}
-    do
+    do   
         _mk_define_name "$_isa"
         _var="MK_AT_HOST_STRING_$result"
         _option="at-host-string-$(echo $_isa | tr '_' '-')"
 
-        _mk_at_system_string HOST "$_isa"
+        # If the build system supports the ISA,
+        # make the host string match the build string.
+        # This avoids triggering the 'cross compiling'
+        # check in many projects when building x86_32
+        # on x86_64, etc.
+        if _mk_contains "$_isa" ${MK_BUILD_ISAS}
+        then
+            result="$MK_AT_BUILD_STRING"
+        else
+            _mk_at_system_string HOST "$_isa"
+        fi
 
         mk_option \
             OPTION="$_option" \
