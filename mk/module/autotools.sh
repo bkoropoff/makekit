@@ -60,11 +60,16 @@ _mk_at_system_string()
             ;;
     esac
 
-    mk_get "MK_${1}_ARCH"
-
-    case "${result}" in
-        x86)
-            __arch="i686-pc"
+    case "${2}" in
+        x86_32)
+            case "$__os" in
+                darwin*)
+                    __arch="i386-apple"
+                    ;;
+                *)
+                    __arch="i686-pc"
+                    ;;
+            esac
             ;;
         x86_64)
             case "$__os" in
@@ -73,6 +78,26 @@ _mk_at_system_string()
                     ;;
                 *)
                     __arch="x86_64-unknown"
+                    ;;
+            esac
+            ;;
+        ppc32)
+            case "$__os" in
+                darwin*)
+                    __arch="ppc-apple"
+                    ;;
+                *)
+                    __arch="ppc-unknown"
+                    ;;
+            esac
+            ;;
+        ppc64)
+            case "$__os" in
+                darwin*)
+                    __arch="ppc64-apple"
+                    ;;
+                *)
+                    __arch="ppc64-unknown"
                     ;;
             esac
             ;;
@@ -87,14 +112,8 @@ _mk_at_system_string()
     result="${__arch}-${__os}"
 }
 
-mk_autotools()
+_mk_autotools()
 {
-    mk_push_vars \
-        SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
-        CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SELECT \
-        BUILDDIR DEPS prefix dirname
-    mk_parse_params
-    
     unset _stage_deps
 
     if [ -n "$SOURCEDIR" ]
@@ -107,7 +126,7 @@ mk_autotools()
         dirname="$PROJECT_NAME"
     fi
     
-    mk_comment "autotools source component $dirname ($MK_SYSTEM)"
+    mk_comment "autotools source component $dirname ($SYSTEM)"
 
     for _lib in ${LIBDEPS}
     do
@@ -127,13 +146,14 @@ mk_autotools()
         fi
     done
 
-    _mk_slashless_name "${SOURCEDIR:-build}/${MK_CANONICAL_SYSTEM}"
+    _mk_slashless_name "${SOURCEDIR:-build}/${CANONICAL_SYSTEM}"
     BUILDDIR="$result"
 
     mk_resolve_target "$BUILDDIR"
     mk_add_clean_target "$result"
 
     mk_target \
+        SYSTEM="$SYSTEM" \
         TARGET=".${BUILDDIR}_configure" \
         DEPS="$DEPS ${_stage_deps}" \
         mk_run_script \
@@ -144,14 +164,81 @@ mk_autotools()
     __configure_stamp="$result"
 
     mk_target \
+        SYSTEM="$SYSTEM" \
         TARGET=".${BUILDDIR}_build" \
         DEPS="'$__configure_stamp'" \
         mk_run_script \
         at-build \
-        %SYSTEM %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
+        %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
         MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
+}
 
-    __build_stamp="$result"
+mk_autotools()
+{
+    mk_push_vars \
+        SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
+        CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SELECT \
+        BUILDDIR DEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
+        prefix dirname
+    mk_parse_params
+    
+    if [ "$MK_SYSTEM" = "host" -a "$MK_HOST_MULTIARCH" = "combine" ]
+    then
+        parts=""
+
+        for _isa in ${MK_HOST_ISAS}
+        do
+            SYSTEM="host/$_isa"
+            CANONICAL_SYSTEM="$SYSTEM"
+
+            _mk_autotools "$@"
+            mk_quote "$result"
+            stamp="$result"
+
+            mk_resolve_file ".${BUILDDIR}_install"
+            DESTDIR="$result"
+
+            mk_target \
+                SYSTEM="$SYSTEM" \
+                TARGET="@$DESTDIR" \
+                DEPS="$stamp" \
+                mk_run_script \
+                at-install \
+                DESTDIR="$DESTDIR" \
+                %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
+                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
+            mk_quote "$result"
+            parts="$parts $result"
+        done
+
+        _mk_slashless_name "${SOURCEDIR:-build}_host"
+
+        mk_target \
+            TARGET=".${result}_stage" \
+            DEPS="$parts" \
+            mk_run_script at-combine '$@' "*$parts"
+        stamp="$result"
+    else
+        mk_canonical_system "$SYSTEM"
+        CANONICAL_SYSTEM="$result"
+
+        _mk_autotools "$@"
+        if [ "$INSTALL" != "no" ]
+        then
+            mk_quote "$result"
+            
+            mk_target \
+                SYSTEM="$SYSTEM" \
+                TARGET=".${BUILDDIR}_stage" \
+                DEPS="$result" \
+                mk_run_script \
+                at-install \
+                DESTDIR="${MK_STAGE_DIR}" \
+                %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
+                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
+        fi
+        stamp="$result"
+    fi
 
     # Add dummy rules for target built by this component
     for _header in ${HEADERS}
@@ -160,7 +247,7 @@ mk_autotools()
         
         mk_target \
             TARGET="$result" \
-            DEPS="'$__build_stamp'"
+            DEPS="'$stamp'"
 
         mk_add_all_target "$result"
 
@@ -171,7 +258,7 @@ mk_autotools()
     do
         mk_target \
             TARGET="${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}" \
-            DEPS="'$__build_stamp'"
+            DEPS="'$stamp'"
 
         mk_add_all_target "$result"
 
@@ -182,7 +269,7 @@ mk_autotools()
     do
         mk_target \
             TARGET="@${MK_OBJECT_DIR}/build-run/bin/${_program}" \
-            DEPS="'$__build_stamp'"
+            DEPS="'$stamp'"
 
         MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $_program"
     done
@@ -191,7 +278,7 @@ mk_autotools()
     do
         mk_target \
             TARGET="$_target" \
-            DEPS="'$__build_stamp'"
+            DEPS="'$stamp'"
     done
 
     if [ -n "$SOURCEDIR" ]
@@ -199,7 +286,7 @@ mk_autotools()
         # Add convenience rule for building just this component
         mk_target \
             TARGET="@${MK_SUBDIR:+${MK_SUBDIR#/}/}$SOURCEDIR" \
-            DEPS="$__build_stamp"
+            DEPS="$stamp"
         mk_add_phony_target "$result"
     fi
 
@@ -230,13 +317,20 @@ option()
         DEFAULT="$result" \
         HELP="Build system string"
 
-    _mk_at_system_string HOST
+    for _isa in ${MK_HOST_ISAS}
+    do
+        _mk_define_name "$_isa"
+        _var="MK_AT_HOST_STRING_$result"
+        _option="at-host-string-$(echo $_isa | tr '_' '-')"
 
-    mk_option \
-        OPTION="at-host-string" \
-        VAR=MK_AT_HOST_STRING \
-        DEFAULT="$result" \
-        HELP="Host system string"
+        _mk_at_system_string HOST "$_isa"
+
+        mk_option \
+            OPTION="$_option" \
+            VAR="$_var" \
+            DEFAULT="$result" \
+            HELP="Host system string ($_isa)"
+    done
 
     mk_option \
         OPTION="at-pass-vars" \
@@ -248,10 +342,20 @@ option()
 configure()
 {
     mk_msg "build system string: $MK_AT_BUILD_STRING"
-    mk_msg "host system string: $MK_AT_HOST_STRING"
-    mk_msg "pass-through variables: $MK_AT_PASS_VARS"
 
-    mk_export MK_AT_BUILD_STRING MK_AT_HOST_STRING
+    mk_export MK_AT_BUILD_STRING
+
+    mk_declare_system_var MK_AT_HOST_STRING
+    
+    for _isa in ${MK_HOST_ISAS}
+    do
+        _mk_define_name "$_isa"
+        mk_get "MK_AT_HOST_STRING_$result"
+        mk_msg "host system string ($_isa): $result"
+        mk_set_system_var SYSTEM="host/$_isa" MK_AT_HOST_STRING "$result"
+    done
+
+    mk_msg "pass-through variables: $MK_AT_PASS_VARS"
 
     _MK_AT_PASS_VARS=""
 
