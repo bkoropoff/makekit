@@ -36,7 +36,7 @@
 
 alias mk_multiarch_do='for __sys in ${_MK_MULTIARCH_SYS}; do mk_system "$__sys"'
 alias mk_multiarch_done='done; mk_system "host"'
-alias mk_compat_do='for __sys in ${_MK_COMPAT_SYS}; do mk_system "host/$__isa"'
+alias mk_compat_do='for __sys in ${_MK_COMPAT_SYS}; do mk_system "$__sys"'
 alias mk_compat_done='done; mk_system "host"'
 
 mk_get_system_var()
