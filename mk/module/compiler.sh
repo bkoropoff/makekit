@@ -698,14 +698,11 @@ mk_program()
         _mk_program "$@"
     fi
     
-    if [ "$INSTALL" != "no" ]
+    if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
     then
-        if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
-        then
-            MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
-        else
-            mk_add_all_target "$result"
-        fi
+        MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
+    else
+        mk_add_all_target "$result"
     fi
     
     mk_pop_vars
