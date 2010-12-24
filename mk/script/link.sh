@@ -135,19 +135,21 @@ ${IS_CXX} && COMPILER="c++"
 case "$COMPILER" in
     c)
         CPROG="$MK_CC"
+        LD_STYLE="$MK_CC_LD_STYLE"
         ;;
     c++)
         CPROG="$MK_CXX"
+        LD_STYLE="$MK_CXX_LD_STYLE"
         ;;
 esac
 
-case "${MK_OS}" in
-    linux|freebsd)
+case "${MK_OS}:${LD_STYLE}" in
+    *:gnu)
         DLO_LINK="-shared"
         LIB_LINK="-shared"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-rpath,${RPATH_LIBDIR} -Wl,-rpath-link,${LINK_LIBDIR}"
         ;;
-    solaris)
+    solaris:native)
         DLO_LINK="-shared"
         LIB_LINK="-shared"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -R${RPATH_LIBDIR}"
@@ -162,7 +164,7 @@ case "${MK_OS}" in
         # so use available libtool .la files to add implicit dependencies to the link command
         combine_libtool_flags
         ;;
-    darwin)
+    darwin:native)
         DLO_LINK="-bundle"
         LIB_LINK="-dynamiclib"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module -Wl,-arch_errors_fatal"

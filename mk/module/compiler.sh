@@ -1672,10 +1672,77 @@ option()
     done
 }
 
+_mk_compile_primitive()
+{
+    cat >.check.c || mk_fail "could not write .check.c"
+    ${MK_CC} ${MK_CFLAGS} -o .check.o -c .check.c
+    _res="$?"
+    rm -f .check.o .check.c
+    return "$_res"
+}
+
+_mk_check_cc_style()
+{
+    mk_msg_checking "C compiler style"
+    if cat <<EOF | _mk_compile_primitive >/dev/null 2>&1
+#ifndef __GNUC__
+#error nope
+#endif
+EOF
+    then
+        result="gcc"
+    else
+        result="unknown"
+    fi
+    
+    MK_CC_STYLE="$result"
+    mk_msg_result "$MK_CC_STYLE"
+}
+
+_mk_check_cc_ld_style()
+{
+    mk_msg_checking "C compiler linker style"
+
+    case "$MK_CC_STYLE" in
+        gcc)
+            _ld="`${MK_CC} -print-prog-name=ld`"
+            case "`ld -v 2>&1`" in
+                *"GNU"*)
+                    result="gnu"
+                    ;;
+                *)
+                    result="native"
+                    ;;
+            esac
+            ;;
+        *)
+            result="native"
+    esac
+
+    MK_CC_LD_STYLE="$result"
+    mk_msg_result "$MK_CC_LD_STYLE"
+}
+
+_mk_compiler_check()
+{
+    for _sys in build host
+    do
+        mk_system "$_sys"
+
+        for _isa in ${MK_ISAS}
+        do
+            mk_system "$_sys/$_isa"
+
+            _mk_check_cc_style
+            _mk_check_cc_ld_style
+        done
+    done
+}
+
 configure()
 {
     mk_export MK_CONFIG_HEADER=""
-    mk_declare_system_var MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS
+    mk_declare_system_var MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS MK_CC_STYLE MK_CC_LD_STYLE
     mk_declare_system_var EXPORT=no MK_INTERNAL_LIBS
 
     mk_msg "default C compiler: $MK_DEFAULT_CC"
@@ -1720,6 +1787,8 @@ configure()
             mk_set_system_var SYSTEM="$_sys/$_isa" MK_LDFLAGS "$result"
         done
     done
+
+    _mk_compiler_check
 
     # Each invocation of mk_config_header closes and finishes up
     # the previous header.  In order to close the final config
