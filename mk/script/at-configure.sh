@@ -33,7 +33,7 @@ MK_MSG_DOMAIN="configure"
 
 if [ -n "$SOURCEDIR" ]
 then
-    dirname="${MK_SUBDIR#/}/$SOURCEDIR"
+    dirname="${MK_SUBDIR:+${MK_SUBDIR#/}/}$SOURCEDIR"
 elif [ -n "$MK_SUBDIR" ]
 then
     dirname="${MK_SUBDIR#/}"
@@ -67,7 +67,8 @@ else
     _localstatedir="$MK_LOCALSTATEDIR"
 fi
 
-_src_dir="`cd ${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR} && pwd`"
+mk_resolve_file "$SOURCEDIR"
+_src_dir="`cd $result && pwd`"
 _stage_dir="`cd ${MK_STAGE_DIR} && pwd`"
 _include_dir="${_stage_dir}${_includedir}"
 _lib_dir="${_stage_dir}${_libdir}"
@@ -95,6 +96,12 @@ case "$MK_OS" in
         _ldflags="-L${_lib_dir}"
         ;;
 esac
+
+if [ -d "$MK_RUN_BINDIR" ]
+then
+    PATH="`cd $MK_RUN_BINDIR && pwd`:$PATH"
+    export PATH
+fi
 
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" && \
 mk_run_quiet_or_fail "${_src_dir}/configure" \

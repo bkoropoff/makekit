@@ -30,7 +30,7 @@ mk_msg_domain "stage"
 
 if [ -n "$SOURCEDIR" ]
 then
-    dirname="${MK_SUBDIR#/}/$SOURCEDIR"
+    dirname="${MK_SUBDIR:+${MK_SUBDIR#/}/}$SOURCEDIR"
 elif [ -n "$MK_SUBDIR" ]
 then
     dirname="${MK_SUBDIR#/}"
@@ -44,6 +44,13 @@ mk_msg "begin ${__msg}"
 _stamp="$1"
 mk_mkdir "${DESTDIR}"
 _stage_dir="`cd "${DESTDIR}" && pwd`"
+
+if [ -d "$MK_RUN_BINDIR" ]
+then
+    PATH="`cd $MK_RUN_BINDIR && pwd`:$PATH"
+    export PATH
+fi
+
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" || mk_fail "could not change directory"
 if [ "${MK_SYSTEM%/*}" = "build" ]
 then

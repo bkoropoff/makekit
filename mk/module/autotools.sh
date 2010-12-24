@@ -118,7 +118,7 @@ _mk_autotools()
 
     if [ -n "$SOURCEDIR" ]
     then
-        dirname="${MK_SUBDIR#/}/$SOURCEDIR"
+        dirname="${MK_SUBDIR:+${MK_SUBDIR#/}/}$SOURCEDIR"
     elif [ -n "$MK_SUBDIR" ]
     then
         dirname="${MK_SUBDIR#/}"
@@ -182,6 +182,24 @@ mk_autotools()
         prefix dirname
     mk_parse_params
     
+    if ! [ -d "${MK_SOURCE_DIR}${MK_SUBDIR}/$SOURCEDIR" ]
+    then
+        mk_quote "$SOURCEDIR"
+        DEPS="$DEPS $result"
+    elif ! [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/configure" ]
+    then
+        if [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/autogen.sh" ]
+        then
+            mk_msg "running autogen.sh for ${dirname}"
+            cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail "./autogen.sh"
+            cd "${MK_ROOT_DIR}"
+        else
+            mk_msg "running autoreconf for ${dirname}"
+            cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail autoreconf -fi
+            cd "${MK_ROOT_DIR}"
+        fi
+    fi
+    
     if [ "$MK_SYSTEM" = "host" -a "$MK_HOST_MULTIARCH" = "combine" ]
     then
         parts=""
@@ -240,6 +258,8 @@ mk_autotools()
         stamp="$result"
     fi
 
+    mk_add_all_target "$stamp"
+
     # Add dummy rules for target built by this component
     for _header in ${HEADERS}
     do
@@ -290,20 +310,7 @@ mk_autotools()
         mk_add_phony_target "$result"
     fi
 
-    if ! [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/configure" ]
-    then
-        if [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/autogen.sh" ]
-        then
-            mk_msg "running autogen.sh for ${dirname}"
-            cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail "./autogen.sh"
-            cd "${MK_ROOT_DIR}"
-        else
-            mk_msg "running autoreconf for ${dirname}"
-            cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail autoreconf -fi
-            cd "${MK_ROOT_DIR}"
-        fi
-    fi
-
+    result="$stamp"
     mk_pop_vars
 }
 
