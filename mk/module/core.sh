@@ -435,6 +435,11 @@ mk_symlink()
     [ -z "$LINK" ] && LINK="$2"
 
     case "$TARGET" in
+        @*)
+            mk_quote "$TARGET"
+            DEPS="$DEPS $result"
+            TARGET="${TARGET#@}"
+            ;;
         /*)
             mk_quote "$TARGET"
             DEPS="$DEPS $result"
@@ -564,6 +569,14 @@ mk_add_scrub_target()
     mk_push_vars result
     mk_quote "${1#@}"
     MK_SCRUB_TARGETS="$MK_SCRUB_TARGETS $result"
+    mk_pop_vars
+}
+
+mk_add_nuke_target()
+{
+    mk_push_vars result
+    mk_quote "${1#@}"
+    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $result"
     mk_pop_vars
 }
 
