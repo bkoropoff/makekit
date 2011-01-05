@@ -358,10 +358,12 @@ mk_library()
 
         mk_comment "library ${LIB} (host) from ${MK_SUBDIR#/}"
 
+        mk_resolve_target "$TARGET"
+
         mk_target \
-            TARGET="$TARGET" \
+            TARGET="$result" \
             DEPS="$_PARTS" \
-            _mk_compiler_multiarch_combine "&$TARGET" "*$_PARTS"
+            _mk_compiler_multiarch_combine "$result" "*$_PARTS"
     else
         mk_unquote_list "$LINKS"
         TARGET="${INSTALLDIR:+$INSTALLDIR/}$1"
@@ -489,10 +491,12 @@ mk_dlo()
 
         mk_comment "library ${LIB} (host) from ${MK_SUBDIR#/}"
 
+        mk_resolve_target "$TARGET"
+
         mk_target \
-            TARGET="$TARGET" \
+            TARGET="$result" \
             DEPS="$_PARTS" \
-            _mk_compiler_multiarch_combine "&$TARGET" "*$_PARTS"
+            _mk_compiler_multiarch_combine "$result" "*$_PARTS"
     else
         case "$INSTALL" in
             no)
@@ -678,13 +682,14 @@ mk_program()
     if _mk_is_fat
     then
         _mk_do_fat "$PROGRAM" "$EXT" _mk_program "$@"
+        _deps="$result"
 
-        TARGET="$INSTALLDIR/$PROGRAM$EXT"
+        mk_resolve_target "$INSTALLDIR/$PROGRAM$EXT"
 
         mk_target \
-            TARGET="$TARGET" \
-            DEPS="$result" \
-            _mk_compiler_multiarch_combine "&$TARGET" "*$result"
+            TARGET="$result" \
+            DEPS="$_deps" \
+            _mk_compiler_multiarch_combine "$result" "*$_deps"
     else
         mk_canonical_system "$SYSTEM"
         CANONICAL_SYSTEM="$result"

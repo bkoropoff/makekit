@@ -340,7 +340,6 @@ _mk_build_command()
 
 _mk_build_command_expand()
 {
-    
     mk_unquote_list "$1"
     _mk_build_command "$@"
 }
@@ -468,13 +467,13 @@ mk_stage()
     if [ -n "$SOURCE" -a -n "$DEST" ]
     then
         mk_quote "$SOURCE"
+        SOURCE="$result"
+        mk_quote "$DEST"
         mk_target \
             TARGET="$DEST" \
-            DEPS="$result $DEPS" \
-            _mk_core_stage "&$DEST" "&$SOURCE" "$MODE"
-        _result="$result"
+            DEPS="$SOURCE $DEPS" \
+            _mk_core_stage "&$result" "&$SOURCE" "$MODE"
         mk_add_all_target "$result"
-        result="$_result"
     elif [ -n "$SOURCE" -a -n "$DESTDIR" ]
     then
         mk_stage \
