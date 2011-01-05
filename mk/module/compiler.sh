@@ -120,7 +120,7 @@ _mk_compile_detect()
         c)
             COMPILER="c"
             ;;
-        cpp|cxx|cc|CC|C)
+        [cC][pP]|[cC][pP][pP]|[cC][xX][xX]|[cC][cC]|C)
             COMPILER="c++"
             ;;
         *)
