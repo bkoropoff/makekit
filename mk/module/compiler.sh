@@ -623,7 +623,7 @@ _mk_program()
         mk_quote "$result"
         _deps="$_deps $result"
         _objects="$_objects $result"
-        [ "$COMPILER" = "c++" ] && IS_CXX=yes
+        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
     mk_unquote_list "${GROUPS}"
