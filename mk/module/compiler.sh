@@ -1672,7 +1672,7 @@ option()
     done
 }
 
-_mk_compile_primitive()
+_mk_cc_primitive()
 {
     cat >.check.c || mk_fail "could not write .check.c"
     ${MK_CC} ${MK_CFLAGS} -o .check.o -c .check.c
@@ -1681,10 +1681,19 @@ _mk_compile_primitive()
     return "$_res"
 }
 
+_mk_cxx_primitive()
+{
+    cat >.check.cpp || mk_fail "could not write .check.cpp"
+    ${MK_CXX} ${MK_CXXFLAGS} -o .check.o -c .check.cpp
+    _res="$?"
+    rm -f .check.o .check.cpp
+    return "$_res"
+}
+
 _mk_check_cc_style()
 {
     mk_msg_checking "C compiler style"
-    if cat <<EOF | _mk_compile_primitive >/dev/null 2>&1
+    if cat <<EOF | _mk_cc_primitive >/dev/null 2>&1
 #ifndef __GNUC__
 #error nope
 #endif
@@ -1697,6 +1706,24 @@ EOF
     
     MK_CC_STYLE="$result"
     mk_msg_result "$MK_CC_STYLE"
+}
+
+_mk_check_cxx_style()
+{
+    mk_msg_checking "C++ compiler style"
+    if cat <<EOF | _mk_cxx_primitive >/dev/null 2>&1
+#ifndef __GNUC__
+#error nope
+#endif
+EOF
+    then
+        result="gcc"
+    else
+        result="unknown"
+    fi
+    
+    MK_CXX_STYLE="$result"
+    mk_msg_result "$MK_CXX_STYLE"
 }
 
 _mk_check_cc_ld_style()
@@ -1723,6 +1750,30 @@ _mk_check_cc_ld_style()
     mk_msg_result "$MK_CC_LD_STYLE"
 }
 
+_mk_check_cxx_ld_style()
+{
+    mk_msg_checking "C++ compiler linker style"
+
+    case "$MK_CXX_STYLE" in
+        gcc)
+            _ld="`${MK_CXX} -print-prog-name=ld`"
+            case "`ld -v 2>&1`" in
+                *"GNU"*)
+                    result="gnu"
+                    ;;
+                *)
+                    result="native"
+                    ;;
+            esac
+            ;;
+        *)
+            result="native"
+    esac
+
+    MK_CXX_LD_STYLE="$result"
+    mk_msg_result "$MK_CXX_LD_STYLE"
+}
+
 _mk_compiler_check()
 {
     for _sys in build host
@@ -1734,7 +1785,9 @@ _mk_compiler_check()
             mk_system "$_sys/$_isa"
 
             _mk_check_cc_style
+            _mk_check_cxx_style
             _mk_check_cc_ld_style
+            _mk_check_cxx_ld_style
         done
     done
 }
@@ -1742,7 +1795,9 @@ _mk_compiler_check()
 configure()
 {
     mk_export MK_CONFIG_HEADER=""
-    mk_declare_system_var MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS MK_CC_STYLE MK_CC_LD_STYLE
+    mk_declare_system_var \
+        MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS \
+        MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
     mk_declare_system_var EXPORT=no MK_INTERNAL_LIBS
 
     mk_msg "default C compiler: $MK_DEFAULT_CC"
