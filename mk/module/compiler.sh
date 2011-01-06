@@ -307,7 +307,7 @@ _mk_library()
     do
         if _mk_contains "$result" ${MK_INTERNAL_LIBS}
         then
-            mk_quote "$MK_LIBDIR/lib${result}${MK_LIB_EXT}"
+            mk_quote "$MK_LIBDIR/lib${result}.la"
             _deps="$_deps $result"
         fi
     done
@@ -381,16 +381,18 @@ mk_library()
     for _link
     do
         mk_symlink \
-                TARGET="$_last" \
+            TARGET="$_last" \
             LINK="${MK_LIBDIR}/$_link"
         _last="$_link"
     done
     
+    mk_quote "$result"
+
     mk_target \
         TARGET="${MK_LIBDIR}/lib${LIB}.la" \
         DEPS="$result" \
         mk_run_script link MODE=la \
-        %LIBDEPS %LIBDIRS \
+        %LIBDEPS %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME \
         '$@'
 
     mk_add_all_target "$result"
@@ -434,7 +436,7 @@ _mk_dlo()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+            _deps="$_deps '${MK_LIBDIR}/lib${_lib}.la'"
         fi
     done
     
@@ -446,7 +448,6 @@ _mk_dlo()
         DEPS="$_deps" \
         mk_run_script link \
         MODE=dlo \
-        LA="${LIB}.la" \
         %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
 }
@@ -513,6 +514,17 @@ mk_dlo()
         _mk_dlo "$@"
     fi
 
+    mk_quote "$result"
+
+    mk_target \
+        TARGET="${INSTALLDIR}/${DLO}.la" \
+        DEPS="$result" \
+        mk_run_script link MODE=la \
+        %LIBDEPS %LIBDIRS %GROUPS %COMPILER \
+        '$@'
+
+    mk_add_all_target "$result"
+
     if [ "$INSTALL" != "no" ]
     then
         mk_add_all_target "$result"
@@ -555,7 +567,7 @@ _mk_group()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            _deps="$_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+            _deps="$_deps '${MK_LIBDIR}/lib${_lib}.la'"
         fi
     done
     
@@ -641,7 +653,7 @@ _mk_program()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            _deps="$_deps '${_libdir}/lib${_lib}${MK_LIB_EXT}'"
+            _deps="$_deps '${_libdir}/lib${_lib}.la'"
         fi
     done
 
@@ -729,7 +741,6 @@ mk_headers()
     done
     
     mk_expand_pathnames "${HEADERS} $*"
-    
     mk_unquote_list "$result"
 
     mk_stage \

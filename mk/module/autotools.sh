@@ -132,7 +132,7 @@ _mk_autotools()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            _stage_deps="$_stage_deps '${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}'"
+            _stage_deps="$_stage_deps '${MK_LIBDIR}/lib${_lib}.la'"
         fi
     done
     
@@ -277,8 +277,9 @@ mk_autotools()
     for _lib in ${LIBS}
     do
         mk_target \
-            TARGET="${MK_LIBDIR}/lib${_lib}${MK_LIB_EXT}" \
-            DEPS="'$stamp'"
+            TARGET="${MK_LIBDIR}/lib${_lib}.la" \
+            DEPS="'$stamp'" \
+            mk_at_la '$@'
 
         mk_add_all_target "$result"
 
@@ -380,4 +381,16 @@ configure()
     do
         _MK_AT_PASS_VARS="${_MK_AT_PASS_VARS} %$_var"
     done
+}
+
+### section build
+
+mk_at_la()
+{
+    if ! [ -f "$1" ]
+    then
+        mk_run_script link \
+            MODE=la \
+            "$1"
+    fi
 }
