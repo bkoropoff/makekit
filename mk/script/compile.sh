@@ -66,7 +66,7 @@ if [ -z "$DISABLE_DEPGEN" ]
 then
     mk_mkdir ".MakeKitDeps"
     _mk_slashless_name "${_object%.o}"
-    mk_quote ".MakeKitDeps/$result"
+    mk_quote ".MakeKitDeps/$result.dep"
     DEP_FLAGS="-MMD -MP -MF $result"
 fi
 
