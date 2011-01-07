@@ -537,7 +537,7 @@ mk_output_file()
     # Now overwrites its contents
     # We don't use mk_run_or_fail because it can log
     # output if MK_VERBOSE is set
-    awk -f ".awk.$$" < "$_input" > "${_output}.new" || mk_fail "could not run awk"
+    ${AWK} -f ".awk.$$" < "$_input" > "${_output}.new" || mk_fail "could not run awk"
     mk_run_or_fail rm -f ".awk.$$"
 
     if [ -f "${_output}" ] && diff "${_output}" "${_output}.new" >/dev/null 2>&1
@@ -707,6 +707,9 @@ option()
 
 configure()
 {
+    # Check for best possible awk
+    mk_check_program VAR=AWK FAIL=yes gawk awk
+
     # Default clean targets
     MK_CLEAN_TARGETS="@${MK_RUN_DIR}"
 
