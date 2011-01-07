@@ -79,11 +79,9 @@ create_libtool_archive()
 
         if [ -n "$SONAME" ]
         then
-            EXT="$MK_LIB_EXT"
             mk_quote "$SONAME"
             echo "dlname=$result"
         else
-            EXT="$MK_DLO_EXT"
             result="${object##*/}"
             result="${result%.la}${EXT}"
             mk_quote "$result"

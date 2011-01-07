@@ -392,7 +392,7 @@ mk_library()
         TARGET="${MK_LIBDIR}/lib${LIB}.la" \
         DEPS="$result" \
         mk_run_script link MODE=la \
-        %LIBDEPS %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME \
+        %LIBDEPS %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME %EXT \
         '$@'
 
     mk_add_all_target "$result"
@@ -520,7 +520,7 @@ mk_dlo()
         TARGET="${INSTALLDIR}/${DLO}.la" \
         DEPS="$result" \
         mk_run_script link MODE=la \
-        %LIBDEPS %LIBDIRS %GROUPS %COMPILER \
+        %LIBDEPS %LIBDIRS %GROUPS %COMPILER %EXT \
         '$@'
 
     mk_add_all_target "$result"

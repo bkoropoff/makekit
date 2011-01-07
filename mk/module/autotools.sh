@@ -401,7 +401,6 @@ mk_at_la()
     if ! [ -f "$1" ]
     then
         mk_run_script link \
-            MODE=la \
-            "$1"
+            MODE=la EXT="${MK_LIB_EXT}" "$1"
     fi
 }
