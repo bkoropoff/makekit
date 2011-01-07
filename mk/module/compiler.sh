@@ -1643,6 +1643,14 @@ option()
                     _default_cc="$MK_DEFAULT_CC -m64"
                     _default_cxx="$MK_DEFAULT_CXX -m64"
                     ;;
+                *-aix-ppc32)
+                    _default_cc="$MK_DEFAULT_CC -maix32"
+                    _default_cxx="$MK_DEFAULT_CXX -maix32"
+                    ;;
+                *-aix-ppc64)
+                    _default_cc="$MK_DEFAULT_CC -maix64"
+                    _default_cxx="$MK_DEFAULT_CXX -maix64"
+                    ;;
                 *)
                     _default_cc="$MK_DEFAULT_CC"
                     _default_cxx="$MK_DEFAULT_CXX"

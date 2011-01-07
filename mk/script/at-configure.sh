@@ -92,6 +92,14 @@ case "$MK_OS" in
             export LD_LIBRARY_PATH
         fi
         ;;
+    aix)
+        _ldflags="-L${_lib_dir} -Wl,-brtl"
+        if [ "$MK_CROSS_COMPILING" = "no" ]
+        then
+            LIBPATH="$_lib_dir:$LD_LIBRARY_PATH"
+            export LIBPATH
+        fi
+        ;;
     *)
         _ldflags="-L${_lib_dir}"
         ;;

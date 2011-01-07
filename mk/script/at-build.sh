@@ -51,6 +51,17 @@ then
     export PATH
 fi
 
+case "$MK_OS:$MK_ISA" in
+    aix:ppc32)
+        OBJECT_MODE="32"
+        export OBJECT_MODE
+        ;;
+    aix:ppc64)
+        OBJECT_MODE="64"
+        export OBJECT_MODE
+        ;;
+esac
+
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" || mk_fail "could not change directory"
 mk_run_quiet_or_fail ${MAKE} ${MFLAGS}
 cd "${MK_ROOT_DIR}"

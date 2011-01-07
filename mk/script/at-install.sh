@@ -51,15 +51,43 @@ then
     export PATH
 fi
 
+case "$MK_OS:$MK_ISA" in
+    aix:ppc32)
+        OBJECT_MODE="32"
+        export OBJECT_MODE
+        ;;
+    aix:ppc64)
+        OBJECT_MODE="64"
+        export OBJECT_MODE
+        ;;
+esac
+
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" || mk_fail "could not change directory"
 if [ "${MK_SYSTEM%/*}" = "build" ]
 then
+    if [ -n "$INSTALL_PRE" ]
+    then
+        ${INSTALL_PRE} "${MK_ROOT_DIR}/${MK_RUN_DIR}"
+    fi
     mk_run_quiet_or_fail ${MAKE} ${MFLAGS} install
+    if [ -n "$INSTALL_POST" ]
+    then
+        ${INSTALL_POST} "${MK_ROOT_DIR}/${MK_RUN_DIR}"
+    fi
 elif [ -n "$SELECT" ]
 then
     # We have to install to a temporary location, then copy selected files
     rm -rf ".install"
+
+    if [ -n "$INSTALL_PRE" ]
+    then
+        ${INSTALL_PRE} "${PWD}/.install"
+    fi
     mk_run_quiet_or_fail ${MAKE} ${MFLAGS} DESTDIR="${PWD}/.install" install
+    if [ -n "$INSTALL_POST" ]
+    then
+        ${INSTALL_POST} "${PWD}/.install"
+    fi
     mk_expand_absolute_pathnames "$SELECT" ".install"
     mk_unquote_list "$result"
     for _file in "$@"
@@ -75,9 +103,23 @@ then
     done
     rm -rf ".install"
 else
+    if [ -n "$INSTALL_PRE" ]
+    then
+        ${INSTALL_PRE} "${_stage_dir}"
+    fi
     mk_run_quiet_or_fail ${MAKE} ${MFLAGS} DESTDIR="${_stage_dir}" install
+    if [ -n "$INSTALL_POST" ]
+    then
+        ${INSTALL_POST} "${_stage_dir}"
+    fi
 fi
 
 cd "${MK_ROOT_DIR}"
+
+if [ -n "$INSTALL_POST" ]
+then
+    ${INSTALL_POST}
+fi
+
 mk_run_or_fail touch "$_stamp"
 mk_msg "end ${__msg}"

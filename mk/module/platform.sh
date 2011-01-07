@@ -198,6 +198,9 @@ option()
         Darwin)
             _default_MK_BUILD_OS="darwin"
             ;;
+        AIX)
+            _default_MK_BUILD_OS="aix"
+            ;;
         *)
             _default_MK_BUILD_OS="unknown"
             ;;
@@ -239,6 +242,10 @@ option()
                     ;;
             esac
             ;;
+        aix)
+            # AIX only supports POWER, making this easy
+            _default_MK_BUILD_ARCH="powerpc"
+            ;;
         *)
             case `uname -m` in
                 i?86|i86pc)
@@ -269,6 +276,9 @@ option()
             ;;
         *"-sparc")
             _default_MK_BUILD_ISAS="sparc_32"
+            ;;
+        *"-powerpc")
+            _default_MK_BUILD_ISAS="ppc32 ppc64"
             ;;
         *)
             _default_MK_BUILD_ISAS="$_default_MK_BUILD_ARCH"
@@ -337,6 +347,11 @@ option()
                     ;;
             esac
             _default_MK_BUILD_MULTIARCH="combine"
+            ;;
+        aix)
+            _default_MK_BUILD_DISTRO="aix"
+            _default_MK_BUILD_DISTRO_VERSION="`uname -v`.`uname -r`"
+            _default_MK_BUILD_MULTIARCH="separate"
             ;;
         *)
             _default_MK_BUILD_DISTRO="unknown"
@@ -508,7 +523,7 @@ configure()
         for _isa in $MK_ISAS
         do
             case "$MK_OS-$_isa" in
-                linux-*|solaris-*|freebsd-*)
+                linux-*|solaris-*|freebsd-*|aix-*)
                     mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".so"
                     mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
                     ;;

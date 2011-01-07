@@ -143,6 +143,9 @@ then
         darwin)
             COMBINED_LDFLAGS="$COMBINED_LDFLAGS -install_name ${MK_LIBDIR}/${SONAME}"
             ;;
+        aix)
+            : # SONAMEs aren't encoded in libraries
+            ;;
         *)
             COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-h,$SONAME"
             ;;
@@ -202,6 +205,19 @@ case "${MK_OS}:${LD_STYLE}" in
         DLO_LINK="-bundle"
         LIB_LINK="-dynamiclib"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module -Wl,-arch_errors_fatal"
+        ;;
+    aix:native)
+        DLO_LINK="-shared"
+        LIB_LINK="-shared"
+        COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-brtl"
+
+        if [ "$MODE" = "library" -o "$MODE" = "dlo" ]
+        then
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-bnoentry"
+        fi
+        
+        # The linker on AIX does not track inter-library dependencies, so do it ourselves
+        combine_libtool_flags
         ;;
 esac
 

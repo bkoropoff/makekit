@@ -55,6 +55,10 @@ _mk_at_system_string()
         darwin)
             __os="darwin`uname -r`"
             ;;
+        aix)
+            mk_get "MK_${1}_DISTRO_VERSION"
+            __os="aix${result}.0.0"
+            ;;
         *)
             __os="unknown"
             ;;
@@ -86,6 +90,9 @@ _mk_at_system_string()
                 darwin*)
                     __arch="ppc-apple"
                     ;;
+                aix*)
+                    __arch="powerpc-ibm"
+                    ;;
                 *)
                     __arch="ppc-unknown"
                     ;;
@@ -95,6 +102,9 @@ _mk_at_system_string()
             case "$__os" in
                 darwin*)
                     __arch="ppc64-apple"
+                    ;;
+                aix*)
+                    __arch="powerpc-ibm"
                     ;;
                 *)
                     __arch="ppc64-unknown"
@@ -179,6 +189,7 @@ mk_autotools()
         SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
         CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SELECT \
         BUILDDIR DEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
+        INSTALL_PRE INSTALL_POST \
         prefix dirname
     mk_parse_params
     
@@ -223,7 +234,7 @@ mk_autotools()
                 mk_run_script \
                 at-install \
                 DESTDIR="$DESTDIR" \
-                %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
+                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST \
                 MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
             mk_quote "$result"
             parts="$parts $result"
@@ -252,7 +263,7 @@ mk_autotools()
                 mk_run_script \
                 at-install \
                 DESTDIR="${MK_STAGE_DIR}" \
-                %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
+                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST \
                 MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
         fi
         stamp="$result"
