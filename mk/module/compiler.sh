@@ -1376,6 +1376,11 @@ mk_check_static_predicate()
 
     {
         _mk_c_check_prologue
+        for _header in ${HEADERDEPS}
+        do
+            mk_might_have_header "$_header" && echo "#include <${_header}>"
+        done
+        echo ""
         cat <<EOF
 int main(int argc, char** argv)
 {
