@@ -141,6 +141,9 @@ then
         darwin)
             COMBINED_LDFLAGS="$COMBINED_LDFLAGS -install_name ${MK_LIBDIR}/${SONAME}"
             ;;
+        hpux)
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,+h,${SONAME}"
+            ;;
         aix)
             : # SONAMEs aren't encoded in libraries
             ;;
@@ -215,6 +218,17 @@ case "${MK_OS}:${LD_STYLE}" in
         fi
         
         # The linker on AIX does not track inter-library dependencies, so do it ourselves
+        combine_libtool_flags
+        ;;
+    hpux:native)
+        DLO_LINK="-shared"
+        LIB_LINK="-shared"
+        COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,+b,${RPATH_LIBDIR}"
+
+        if [ "$MODE" = "library" ]
+        then
+            COMBINED_LIBDEPS="$COMBINED_LIBDEPS c"
+        fi
         combine_libtool_flags
         ;;
 esac

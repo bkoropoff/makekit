@@ -59,6 +59,10 @@ _mk_at_system_string()
             mk_get "MK_${1}_DISTRO_VERSION"
             __os="aix${result}.0.0"
             ;;
+        hpux)
+            mk_get "MK_${1}_DISTRO_VERSION"
+            __os="hpux${result}"
+            ;;
         *)
             __os="unknown"
             ;;
@@ -113,6 +117,9 @@ _mk_at_system_string()
             ;;
         sparc*)
             __arch="sparc-sun"
+            ;;
+        hppa*)
+            __arch="hppa2.0-hp"
             ;;
         *)
             __arch="unknown-unknown"

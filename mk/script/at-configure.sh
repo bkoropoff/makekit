@@ -100,6 +100,14 @@ case "$MK_OS" in
             export LIBPATH
         fi
         ;;
+    hpux)
+        _ldflags="-L${_lib_dir}"
+        if [ "$MK_CROSS_COMPILING" = "no" ]
+        then
+            SHLIB_PATH="$_lib_dir:$SHLIB_PATH"
+            export SHLIB_PATH
+        fi
+        ;;
     *)
         _ldflags="-L${_lib_dir}"
         ;;

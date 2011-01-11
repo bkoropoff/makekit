@@ -201,6 +201,9 @@ option()
         AIX)
             _default_MK_BUILD_OS="aix"
             ;;
+        HP-UX)
+            _default_MK_BUILD_OS="hpux"
+            ;;
         *)
             _default_MK_BUILD_OS="unknown"
             ;;
@@ -246,6 +249,25 @@ option()
             # AIX only supports POWER, making this easy
             _default_MK_BUILD_ARCH="powerpc"
             ;;
+        hpux)
+            if hp-pa 2>&1 >/dev/null
+            then
+                case `/usr/bin/getconf SC_CPU_VERSION 2>/dev/null` in
+                    523)
+                        _default_MK_BUILD_ARCH="hppa1.0"
+                        ;;
+                    528)
+                        _default_MK_BUILD_ARCH="hppa1.1"
+                        ;;
+                    532)
+                        _default_MK_BUILD_ARCH="hppa2.0"
+                        ;;
+                    *)
+                        _default_MK_BUILD_ARCH="unknown"
+                        ;;
+                esac
+            fi
+            ;;
         *)
             case `uname -m` in
                 i?86|i86pc)
@@ -279,6 +301,12 @@ option()
             ;;
         *"-powerpc")
             _default_MK_BUILD_ISAS="ppc32 ppc64"
+            ;;
+        *"-hppa1."*)
+            _default_MK_BUILD_ISAS="hppa32"
+            ;;
+        *"-hppa2.0")
+            _default_MK_BUILD_ISAS="hppa32 hppa64"
             ;;
         *)
             _default_MK_BUILD_ISAS="$_default_MK_BUILD_ARCH"
@@ -351,6 +379,12 @@ option()
         aix)
             _default_MK_BUILD_DISTRO="aix"
             _default_MK_BUILD_DISTRO_VERSION="`uname -v`.`uname -r`"
+            _default_MK_BUILD_MULTIARCH="separate"
+            ;;
+        hpux)
+            _default_MK_BUILD_DISTRO="hpux"
+            __release="`uname -r`"
+            _default_MK_BUILD_DISTRO_VERSION="${__release#B.}"
             _default_MK_BUILD_MULTIARCH="separate"
             ;;
         *)
@@ -523,12 +557,16 @@ configure()
         for _isa in $MK_ISAS
         do
             case "$MK_OS-$_isa" in
-                linux-*|solaris-*|freebsd-*|aix-*)
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".so"
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
-                    ;;
                 darwin-*)
                     mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".dylib"
+                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
+                    ;;
+                hpux-hppa*)
+                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".sl"
+                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".sl"
+                    ;;
+                *)
+                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".so"
                     mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
                     ;;
             esac

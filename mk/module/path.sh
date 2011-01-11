@@ -116,6 +116,9 @@ option()
                 solaris-*-x86_64-x86_64)
                     _default_libdir="${MK_BASELIBDIR}/64"
                     ;;
+                hpux-*-hppa2.0-hppa64)
+                    _default_libdir="${MK_BASELIBDIR}/pa20_64"
+                    ;;
                 *)
                     _default_libdir="${MK_BASELIBDIR}"
                     ;;
