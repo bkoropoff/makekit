@@ -69,7 +69,7 @@ then
     then
         ${INSTALL_PRE} "${MK_ROOT_DIR}/${MK_RUN_DIR}"
     fi
-    mk_run_quiet_or_fail ${MAKE} ${MFLAGS} install
+    mk_run_quiet_or_fail ${MAKE} ${MFLAGS} ${MAKE_INSTALL_TARGET}
     if [ -n "$INSTALL_POST" ]
     then
         ${INSTALL_POST} "${MK_ROOT_DIR}/${MK_RUN_DIR}"
@@ -78,12 +78,11 @@ elif [ -n "$SELECT" ]
 then
     # We have to install to a temporary location, then copy selected files
     rm -rf ".install"
-
     if [ -n "$INSTALL_PRE" ]
     then
         ${INSTALL_PRE} "${PWD}/.install"
     fi
-    mk_run_quiet_or_fail ${MAKE} ${MFLAGS} DESTDIR="${PWD}/.install" install
+    mk_run_quiet_or_fail ${MAKE} ${MFLAGS} DESTDIR="${PWD}/.install" ${MAKE_INSTALL_TARGET}
     if [ -n "$INSTALL_POST" ]
     then
         ${INSTALL_POST} "${PWD}/.install"
@@ -107,7 +106,7 @@ else
     then
         ${INSTALL_PRE} "${_stage_dir}"
     fi
-    mk_run_quiet_or_fail ${MAKE} ${MFLAGS} DESTDIR="${_stage_dir}" install
+    mk_run_quiet_or_fail ${MAKE} ${MFLAGS} DESTDIR="${_stage_dir}" ${MAKE_INSTALL_TARGET}
     if [ -n "$INSTALL_POST" ]
     then
         ${INSTALL_POST} "${_stage_dir}"

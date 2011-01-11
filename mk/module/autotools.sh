@@ -186,7 +186,7 @@ _mk_autotools()
         DEPS="'$__configure_stamp'" \
         mk_run_script \
         at-build \
-        %SOURCEDIR %BUILDDIR %INSTALL %SELECT \
+        %SOURCEDIR %BUILDDIR %INSTALL %MAKE_BUILD_TARGET \
         MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
 }
 
@@ -197,6 +197,7 @@ mk_autotools()
         CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SELECT \
         BUILDDIR DEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
         INSTALL_PRE INSTALL_POST \
+	MAKE_BUILD_TARGET="" MAKE_INSTALL_TARGET="install" \
         prefix dirname
     mk_parse_params
     
@@ -241,7 +242,7 @@ mk_autotools()
                 mk_run_script \
                 at-install \
                 DESTDIR="$DESTDIR" \
-                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST \
+                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
                 MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
             mk_quote "$result"
             parts="$parts $result"
@@ -270,7 +271,7 @@ mk_autotools()
                 mk_run_script \
                 at-install \
                 DESTDIR="${MK_STAGE_DIR}" \
-                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST \
+                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
                 MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
         fi
         stamp="$result"
