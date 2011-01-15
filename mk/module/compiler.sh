@@ -1317,6 +1317,8 @@ EOF
     else
         result="no"
     fi
+
+    [ "$result" != "no" ]
 }
 
 mk_check_type()
@@ -1401,6 +1403,9 @@ EOF
 
 _mk_check_sizeof()
 {
+    # Make sure the type actually exists
+    _mk_check_type || return 1
+
     # Algorithm to derive the size of a type even
     # when cross-compiling.  mk_check_static_predicate()
     # lets us evaluate a boolean expression involving
@@ -1463,7 +1468,7 @@ mk_check_sizeofs()
 
         mk_msg_result "$result"
 
-        mk_define "SIZEOF_$DEFNAME" "$result"
+	[ "$result" != "no" ] && mk_define "SIZEOF_$DEFNAME" "$result"
     done
 
     mk_pop_vars
