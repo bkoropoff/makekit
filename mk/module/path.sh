@@ -119,6 +119,12 @@ option()
                 hpux-*-hppa2.0-hppa64)
                     _default_libdir="${MK_BASELIBDIR}/pa20_64"
                     ;;
+                hpux-*-ia64-ia64_32)
+                    _default_libdir="${MK_BASELIBDIR}/hpux32"
+                    ;;
+                hpux-*-ia64-ia64_64)
+                    _default_libdir="${MK_BASELIBDIR}/hpux64"
+                    ;;
                 *)
                     _default_libdir="${MK_BASELIBDIR}"
                     ;;

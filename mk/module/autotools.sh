@@ -121,6 +121,16 @@ _mk_at_system_string()
         hppa*)
             __arch="hppa2.0-hp"
             ;;
+        ia64*)
+            case "$__os" in
+                hpux*)
+                    __arch="ia64-hp"
+                    ;;
+                *)
+                    __arch="ia64-unknown"
+                    ;;
+            esac
+            ;;
         *)
             __arch="unknown-unknown"
             ;;

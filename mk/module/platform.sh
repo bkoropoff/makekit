@@ -266,6 +266,15 @@ option()
                         _default_MK_BUILD_ARCH="unknown"
                         ;;
                 esac
+            else
+                case `uname -m` in
+                    ia64)
+                        _default_MK_BUILD_ARCH="ia64"
+                        ;;
+                    *)
+                        mk_fail "unknown architecture: `uname -m`"
+                        ;;
+                esac
             fi
             ;;
         *)
@@ -307,6 +316,9 @@ option()
             ;;
         *"-hppa2.0")
             _default_MK_BUILD_ISAS="hppa32 hppa64"
+            ;;
+        "hpux-ia64")
+            _default_MK_BUILD_ISAS="ia64_32 ia64_64"
             ;;
         *)
             _default_MK_BUILD_ISAS="$_default_MK_BUILD_ARCH"

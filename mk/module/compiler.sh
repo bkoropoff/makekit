@@ -1661,6 +1661,14 @@ option()
                     _default_cc="$MK_DEFAULT_CC -maix64"
                     _default_cxx="$MK_DEFAULT_CXX -maix64"
                     ;;
+                *-hpux-ia64_32)
+                    _default_cc="$MK_DEFAULT_CC -milp32"
+                    _default_cxx="$MK_DEFAULT_CXX -milp32"
+                    ;;
+                *-hpux-ia64_64)
+                    _default_cc="$MK_DEFAULT_CC -mlp64"
+                    _default_cxx="$MK_DEFAULT_CXX -mlp64"
+                    ;;
                 *)
                     _default_cc="$MK_DEFAULT_CC"
                     _default_cxx="$MK_DEFAULT_CXX"

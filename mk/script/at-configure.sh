@@ -26,6 +26,23 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+hack_libtool()
+{
+    case "$MK_OS:$MK_ARCH" in
+        hpux:ia64)
+            if [ -x libtool ]
+            then
+                sed \
+                    -e 's/^hardcode_direct=no/hardcode_direct=yes/' \
+                    -e 's/^hardcode_direct_absolute=no/hardcode_direct_absolute=yes/' \
+                    < libtool > libtool.new
+                mv -f libtool.new libtool
+                chmod +x libtool
+            fi
+            ;;
+    esac
+}
+
 _stamp="$1"
 shift
 
@@ -135,6 +152,11 @@ mk_run_quiet_or_fail "${_src_dir}/configure" \
     --sbindir="${_sbindir}" \
     --sysconfdir="${_sysconfdir}" \
     --localstatedir="${_localstatedir}" \
+    --enable-fast-install \
     "$@"
+
+# Does what it says
+hack_libtool
+
 cd "${MK_ROOT_DIR}" && mk_run_quiet_or_fail touch "$_stamp"
 mk_msg "end ${__msg}"
