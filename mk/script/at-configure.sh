@@ -78,7 +78,7 @@ _libpath=""
 case "$MK_OS" in
     linux|freebsd)
         _ldflags="-L${_lib_dir} -Wl,-rpath-link -Wl,${_lib_dir}"
-        if [ "$MK_CROSS_COMPILING" = "no" ]
+        if [ "$MK_CROSS_COMPILING" = "no" -a "$SET_LIBRARY_PATH" = "yes" ]
         then
             LD_LIBRARY_PATH="$_lib_dir:$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH
@@ -86,7 +86,7 @@ case "$MK_OS" in
         ;;
     solaris)
         _ldflags="-L${_lib_dir}"
-        if [ "$MK_CROSS_COMPILING" = "no" ]
+        if [ "$MK_CROSS_COMPILING" = "no" -a "$SET_LIBRARY_PATH" = "yes" ]
         then
             LD_LIBRARY_PATH="$_lib_dir:$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH
@@ -94,7 +94,7 @@ case "$MK_OS" in
         ;;
     aix)
         _ldflags="-L${_lib_dir} -Wl,-brtl"
-        if [ "$MK_CROSS_COMPILING" = "no" ]
+        if [ "$MK_CROSS_COMPILING" = "no" -a "$SET_LIBRARY_PATH" = "yes" ]
         then
             LIBPATH="$_lib_dir:$LD_LIBRARY_PATH"
             export LIBPATH
@@ -102,7 +102,7 @@ case "$MK_OS" in
         ;;
     hpux)
         _ldflags="-L${_lib_dir}"
-        if [ "$MK_CROSS_COMPILING" = "no" ]
+        if [ "$MK_CROSS_COMPILING" = "no" -a "$SET_LIBRARY_PATH" = "yes" ]
         then
             SHLIB_PATH="$_lib_dir:$SHLIB_PATH"
             export SHLIB_PATH

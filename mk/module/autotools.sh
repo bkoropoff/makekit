@@ -176,6 +176,7 @@ _mk_autotools()
         mk_run_script \
         at-configure \
         %SOURCEDIR %BUILDDIR %CPPFLAGS %CFLAGS %CXXFLAGS %LDFLAGS \
+	%SET_LIBRARY_PATH \
         DIR="$dir" '$@' "$@" "*$_MK_AT_PASS_VARS"
 
     __configure_stamp="$result"
@@ -196,7 +197,7 @@ mk_autotools()
         SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
         CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SELECT \
         BUILDDIR DEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
-        INSTALL_PRE INSTALL_POST \
+        INSTALL_PRE INSTALL_POST SET_LIBRARY_PATH=yes \
 	MAKE_BUILD_TARGET="" MAKE_INSTALL_TARGET="install" \
         prefix dirname
     mk_parse_params
