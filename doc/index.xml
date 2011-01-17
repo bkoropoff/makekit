@@ -15,7 +15,8 @@
     <xi:include href="guide/c-projects.xml"/>
   </part>
   <part><title>Reference</title>
-    <xi:include href="reference/ref-core.xml"/>
-    <xi:include href="reference/ref-compiler.xml"/>
+    <xi:include href="reference/core.xml"/>
+    <xi:include href="reference/compiler.xml"/>
+    <xi:include href="reference/autotools.xml"/>
   </part>
 </book>

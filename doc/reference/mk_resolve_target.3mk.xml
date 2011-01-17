@@ -2,6 +2,7 @@
   <refmeta>
     <refentrytitle>mk_resolve_target</refentrytitle>
     <manvolnum>3mk</manvolnum>
+    <refmiscinfo class="manual">MakeKit Reference</refmiscinfo>
   </refmeta>
   <refnamediv>
     <refname>mk_resolve_target</refname>

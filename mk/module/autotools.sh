@@ -201,6 +201,65 @@ _mk_autotools()
         MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
 }
 
+#<
+# @brief Build autotools source component
+# @usage options... -- configure_params...
+# @option SOURCEDIR=dir Specifies where the autotools source
+# component is.  Defaults to the directory containing
+# MakeKitBuild.
+# @option HEADERS=headers Specifies system headers installed
+# by the component
+# @option LIBS=libs Specifies libraries installed by the component
+# @option TARGETS=targets Specifies additional targets which
+# are installed by the component
+# @option LIBDEPS=libdeps Specifies libraries the component
+# depends on
+# @option HEADERDEPS=headerdeps Specifies headers the component
+# depends on
+# @option DEPS=deps Specifies additional dependencies of the
+# component
+# @option SELECT=pathnames Specifies a list of pathnames (globs)
+# that should be cherry-picked from among all the files the
+# component installs.  Defaults to everything.
+# @option MAKE_BUILD_TARGET=name The target name to pass to make
+# when building the component.  Defaults to nothing (e.g. the
+# default target in the Makefile, usually "all").
+# @option MAKE_INSTALL_TARGET=name The target name to pass to make
+# when installing the component.  Defaults to "install".
+# @option CPPFLAGS=flags Additional C preprocessor flags
+# @option CFLAGS=flags Additional C compiler flags
+# @option CXXFLAGS=flags Additional C++ compiler flags
+# @option LDFLAGS=flags Additional linker flags
+# @option INSTALL_PRE=func Specifies a custom function to run
+# before installing the component into the staging area.
+# @option INSTALL_POST=func Specifies a custom function to
+# run after installing the component into the staging area.
+# @option configure_options Additional parameters to pass to
+# the component's configure script.
+#
+# Builds and installs an autotools (autoconf, automake, libtool) source
+# project as part of the MakeKit project.  It is important that you specify
+# the products and dependencies of the component to ensure that
+# it is built in the right order with the rest of your MakeKit project.
+# For example, if it produces a library 'foo' that you link to elsewhere
+# in your project, you need to specify that using the <lit>LIBS</lit>
+# option.
+#
+# The remaining positional arguments to this function are passed verbatim
+# to the configure script of the component.  In addition, flags such as
+# <lit>--prefix</lit> are passed automatically according to how the
+# MakeKit project was configured.
+#
+# @example
+# make()
+# {
+#     # Build popt in the popt-1.15 directory
+#     mk_autotools \
+#         SOURCEDIR="popt-1.15" HEADERS="popt.h" LIBS="popt" -- \
+#         --disable-nls
+# }
+# @endexample
+#>
 mk_autotools()
 {
     mk_push_vars \

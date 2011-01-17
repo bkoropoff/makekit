@@ -227,10 +227,10 @@ _mk_library_form_name()
     # $3 = ext
     case "$MK_OS" in
         darwin)
-            result="lib${1}.${2}${3}"
+            result="lib${1}${2:+.$2}${3}"
             ;;
         *)
-            result="lib${1}${3}.${2}"
+            result="lib${1}${3}${2:+.$2}"
             ;;
     esac
 }
@@ -244,12 +244,13 @@ _mk_library_process_version()
         _rest="${_rest#*.}"
         MINOR="${_rest%%.*}"
         _rest="${_rest#*.}"
-        MICRO="${_rest%%.*}"
+        MICRO="${_rest%.}"
     fi
 
-    SONAME=""
-    LINKS="lib${LIB}${EXT}"
-    
+    _mk_library_form_name "$LIB" "" "$EXT"
+    SONAME="$result"
+    LINKS="$result"
+
     if [ -n "$MAJOR" ]
     then
         _mk_library_form_name "$LIB" "$MAJOR" "$EXT"
@@ -260,14 +261,7 @@ _mk_library_process_version()
     
     if [ -n "$MINOR" ]
     then
-        _mk_library_form_name "$LIB" "$MAJOR.$MINOR" "$EXT"
-        mk_quote "$result"
-        LINKS="$result $LINKS"
-    fi
-    
-    if [ -n "$MICRO" ]
-    then
-        _mk_library_form_name "$LIB" "$MAJOR.$MINOR.$MICRO" "$EXT"
+        _mk_library_form_name "$LIB" "$MAJOR.$MINOR${MICRO:+.$MICRO}" "$EXT"
         mk_quote "$result"
         LINKS="$result $LINKS"
     fi
@@ -324,6 +318,31 @@ _mk_library()
         '$@' "*${OBJECTS} ${_objects}"
 }
 
+#<
+# @brief Build a library
+# @usage LIB=name options...
+# @option VERSION=major.minor.micro Sets the version
+# information on the created library.  ABI compatibility
+# should be maintained within a given major version,
+# backwards compatibility should be maintained between
+# minor versions, and micro versions should involve
+# only a change in implementation, not interface.  Defaults
+# to 0.0.0
+# @option SYMFILE=file Specifies a file which contains a list
+# of symbol names, one per line, which should be exported by
+# the library.  If this is option is not used, it defaults
+# to the behavior of the compiler and linker, which typically
+# export all non-static symbols.  This option will be silently
+# ignored on platforms where it is not supported.
+# 
+# Defines a target to build a C/C++ shared library.
+# See <topicref ref="compiler"/> for a list of common
+# options.
+#
+# A libtool-compatible .la file will also be generated.
+# This is actually the canonical representation of a library
+# in MakeKit and is the target which is placed in <var>result</var>.
+#>
 mk_library()
 {
     mk_push_vars \
@@ -375,22 +394,24 @@ mk_library()
     fi
 
     mk_unquote_list "$LINKS"
-    _last="$1"
+    _lib="$1"
+    _links=""
     shift
     
     for _link
     do
         mk_symlink \
-            TARGET="$_last" \
-            LINK="${MK_LIBDIR}/$_link"
-        _last="$_link"
+            TARGET="$_lib" \
+            LINK="${INSTALLDIR}/$_link"
+        mk_quote "$result"
+        _links="$_links $result"
     done
     
-    mk_quote "$result"
+    mk_quote "$INSTALLDIR/$_lib"
 
     mk_target \
-        TARGET="${MK_LIBDIR}/lib${LIB}.la" \
-        DEPS="$result" \
+        TARGET="${INSTALLDIR}/lib${LIB}.la" \
+        DEPS="$_links $result" \
         mk_run_script link MODE=la \
         %LIBDEPS %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME %EXT \
         '$@'
@@ -436,7 +457,8 @@ _mk_dlo()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            _deps="$_deps '${MK_LIBDIR}/lib${_lib}.la'"
+            mk_quote "${MK_LIBDIR}/lib${_lib}.la"
+            _deps="$_deps $result"
         fi
     done
     
@@ -452,6 +474,21 @@ _mk_dlo()
         '$@' "*${OBJECTS} ${_objects}"
 }
 
+#<
+# @brief Build a dynamically loadable object
+# @usage DLO=name options...
+# @option SYMFILE=file Specifies an exported symbol file
+# in the same manner as <funcref>mk_library</funcref>.
+# 
+# Defines a target to build a C/C++ dynamically loadable object --
+# that is, an object suitable for loading with dlopen() or similar
+# functions at runtime.  On some systems, Darwin in particular, this
+# is not the same thing as a shared library.  See
+# <topicref ref="compiler"/> for a list of common options.
+#
+# A libtool-compatible .la file will also be generated and is
+# the target which is placed in <var>result</var>.
+#>
 mk_dlo()
 {
     mk_push_vars \
@@ -567,7 +604,8 @@ _mk_group()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            _deps="$_deps '${MK_LIBDIR}/lib${_lib}.la'"
+            mk_quote "${MK_LIBDIR}/lib${_lib}.la"
+            _deps="$_deps $result"
         fi
     done
     
@@ -580,6 +618,18 @@ _mk_group()
         mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"    
 }
 
+#<
+# @brief Build an object group
+# @usage GROUP=name options...
+#
+# Defines a target to build a C/C++ "object group", which combines sources
+# files and other object groups into a logical unit which can be referenced
+# from <funcref>mk_program</funcref> and friends.  This feature is
+# similar to "convenience libraries" with GNU libtool.
+#
+# See <topicref ref="compiler"/> for common options or <topicref
+# ref="c-projects-object-groups"/> in the MakeKit guide for usage examples.
+#>
 mk_group()
 {
     mk_push_vars \
@@ -653,7 +703,8 @@ _mk_program()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            _deps="$_deps '${_libdir}/lib${_lib}.la'"
+            mk_quote "${_libdir}/lib${_lib}.la"
+            _deps="$_deps $result"
         fi
     done
 
@@ -666,6 +717,14 @@ _mk_program()
         mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"
 }
 
+#<
+# @brief Build a program
+# @usage PROGRAM=name options...
+# 
+# Defines a target to build a C/C++ executable program.
+# See <topicref ref="compiler"/> for a list of common
+# options.
+#>
 mk_program()
 {
     mk_push_vars \
@@ -720,6 +779,21 @@ mk_program()
     mk_pop_vars
 }
 
+#<
+# @brief Install headers
+# @usage headers...
+# @usage MASTER=master headers...
+# @option INSTALLDIR=dir Specifies the location to install
+# the headers.  By default, this is <var>MK_INCLUDEDIR</var>.
+# @option ... See <topicref ref="compiler"/> for common options.
+#
+# Installs each header in <param>headers</param> into the system
+# header directory.  If <param>master</param> is specified, it is
+# also installed and marked as depending on all the other headers
+# in the list.  This is useful when using HEADERDEPS elsewhere in
+# the project, as depending on <param>master</param> will depend
+# on all of the listed headers.
+#>
 mk_headers()
 {
     mk_push_vars HEADERS MASTER INSTALLDIR HEADERDEPS DEPS
@@ -802,6 +876,14 @@ mk_declare_internal_library()
 # Helper functions for configure() stage
 # 
 
+#<
+# @brief Define a macro in config header
+# @usage def value
+#
+# Defines the C preprocessor macro <param>def</param> to
+# <param>value</param> in the current config
+# header created by <funcref>mk_config_header</funcref>.
+#>
 mk_define()
 {
     mk_push_vars cond
@@ -871,7 +953,16 @@ EOF
         MK_LAST_CONFIG_HEADER=""
     fi
 }
-    
+
+#<
+# @brief Create config header
+# @usage header
+#
+# Creates a config header named <param>header</param>.
+# Any subsequent definitions made by <funcref>mk_define</funcref>
+# or various configuration tests will be placed in the header
+# most recently created with this function.
+#>
 mk_config_header()
 {
     mk_push_vars HEADER
@@ -1010,6 +1101,22 @@ EOF
     return "$_ret"
 }
 
+#<
+# @brief Check for a header
+# @usage HEADER=header
+# @option HEADERDEPS=headers Specifies additional headers
+# which might be needed in order for <param>header</param>
+# to be compilable.  If a header has been determined to be
+# unavailable by a previous <funcref>mk_check_headers</funcref>,
+# it will be silently omitted from this list as a convenience.
+#
+# Checks for the availability of a system header and sets
+# <var>result</var> to the result.  If the header was found
+# on the system, the result will be "external".  If the header
+# is provided by <funcref>mk_headers</funcref> within the current
+# project, the result will be "internal".  Otherwise, the result
+# will be "no".
+#>
 mk_check_header()
 {
     mk_push_vars HEADER HEADERDEPS CPPFLAGS CFLAGS
@@ -1053,6 +1160,16 @@ EOF
     [ "$result" != "no" ]
 }
 
+#<
+# @brief Check for headers
+# @usage headers...
+#
+# For each header in <param>headers</param>, <funcref>mk_check_header</funcref>
+# is invoked to check for its availability.  <var>HAVE_<varname>header</varname></var>
+# is set to the result, and if the header was available, <def>HAVE_<varname>header</varname></def>
+# is defined in the current config header.  A message is printed indicating the result
+# of each test.
+#>
 mk_check_headers()
 {
     mk_push_vars HEADERDEPS FAIL CPPFLAGS CFLAGS DEFNAME HEADER
@@ -1105,6 +1222,26 @@ mk_might_have_header()
     [ "$result" != "no" ]
 }
 
+#<
+# @brief Check for a function
+# @usage FUNCTION=func
+#
+# @option HEADERDEPS=headers Specifies any headers
+# which might be needed in order for a prototype of
+# the function to be available.  Unlike autoconf, MakeKit
+# checks that both the function prototype and symbol are
+# available, so specifying this option correctly is vital.
+# @option LIBDEPS=deps Specifies any libraries which
+# might be needed for the function to be available.
+#
+# Checks for the availability of a function, setting
+# <var>result</var> to the result ("yes" or "no").
+# If <param>func</param> is specified as a full function prototype,
+# the test will only succeed if the function which was found
+# had the same prototype.  If <param>func</param> is specified as
+# a simple name, the test will succeed as long as the function
+# has an available prototype and symbol.
+#>
 mk_check_function()
 {
     mk_push_vars LIBDEPS FUNCTION HEADERDEPS CPPFLAGS LDFLAGS CFLAGS FAIL PROTOTYPE
@@ -1170,6 +1307,17 @@ EOF
     [ "$result" != "no" ]
 }
 
+#<
+# @brief Check for functions
+# @usage funcs...
+#
+# For each function in <param>funcs</param>, <funcref>mk_check_function</funcref>
+# is invoked to check for its availability.  <var>HAVE_<varname>header</varname></var>
+# is set to the result, and if the function was available, <def>HAVE_<varname>func</varname></def>
+# is defined in the current config header.  <def>HAVE_DECL_<varname>func</varname></def>
+# is defined to 1 if the function was available and 0 otherwise.  A message is printed indicating
+# the result of each test.
+#>
 mk_check_functions()
 {
     mk_push_vars \
@@ -1214,6 +1362,24 @@ mk_check_functions()
     mk_pop_vars
 }
 
+#<
+# @brief Check for a library
+# @usage LIB=lib
+#
+# @option LIBDEPS=headers Specifies any additional
+# libraries might be needed in order to link against
+# <param>lib</param>.  Note that MakeKit will respect
+# .la files when checking for linkability, so
+# this is generally not necessary if the library in
+# question was produced with MakeKit or libtool.
+#
+# Checks for the availability of a library, setting
+# <var>result</var> to the result.  If the library
+# was found on the system, the result will be "external".
+# If it is produced by <funcref>mk_library</funcref> within
+# the current project, the result will be "internal".
+# Otherwise, the result will be "no".
+#>
 mk_check_library()
 {
     mk_push_vars LIBDEPS LIB CPPFLAGS LDFLAGS CFLAGS
@@ -1250,7 +1416,17 @@ EOF
     [ "$result" != "no" ]
 }
 
-
+#<
+# @brief Check for libraries
+# @usage libs...
+#
+# For each library in <param>libs</param>, <funcref>mk_check_library</funcref>
+# is invoked to check for its availability.  <var>HAVE_<varname>lib</varname></var>
+# is set to the result.  If the library was available, <def>HAVE_LIB_<varname>lib</varname></def>
+# is defined in the current config header and <var>LIB_<varname>lib</varname></var> is
+# set to <param>lib</param> (this is useful for conditionally linking to the library
+# with LIBDEPS= later on).  A message is printed indicating the result of each test.
+#>
 mk_check_libraries()
 {
     mk_push_vars LIBS LIBDEPS CPPFLAGS LDFLAGS CFLAGS FAIL LIB DEFNAME
@@ -1321,6 +1497,15 @@ EOF
     [ "$result" != "no" ]
 }
 
+#<
+# @brief Check for a type
+# @usage TYPE=type
+# @option HEADERDEPS=headers Specifies any headers that
+# are necessary to find a declaration of the type.
+#
+# Checks if the specified type is declared and sets <var>result</var>
+# to the result ("yes" or "no").
+#>
 mk_check_type()
 {
     mk_push_vars TYPE HEADERDEPS CPPFLAGS CFLAGS
@@ -1336,6 +1521,16 @@ mk_check_type()
     [ "$result" != "no" ]
 }
 
+#<
+# @brief Check for types
+# @usage typess...
+#
+# For each type in <param>types</param>, <funcref>mk_check_type</funcref>
+# is invoked to check for its availability.  <var>HAVE_<varname>type</varname></var>
+# is set to the result.  If the type was available, <def>HAVE_<varname>type</varname></def>
+# is defined in the current config header. A messsage is printed indicating the result of
+# each test.
+#>
 mk_check_types()
 {
     mk_push_vars TYPES HEADERDEPS CPPFLAGS CFLAGS TYPE FAIL DEFNAME
@@ -1429,6 +1624,16 @@ _mk_check_sizeof()
     unset upper lower mid
 }
 
+#<
+# @brief Check size of a type
+#
+# @usage TYPE=type
+# @usage type
+#
+# Runs a test for the size of <param>type</param> and sets
+# <var>result</var> to the result.  If the type cannot be
+# found at all, configuration will be aborted.
+#>
 mk_check_sizeof()
 {
     mk_push_vars TYPE HEADERDEPS CPPFLAGS LDFLAGS CFLAGS LIBDEPS
@@ -1444,6 +1649,16 @@ mk_check_sizeof()
     mk_pop_vars
 }
 
+#<
+# @brief Check sizes of several types
+#
+# @usage types...
+#
+# Runs <funcref>mk_check_sizeof</funcref> on each type in <param>types</param>.
+# For each type, the variable <var>SIZEOF_<varname>type</varname></var> will be
+# set to the result, and <def>SIZEOF_<varname>type</varname></def> will be
+# similarly defined in the current config header.
+#>
 mk_check_sizeofs()
 {
     mk_push_vars HEADERDEPS CPPFLAGS LDFLAGS CFLAGS LIBDEPS
@@ -1474,6 +1689,15 @@ mk_check_sizeofs()
     mk_pop_vars
 }
 
+#<
+# @brief Check endianness of system
+# @usage
+#
+# Checks the endianness of the current system and sets the variable
+# <var>ENDIANNESS</var> to the result ("little" or "big").  If the
+# result was "big", it also defines <def>WORDS_BIGENDIAN</def> in
+# the current config header.
+#>
 mk_check_endian()
 {
     mk_push_vars CPPFLAGS LDFLAGS CFLAGS LIBDEPS
@@ -1543,6 +1767,13 @@ EOF
     mk_pop_vars
 }
 
+#<
+# @brief Set language for configure checks
+# @usage lang
+#
+# Sets the language used for subsequent configuration checks.
+# Valid values are "c" and "c++".
+#>
 mk_check_lang()
 {
     MK_CHECK_LANG="$1"

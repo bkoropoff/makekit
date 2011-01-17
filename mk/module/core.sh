@@ -36,6 +36,19 @@ DEPENDS="platform program"
 
 ### section common
 
+#<
+# @brief Get value of exported variable
+# @usage dir var
+# 
+# Gets the value of the exported variable
+# <param>var</param> in the directory 
+# <param>dir</param> (relative to the directory
+# containing the current MakeKitBuild).  The
+# specified directory must have been previously
+# processed.
+#
+# The value is placed in <var>result</var>.
+#>
 mk_get_export()
 {
     # $1 = directory (relative to MK_SUBDIR)
@@ -91,6 +104,15 @@ mk_get_stage_targets()
     mk_pop_vars
 }
 
+#<
+# @brief Run a command and abort on failure
+# @usage command...
+# 
+# Runs the specified command.  If it fails,
+# the current operation will be aborted with
+# an error message detailing the command that
+# was run.
+#>
 mk_run_or_fail()
 {
     mk_quote_list "$@"
@@ -103,6 +125,14 @@ mk_run_or_fail()
     fi
 }
 
+#<
+# @brief Run a command quietly and abort on failure
+# @usage command...
+# 
+# Like <funcref>mk_run_or_fail</funcref>, but suppresses
+# all command output if the command succeeds.  On failure,
+# the output is displayed.
+#>
 mk_run_quiet_or_fail()
 {
     mk_quote_list "$@"
@@ -143,6 +173,15 @@ mk_safe_rm()
     mk_run_or_fail rm -rf -- "$result"
 }
 
+#<
+# @brief Print warning
+# @usage message...
+#
+# Prints <param>message</param> to the user.  If fail-on-warn
+# is turned on, this will abort the current operation.  Otherwise,
+# this function will pause for 1 second to catch the user's
+# attention.
+#>
 mk_warn()
 {
     if [ "$MK_FAIL_ON_WARN" = "yes" ]
@@ -154,6 +193,14 @@ mk_warn()
     fi
 }
 
+#<
+# @brief Note deprecated function usage
+# @usage message...
+#
+# If warn-on-deprecated is on, warns the user about deprecated
+# function usage by passing <param>message</param> to
+# <funcref>mk_warn</funcref>.
+#>
 mk_deprecated()
 {
     [ "$MK_WARN_DEPRECATED" = "yes" ] && mk_warn "$@"
@@ -425,6 +472,23 @@ mk_install_files()
     mk_pop_vars
 }
 
+#<
+# @brief Create symlink in staging area
+# @usage TARGET=target LINK=link
+#
+# @option DEPS=deps
+# Specify additional dependencies of <param>link</param>
+# other than <param>target</param>
+#
+# Creates a symlink at <param>link</param> which points to
+# <param>target</param>.
+#
+# @example
+# # Make symlink /etc/foobar.conf that points to foobar.conf.default
+#
+# mk_symlink LINK=/etc/foobar.conf TARGET=foobar.conf.default
+# @endexample
+#>
 mk_symlink()
 {
     mk_push_vars TARGET LINK DEPS
@@ -459,6 +523,43 @@ mk_symlink()
     mk_pop_vars
 }
 
+#<
+# @brief Install files or directories into staging area
+#
+# @usage SOURCE=source_path DEST=dest_path
+# @usage SOURCE=source_path DESTDIR=dest_dir
+# @usage DESTDIR=dest_dir sources...
+#
+# @option MODE=mode
+# Specifies the UNIX mode of the destination files
+# or directories
+# @option DEPS=deps
+# Specifies additional dependencies of the destination
+# files or directories other than the sources.
+#
+# Defines targets that copy one or more files or directories into
+# the staging area.  In the first form, a single file or directory
+# is copied, with the <param>dest_path</param> specifying the complete
+# destination path.  In the second form, the <param>dest_dir</param>
+# parameter specifies the directory into which the source will be
+# copied; the name of the source will be preserved.  In the third form,
+# multiple sources are copied into <param>dest_dir</param>.
+#
+# @example
+# # Copy a single file or directory
+# mk_stage SOURCE=foobar.conf.example DEST=/etc/foobar.conf
+# mk_stage SOURCE=foobar.d.example DEST=/etc/foobar.d
+#
+# # Copy a single file or directory, specifying destination directory
+# Source filename is preserved
+# mk_stage SOURCE=foobar.conf DESTDIR=/etc
+# mk_stage SOURCE=foobar.d DESTDIR=/etc
+#
+# # Copy multiple files and directories to destination directory
+# Source filenames are preserved
+# mk_stage DESTDIR=/etc foo.conf bar.conf
+# @endexample
+#>
 mk_stage()
 {
     mk_push_vars SOURCE DEST SOURCEDIR DESTDIR RESULTS MODE DEPS
@@ -618,6 +719,16 @@ mk_msg_result()
     mk_msg_end "$*"
 }
 
+#<
+# @brief Check for cached test result
+# @usage var
+#
+# Checks if a variable has been previously
+# cached by <funcref>mk_cache</funcref>.  On success,
+# both <param>var</param> and <var>result</var> are
+# set the the cached value, and true is returned.
+# Otherwise, false is returned.
+#>
 mk_check_cache()
 {
     mk_declare_system_var "$1"
@@ -640,6 +751,13 @@ mk_check_cache()
     fi
 }
 
+#<
+# @brief Cache test result
+# @usage var value
+#
+# Sets <param>var</param> to <param>value</param> and
+# stores the result in the cache.
+#>
 mk_cache()
 {
     __systems=""
@@ -869,7 +987,9 @@ _mk_core_stage()
 
     mk_msg "${1#$MK_STAGE_DIR}"
     mk_mkdir "${1%/*}"
+    [ -d "$1" ] && mk_safe_rm "$1"
     mk_run_or_fail cp -r "$2" "$1"
+    mk_run_or_fail touch "$1"
 
     if [ -n "$3" ]
     then

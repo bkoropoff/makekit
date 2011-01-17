@@ -223,6 +223,29 @@ _mk_process_build()
     MK_SUBDIR=":"
 }
 
+#<
+# @brief Define an option
+# @usage OPTION=option VAR=var
+# @usage VAR=var
+# @option DEFAULT=default If the option is not specified
+# by the user, <param>var</param> will be set to <param>default</param>.
+# @option PARAM=name A short descriptive name of the option value
+# which will show up in the help text.
+# @option HELP=text A short snippet of text describing the option
+#
+# Declares an option that can be passed by the user when configuring
+# the project and stored in <param>var</param>.  If the first form is used,
+# the option can be specified with --<param>option</param>=... on the
+# command line.  In either case, it may also be set by passing
+# <param>var</param>=... on the command line, or setting the variable
+# in the environment or in a configuration file passed with @filename.
+#
+# If <param>name</param> and <param>text</param> are provided, they will
+# be displayed in the output of --help.
+#
+# This function can only be used within the option function in
+# MakeKitBuild.
+#>
 mk_option()
 {
     unset _found
@@ -326,6 +349,42 @@ _mk_restore_exports()
     . "$1"
 }
 
+#<
+# @brief Mark variables for export
+# @usage vars...
+# @usage var=value...
+#
+# Indicates that each variable in <param>vars</param> should
+# be "exported".  A variable exported in this way during the configure
+# phase will be available when the user actually runs make.  In addition,
+# exported variables are scoped with regard to subdirectories.  A subdirectory
+# inherits the value of an exported variable from its parent, but may
+# override it by simply setting it to a new value, which all of its
+# subdirectories in turn will inherit.
+#
+# If the second form is used for a variable, it will also be assigned
+# <param>value</param> at the same time it is exported.
+#
+# @example
+# configure()
+# {
+#     mk_export FOO="foo"
+#     BAR="bar"
+# }
+#
+# make()
+# {
+#     mk_target TARGET="foobar" my_custom_function '$@'
+# }
+#
+# my_custom_function()
+# {
+#     # The value of FOOBAR is available here because it was exported
+#     echo "$FOOBAR" > "$1"
+#     # The value of BAR is not available, so this will not print "bar"
+#     mk_msg "BAR=$BAR"
+# }
+#>
 mk_export()
 {
     for _export in "$@"

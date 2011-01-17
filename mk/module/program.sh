@@ -37,6 +37,20 @@
 
 ### section configure
 
+#<
+# @brief Check for program on build system
+# @usage PROGRAM=name
+# @usage VAR=varname candidates...
+# @option FAIL=yes|no If set to yes, fails configuration
+# if the program is not found.  Defaults to no.
+#
+# Checks for an available program among a list of
+# one or more candidates and sets a variable to
+# the first one found.
+#
+# When <param>varname</param> is unspecified, it is
+# derived automatically from <param>name</param>.
+#>
 mk_check_program()
 {
     mk_push_vars VAR PROGRAM FAIL

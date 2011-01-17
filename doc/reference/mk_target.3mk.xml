@@ -1,7 +1,8 @@
-<refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="mk_target">
+<refentry version="5.0" xml:id="mk_target">
   <refmeta>
     <refentrytitle>mk_target</refentrytitle>
     <manvolnum>3mk</manvolnum>
+    <refmiscinfo class="manual">MakeKit Reference</refmiscinfo>
   </refmeta>
   <refnamediv>
     <refname>mk_target</refname>
