@@ -88,14 +88,15 @@ mk_docbook_html()
         IMAGES="@$MK_DOCBOOK_XSL_DIR/images" \
         INSTALLDIR="${MK_HTMLDIR}" \
         SOURCE \
+        INCLUDES \
         DEPS
 
     mk_parse_params
 
     mk_target \
         TARGET="${INSTALLDIR}" \
-        DEPS="$DEPS $SOURCE $STYLESHEET" \
-        _mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET"
+        DEPS="$DEPS $SOURCE $STYLESHEET $INCLUDES" \
+        _mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
 
     mk_add_all_target "$result"
 
@@ -115,13 +116,14 @@ mk_docbook_man()
         INSTALLDIR="${MK_MANDIR}" \
         SOURCE \
         MANPAGES \
+        INCLUDES \
         DEPS
     mk_parse_params
 
     mk_target \
         TARGET="${SOURCE}.docbook-man" \
-        DEPS="$DEPS $SOURCE" \
-        _mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET"
+        DEPS="$DEPS $SOURCE $INCLUDES" \
+        _mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
     man_output="$result"
 
     mk_unquote_list "$MANPAGES"
@@ -147,15 +149,36 @@ mk_docbook_man()
 
 _mk_docbook()
 {
-    MK_MSG_DOMAIN="xsltproc"
+    mk_msg_domain "xsltproc"
+    OUTPUT="$1"
+    SOURCE="$2"
+    SHEET="$3"
+    TMPDIR=".docbook$$"
 
-    mk_msg "${1#${MK_STAGE_DIR}}"
-    mk_mkdir "${1%/*}"
+    trap "cd \"$MK_ROOT_DIR\"; mk_safe_rm \"$TMPDIR\"" EXIT
+
+    mk_mkdir "$TMPDIR"
+    mk_run_or_fail cp "$SOURCE" "$TMPDIR/in.xml"
+
+    mk_expand_pathnames "$4"
+    mk_unquote_list "$result"
+
+    for f
+    do
+        mk_mkdir "$TMPDIR/${f%/*}"
+        mk_resolve_file "$f"
+        mk_run_or_fail cp "$result" "$TMPDIR/$f"
+    done
+
+    mk_msg "${OUTPUT#${MK_STAGE_DIR}}"
+    mk_mkdir "${OUTPUT%/*}"
+    mk_cd_or_fail "$TMPDIR"
     mk_run_or_fail \
         "${XSLTPROC}" \
         --xinclude \
-        --output "$1" \
-        "$3" \
-        "$2"
-    mk_run_or_fail touch "$1"
+        --output "$MK_ROOT_DIR/$OUTPUT" \
+        "$MK_ROOT_DIR/$SHEET" \
+        "in.xml"
+    mk_cd_or_fail "$MK_ROOT_DIR"
+    mk_run_or_fail touch "$OUTPUT"
 }
