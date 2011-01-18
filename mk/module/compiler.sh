@@ -202,8 +202,8 @@ _mk_process_symfile_gnu_ld()
         rm -f "$__output.new"
     fi
 
-    mk_add_configure_input "$__input"
-    mk_add_configure_output "$__output"
+    mk_add_configure_input "@$__input"
+    mk_add_configure_output "@$__output"
 
     LDFLAGS="$LDFLAGS -Wl,-version-script,$__output"
     DEPS="$DEPS @$__output"
@@ -974,7 +974,6 @@ mk_config_header()
     
     MK_CONFIG_HEADER="${MK_OBJECT_DIR}${MK_SUBDIR}/${HEADER}"
     MK_LAST_CONFIG_HEADER="$MK_CONFIG_HEADER"
-    MK_CONFIG_HEADERS="$MK_CONFIG_HEADERS '$MK_CONFIG_HEADER'"
     
     mkdir -p "${MK_CONFIG_HEADER%/*}"
     
@@ -990,7 +989,7 @@ mk_config_header()
 
 EOF
     
-    mk_add_configure_output "$MK_CONFIG_HEADER"
+    mk_add_configure_output "@$MK_CONFIG_HEADER"
     
     mk_pop_vars
 }

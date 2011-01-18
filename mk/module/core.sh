@@ -351,7 +351,7 @@ _mk_rule()
 
 _mk_build_command()
 {
-    for __param in "$@"
+    for __param
     do
         case "$__param" in
             "%<"|"%>"|"%<<"|"%>>"|"%;")
@@ -373,6 +373,9 @@ _mk_build_command()
                     mk_quote "${__param#%}=$result"
                     __command="$__command $result"
                 fi
+                ;;
+            "#"*)
+                __command="$__command ${__param#?}"
                 ;;
             "*"*)
                 _mk_build_command_expand "${__param#?}"
@@ -648,8 +651,8 @@ mk_output_file()
         mk_run_or_fail mv "${_output}.new" "${_output}"
     fi
 
-    mk_add_configure_output "${_output}"
-    mk_add_configure_input "${_input}"
+    mk_add_configure_output "@${_output}"
+    mk_add_configure_input "@${_input}"
 
     result="@$_output"
 
@@ -701,6 +704,24 @@ mk_add_subdir_target()
     mk_push_vars result
     mk_quote "$1"
     MK_SUBDIR_TARGETS="$MK_SUBDIR_TARGETS $result"
+    mk_pop_vars
+}
+
+mk_add_configure_output()
+{
+    mk_push_vars result
+    mk_resolve_target "$1"
+    mk_quote "$result"
+    MK_CONFIGURE_OUTPUTS="$MK_CONFIGURE_OUTPUTS $result"
+    mk_pop_vars
+}
+
+mk_add_configure_input()
+{
+    mk_push_vars result
+    mk_resolve_target "$1"
+    mk_quote "$result"
+    MK_CONFIGURE_INPUTS="$MK_CONFIGURE_INPUTS $result"
     mk_pop_vars
 }
 
@@ -837,6 +858,17 @@ configure()
     # Default nuke targets (scrub targets implicitly included)
     MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps .MakeKitClean"
 
+    MK_BUILD_FILES=""
+
+    for _module in ${MK_MODULE_LIST}
+    do
+        _mk_find_resource "module/${_module}.sh" || mk_fail "internal error"
+        mk_quote "@$result"
+        MK_BUILD_FILES="$MK_BUILD_FILES $result"
+    done
+
+    mk_add_configure_prehook _mk_core_configure_pre
+
     # Add a post-make() hook to write out a rule
     # to build all relevant targets in that subdirectory
     mk_add_make_posthook _mk_core_write_subdir_rule
@@ -897,8 +929,38 @@ make()
         TARGET="@.PHONY" \
         DEPS="$MK_PHONY_TARGETS"
 
+    mk_target \
+        TARGET="@Makefile" \
+        DEPS="$MK_BUILD_FILES $MK_CONFIGURE_INPUTS" \
+        mk_msg "regenerating Makefile" '%;' \
+        set -- "#$MK_OPTIONS" '%;' \
+        . "$MK_HOME/command/configure.sh" '%;' \
+        exit 0
+
+    mk_unquote_list "$MK_BUILD_FILES" "$MK_CONFIGURE_INPUTS"
+    for _target
+    do
+        mk_target TARGET="$_target"
+    done
+
+    mk_unquote_list "$MK_CONFIGURE_OUTPUTS"
+    for _target
+    do
+        mk_target TARGET="$_target" DEPS="@Makefile"
+    done
+
+    _mk_emit ""
+    _mk_emit "sinclude .MakeKitDeps/*.dep"
+    _mk_emit ""
+
     # Save configure check cache
     _mk_save_cache
+}
+
+_mk_core_configure_pre()
+{
+    mk_quote "@$MK_CURRENT_FILE"
+    MK_BUILD_FILES="$MK_BUILD_FILES $result"
 }
 
 _mk_core_write_subdir_rule()

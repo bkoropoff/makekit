@@ -11,7 +11,7 @@ configure()
 
 reference_begin()
 {
-    mk_add_configure_input "${MK_HOME}/doc.awk"
+    mk_add_configure_input "@${MK_HOME}/doc.awk"
 }
 
 reference_end()
@@ -42,12 +42,12 @@ reference()
             *)
                 case "$MODE" in
                     file)
-                        mk_add_configure_input "$i"
+                        mk_add_configure_input "@$i"
                         ;;
                     module)
                         DOC_MODULES="$DOC_MODULES $i"
                         _mk_find_resource "module/$i.sh" || mk_fail "could not find module $i"
-                        mk_add_configure_input "$result"
+                        mk_add_configure_input "@$result"
                         ;;
                 esac
                 ;;
@@ -56,7 +56,7 @@ reference()
 
     mk_resolve_file "$OUTPUT"
     _output="$result"
-    mk_add_configure_output "$_output"
+    mk_add_configure_output "@$_output"
     mk_mkdir "${_output%/*}"
     
     mk_resolve_file "mkdoc.xsl"

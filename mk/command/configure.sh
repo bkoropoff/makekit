@@ -113,7 +113,6 @@ _mk_process_build_module()
     _mk_find_resource "module/$1.sh"
 
     MK_CURRENT_FILE="$result"
-    MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
 
     unset -f option configure make
     unset SUBDIRS
@@ -134,7 +133,6 @@ _mk_process_build_configure()
     unset -f option configure make
 
     MK_CURRENT_FILE="${MK_SOURCE_DIR}$1/MakeKitBuild"
-    MK_BUILD_FILES="$MK_BUILD_FILES $MK_CURRENT_FILE"
 
     mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCE_DIR}${1}"
     
@@ -157,7 +155,6 @@ _mk_process_build_make()
     SUBDIRS="$_backup_SUBDIRS"
     
     MK_SUBDIR="$1"
-    mk_msg_verbose "emitting make rules"
     _mk_make_prehooks
     mk_function_exists make && make
     _mk_make_posthooks
@@ -509,29 +506,6 @@ _mk_emit_make_footer()
             _mk_make_posthooks
         fi
     done
-
-    _mk_emit ""
-    _mk_emit "Makefile:${MK_BUILD_FILES}${MK_CONFIGURE_INPUTS}"
-    _mk_emitf '\t@$(MK_CONTEXT) :; mk_msg "regenerating Makefile"; set -- %s; . %s; exit 0\n\n' "$MK_OPTIONS" "'${MK_HOME}/command/configure.sh'"
-
-    for _target in ${MK_CONFIGURE_OUTPUTS}
-    do
-        _mk_emit "${_target}: Makefile"
-        _mk_emit ""
-    done
-
-    _mk_emit "sinclude .MakeKitDeps/*.dep"
-    _mk_emit ""
-}
-
-mk_add_configure_output()
-{
-    MK_CONFIGURE_OUTPUTS="$MK_CONFIGURE_OUTPUTS $1"
-}
-
-mk_add_configure_input()
-{
-    MK_CONFIGURE_INPUTS="$MK_CONFIGURE_INPUTS $1"
 }
 
 mk_help_recursive()
