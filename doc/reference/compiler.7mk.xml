@@ -2,6 +2,7 @@
   <refmeta>
     <refentrytitle>compiler</refentrytitle>
     <manvolnum>7mk</manvolnum>
+    <refmiscinfo class="manual">MakeKit Reference</refmiscinfo>
   </refmeta>
   <refnamediv>
     <refname>compiler</refname>
