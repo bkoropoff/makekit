@@ -92,8 +92,10 @@ char *strsignal(int sig)
 {
 	static char buf[19];
 
+#if HAVE_DECL_SYS_SIGLIST
 	if ((unsigned)sig < NSIG && sys_siglist[sig])
 		return (char *)sys_siglist[sig];
+#endif
 	fmtstr(buf, sizeof(buf), "Signal %d", sig); 
 	return buf;
 }

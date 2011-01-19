@@ -372,6 +372,56 @@ __closememout(void) {
 #endif
 #endif
 
+#ifdef __hpux
+static int
+xvsnprintf(char *outbuf, size_t length, const char *fmt, va_list ap)
+{
+	int ret;
+	char* dummy = NULL;
+	char* dummy_new = NULL;
+	size_t dummy_len = 8;
+	va_list ap_mine;
+
+	if (length > 0) {
+		INTOFF;
+		va_copy(ap_mine, ap);
+                errno = 0;
+		ret = vsnprintf(outbuf, length, fmt, ap_mine);
+		va_end(ap_mine);
+		INTON;
+	} else {
+		ret = -1;
+		errno = 0;
+	}
+
+	if (ret < 0 && errno == 0) {
+		do {
+			dummy_len *= 2;
+			dummy_new = realloc(dummy, dummy_len);
+			if (!dummy_new) {
+				ret = -1;
+				errno = ENOMEM;
+				break;
+			}
+			dummy = dummy_new;
+			INTOFF;
+			va_copy(ap_mine, ap);
+                        errno = 0;
+			ret = vsnprintf(dummy, dummy_len, fmt, ap_mine);
+			va_end(ap_mine);
+			INTON;
+		} while (ret < 0 && errno == 0);
+
+		if (ret >= 0 && length) {
+			memcpy(outbuf, dummy, length);
+		}
+		if (dummy) free(dummy);
+	}
+
+	return ret;
+}
+
+#else
 
 static int
 xvsnprintf(char *outbuf, size_t length, const char *fmt, va_list ap)
@@ -397,3 +447,5 @@ xvsnprintf(char *outbuf, size_t length, const char *fmt, va_list ap)
 	INTON;
 	return ret;
 }
+
+#endif
