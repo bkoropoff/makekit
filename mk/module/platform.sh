@@ -601,7 +601,7 @@ option()
         HELP="Host operating system distribution version"
 
     case "$MK_HOST_DISTRO" in
-        centos|redhat|fedora)
+        centos|redhat|fedora|rhel)
             _distro_archetype="redhat"
             ;;
         debian|ubuntu)
