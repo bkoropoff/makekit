@@ -1094,6 +1094,7 @@ EOF
 
     _mk_build_test compile ".check.c"
     _ret="$?"
+    mk_safe_rm .check.c
 
     mk_pop_vars
 
