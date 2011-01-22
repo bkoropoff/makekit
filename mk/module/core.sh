@@ -328,10 +328,7 @@ mk_skip_subdir()
 
 mk_comment()
 {
-    _mk_emit ""
-    _mk_emit "#"
-    _mk_emit "# $*"
-    _mk_emit "#"
+    _mk_emitf "\n#\n# %s\n#\n" "$*"
 }
 
 _mk_rule()
@@ -929,6 +926,8 @@ make()
         TARGET="@.PHONY" \
         DEPS="$MK_PHONY_TARGETS"
 
+    mk_comment "Rule to regenerate Makefile"
+
     mk_target \
         TARGET="@Makefile" \
         DEPS="$MK_BUILD_FILES $MK_CONFIGURE_INPUTS" \
@@ -937,11 +936,15 @@ make()
         . "$MK_HOME/command/configure.sh" '%;' \
         exit 0
 
+    mk_comment "Dummy targets for files needed by configure"
+
     mk_unquote_list "$MK_BUILD_FILES" "$MK_CONFIGURE_INPUTS"
     for _target
     do
         mk_target TARGET="$_target"
     done
+
+    mk_comment "Targets for files output by configure"
 
     mk_unquote_list "$MK_CONFIGURE_OUTPUTS"
     for _target
