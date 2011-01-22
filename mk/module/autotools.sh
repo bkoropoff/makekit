@@ -279,14 +279,22 @@ mk_autotools()
     then
         if [ -f "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}/autogen.sh" ]
         then
-            mk_msg "running autogen.sh for ${dirname}"
-            cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail "./autogen.sh"
-            cd "${MK_ROOT_DIR}"
+            _command="./autogen.sh"
+            _msg="running autogen.sh"
         else
-            mk_msg "running autoreconf for ${dirname}"
-            cd "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}" && mk_run_or_fail autoreconf -fi
-            cd "${MK_ROOT_DIR}"
+            _command="autoreconf -fi"
+            _msg="running autoreconf"
         fi
+
+        if [ -n "$SOURCEDIR" ]
+        then
+            _msg="$_msg for $SOURCEDIR"
+        fi
+
+        mk_msg "$_msg"
+        mk_cd_or_fail "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}"
+        mk_run_or_fail ${_command}
+        mk_cd_or_fail "${MK_ROOT_DIR}"
     fi
     
     if [ "$MK_SYSTEM" = "host" -a "$MK_HOST_MULTIARCH" = "combine" ]
