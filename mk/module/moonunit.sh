@@ -99,7 +99,7 @@ mk_moonunit()
     SOURCES="$SOURCES $_stub"
 
     mk_dlo \
-        INSTALL="no" \
+        INSTALLDIR="@$MK_MOONUNIT_DIR" \
         DLO="$DLO" \
         SOURCES="$SOURCES" \
         HEADERS="$HEADERS" \
@@ -116,6 +116,16 @@ mk_moonunit()
     MK_MOONUNIT_TESTS="$MK_MOONUNIT_TESTS $result"
 
     mk_pop_vars
+}
+
+option()
+{
+    mk_option \
+        OPTION="moonunit-dir" \
+        VAR="MK_MOONUNIT_DIR" \
+        PARAM="dir" \
+        DEFAULT="mu" \
+        HELP="Directory where MoonUnit tests are placed"
 }
 
 configure()
@@ -152,5 +162,7 @@ make()
             mk_run_script moonunit "*${MK_MOONUNIT_TESTS}"
 
         mk_add_phony_target "$result"
+
+        mk_add_clean_target "@${MK_MOONUNIT_DIR}"
     fi
 }
