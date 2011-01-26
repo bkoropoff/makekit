@@ -92,7 +92,7 @@ _mk_compile()
     
     unset _header_deps
 
-    for _header in ${HEADERDEPS}
+    for _header in ${HEADERDEPS} ${MK_HEADERDEPS}
     do
         if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
         then
@@ -297,7 +297,7 @@ _mk_library()
         _deps="$_deps $result"
     done
     
-    for result in ${LIBDEPS}
+    for result in ${LIBDEPS} ${MK_LIBDEPS}
     do
         if _mk_contains "$result" ${MK_INTERNAL_LIBS}
         then
@@ -314,7 +314,7 @@ _mk_library()
         DEPS="${_deps}" \
         mk_run_script link \
         MODE=library \
-        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %SONAME %EXT %COMPILER \
+        %GROUPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %LDFLAGS %SONAME %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
 }
 
@@ -357,8 +357,8 @@ mk_library()
 
     [ "$COMPILER" = "c++" ] && IS_CXX=true
     
-    _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS"
-    _mk_verify_headerdeps "lib$LIB${EXT}" "$HEADERDEPS"
+    _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS $MK_LIBDEPS"
+    _mk_verify_headerdeps "lib$LIB${EXT}" "$HEADERDEPS $MK_HEADERDEPS"
 
     if [ -n "$SYMFILE" ]
     then
@@ -413,7 +413,7 @@ mk_library()
         TARGET="${INSTALLDIR}/lib${LIB}.la" \
         DEPS="$_links $result" \
         mk_run_script link MODE=la \
-        %LIBDEPS %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME %EXT \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME %EXT \
         '$@'
 
     mk_add_all_target "$result"
@@ -453,7 +453,7 @@ _mk_dlo()
         _deps="$_deps $result"
     done
     
-    for _lib in ${LIBDEPS}
+    for _lib in ${LIBDEPS} ${MK_LIBDEPS}
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
@@ -470,7 +470,7 @@ _mk_dlo()
         DEPS="$_deps" \
         mk_run_script link \
         MODE=dlo \
-        %GROUPS %LIBDEPS %LIBDIRS %LDFLAGS %EXT %COMPILER \
+        %GROUPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %LDFLAGS %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
 }
 
@@ -505,8 +505,8 @@ mk_dlo()
 
     [ "$COMPILER" = "c++" ] && IS_CXX=true
     
-    _mk_verify_libdeps "$DLO${EXT}" "$LIBDEPS"
-    _mk_verify_headerdeps "$DLO${EXT}" "$HEADERDEPS"
+    _mk_verify_libdeps "$DLO${EXT}" "$LIBDEPS $MK_LIBDEPS"
+    _mk_verify_headerdeps "$DLO${EXT}" "$HEADERDEPS $MK_HEADERDEPS"
 
     if [ -n "$SYMFILE" ]
     then
@@ -557,7 +557,7 @@ mk_dlo()
         TARGET="${INSTALLDIR}/${DLO}.la" \
         DEPS="$result" \
         mk_run_script link MODE=la \
-        %LIBDEPS %LIBDIRS %GROUPS %COMPILER %EXT \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %EXT \
         '$@'
 
     mk_add_all_target "$result"
@@ -600,7 +600,7 @@ _mk_group()
         _deps="$_deps $result"
     done
     
-    for _lib in ${LIBDEPS}
+    for _lib in ${LIBDEPS} ${MK_LIBDEPS}
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
@@ -615,7 +615,8 @@ _mk_group()
         SYSTEM="$SYSTEM" \
         TARGET="$TARGET" \
         DEPS="$_deps" \
-        mk_run_script group %GROUPDEPS %LIBDEPS %LIBDIRS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"    
+        mk_run_script group %GROUPDEPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" \
+        %LIBDIRS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"    
 }
 
 #<
@@ -656,8 +657,8 @@ mk_group()
         _mk_group "$@"
     fi
 
-    _mk_verify_libdeps "$GROUP" "$LIBDEPS"
-    _mk_verify_headerdeps "$GROUP" "$HEADERDEPS"
+    _mk_verify_libdeps "$GROUP" "$LIBDEPS $MK_LIBDEPS"
+    _mk_verify_headerdeps "$GROUP" "$HEADERDEPS $MK_HEADERDEPS"
 
     mk_pop_vars
 }
@@ -699,7 +700,7 @@ _mk_program()
         _deps="$_deps $result"
     done
     
-    for _lib in ${LIBDEPS}
+    for _lib in ${LIBDEPS} ${MK_LIBDEPS}
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
@@ -714,7 +715,8 @@ _mk_program()
         SYSTEM="$SYSTEM" \
         TARGET="$TARGET" \
         DEPS="$_deps" \
-        mk_run_script link MODE=program %GROUPS %LIBDEPS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"
+        mk_run_script link MODE=program %GROUPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" \
+        %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"
 }
 
 #<
@@ -747,8 +749,8 @@ mk_program()
 
     [ "$COMPILER" = "c++" ] && IS_CXX=true
 
-    _mk_verify_libdeps "$PROGRAM" "$LIBDEPS"
-    _mk_verify_headerdeps "$PROGRAM" "$HEADERDEPS"
+    _mk_verify_libdeps "$PROGRAM" "$LIBDEPS $MK_LIBDEPS"
+    _mk_verify_headerdeps "$PROGRAM" "$HEADERDEPS $MK_HEADERDEPS"
 
     if _mk_is_fat
     then
@@ -800,13 +802,13 @@ mk_headers()
     INSTALLDIR="${MK_INCLUDEDIR}"
     mk_parse_params
     
-    _mk_verify_headerdeps "header" "$HEADERDEPS"
+    _mk_verify_headerdeps "header" "$HEADERDEPS $MK_HEADERDEPS"
 
     unset _all_headers
     
     mk_comment "headers from ${MK_SUBDIR#/}"
     
-    for _header in ${HEADERDEPS}
+    for _header in ${HEADERDEPS} ${MK_HEADERDEPS}
     do
         if _mk_contains "$_header" ${MK_INTERNAL_HEADERS}
         then
@@ -2067,7 +2069,7 @@ _mk_compiler_check()
 
 configure()
 {
-    mk_export MK_CONFIG_HEADER=""
+    mk_export MK_CONFIG_HEADER="" MK_HEADERDEPS="" MK_LIBDEPS=""
     mk_declare_system_var \
         MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS \
         MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
