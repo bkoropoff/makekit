@@ -416,7 +416,11 @@ mk_library()
         LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME %EXT \
         '$@'
 
-    mk_add_all_target "$result"
+    case "$result" in
+        "@${MK_STAGE_DIR}/"*)
+            mk_add_all_target "$result"
+            ;;
+    esac
 
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     
@@ -492,7 +496,7 @@ _mk_dlo()
 mk_dlo()
 {
     mk_push_vars \
-        INSTALL DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
+        DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION \
         OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE COMPILER=c \
         IS_CXX=false OSUFFIX PIC=yes SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM
@@ -518,17 +522,9 @@ mk_dlo()
         _mk_do_fat "$DLO" "$EXT" _mk_dlo "$@"
         _PARTS="$result"
 
-        case "$INSTALL" in
-            no)
-                TARGET="${DLO}${EXT}"
-                ;;
-            *)
-                TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
-                ;;
-        esac
-
         mk_comment "library ${LIB} (host) from ${MK_SUBDIR#/}"
 
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
         mk_resolve_target "$TARGET"
 
         mk_target \
@@ -536,14 +532,7 @@ mk_dlo()
             DEPS="$_PARTS" \
             _mk_compiler_multiarch_combine "$result" "*$_PARTS"
     else
-        case "$INSTALL" in
-            no)
-                TARGET="${DLO}${EXT}"
-                ;;
-            *)
-                TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
-                ;;
-        esac
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
 
         mk_canonical_system "$SYSTEM"
         CANONICAL_SYSTEM="$result"
@@ -560,12 +549,11 @@ mk_dlo()
         LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %EXT \
         '$@'
 
-    mk_add_all_target "$result"
-
-    if [ "$INSTALL" != "no" ]
-    then
-        mk_add_all_target "$result"
-    fi
+    case "$result" in
+        "@${MK_STAGE_DIR}/"*)
+            mk_add_all_target "$result"
+            ;;
+    esac
     
     mk_pop_vars
 }
@@ -774,9 +762,13 @@ mk_program()
     if [ "${MK_CANONICAL_SYSTEM%/*}" = "build" ]
     then
         MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
-    else
-        mk_add_all_target "$result"
     fi
+
+    case "$result" in
+        "@${MK_STAGE_DIR}/"*)
+            mk_add_all_target "$result"
+            ;;
+    esac
     
     mk_pop_vars
 }
