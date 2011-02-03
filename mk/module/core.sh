@@ -36,6 +36,125 @@ DEPENDS="platform program"
 
 ### section common
 
+_mk_declare_output()
+{
+    case " $_MK_OUTPUT_VARS " in
+        *" $1 "*)
+            return 0
+            ;;
+    esac
+
+    _MK_OUTPUT_VARS="$_MK_OUTPUT_VARS $1"
+}
+
+#<
+# @brief Declare special variables
+# @usage [-i] [-e] [-s] [-o] vars...
+# @usage [-i] [-e] [-s] [-o] var=value...
+# @option -i Marks all listed variables as inherited by subdirectories.
+#            Each subdirectory may override the variable by setting it
+#            to a new value; the original value will be restored upon
+#            returning to the parent directory.
+# @option -e Mark all listed variables as exported.  Their values
+#            will be available when the user runs <cmd>make</cmd>.
+# @option -s Mark all listed variables as system-dependent.  The
+#            variables may have different values for each target system.
+#            The values will be swapped out when the target system is
+#            changed with <funcref>mk_system</funcref>.
+# @option -o Mark all listed variables as output variables.  Their
+#            values will be substituted when processing a file with
+#            <funcref>mk_output_file</funcref>.
+#
+# Marks each variable in the list with the above attributes.
+# If the second form is used for a variable, it will also be assigned
+# <param>value</param> at the same time.
+#
+# @example
+# configure()
+# {
+#     mk_declare -e FOO="foo"
+#     BAR="bar"
+# }
+#
+# make()
+# {
+#     mk_target TARGET="foobar" my_custom_function '$@'
+# }
+#
+# my_custom_function()
+# {
+#     # The value of FOOBAR is available here because it was exported
+#     echo "$FOOBAR" > "$1"
+#     # The value of BAR is not available, so this will not print "bar"
+#     mk_msg "BAR=$BAR"
+# }
+#>
+mk_declare()
+{
+    _inherited=false
+    _exported=false
+    _system=false
+    _output=false
+
+    while [ "$#" -gt 0 ]
+    do
+        case "$1" in
+            '-e') _exported=true;;
+            '-i') _inherited=true;;
+            '-s') _system=true;;
+            '-o') _output=true;;
+            *'='*)
+                _name="${1%%=*}"
+                _val="${1#*=}"
+                mk_set "$_name" "$_val"
+                if $_system
+                then
+                    _mk_declare_system "$_name"
+                    $_output && _mk_declare_output "$_name"
+                else
+                    $_inherited && _mk_declare_inherited "$_name"
+                    $_exported && _mk_declare_exported "$_name"
+                    $_output && _mk_declare_output "$_name"
+                fi
+                ;;
+            *)
+                if $_system
+                then
+                    _mk_declare_system "$1"
+                    $_output && _mk_declare_output "$1"
+                else
+                    $_inherited && _mk_declare_inherited "$1"
+                    $_exported && _mk_declare_exported "$1"
+                    $_output && _mk_declare_output "$1"
+                fi
+                ;;
+        esac
+        shift
+    done
+}
+
+mk_export()
+{
+    mk_deprecated "mk_export is deprecated; use mk_declare -e instead"
+
+    for _export
+    do
+        case "$_export" in
+            *"="*)
+                _val="${_export#*=}"
+                _name="${_export%%=*}"
+                mk_set "$_name" "$_val"
+                _mk_declare_exported "$_name"
+                _mk_declare_inherited "$_name"
+                ;;
+            *)
+                _mk_declare_exported "$_export"
+                _mk_declare_inherited "$_export"
+                ;;
+        esac
+    done
+}
+
 #<
 # @brief Get value of exported variable
 # @usage dir var
@@ -602,6 +721,25 @@ mk_stage()
     mk_pop_vars
 }
 
+#<
+# @brief Output a file with variable substitutions
+#
+# @usage INPUT=source_path DEST=dest_path
+# @usage dest_path
+#
+# Processes the given <param>source_path</param>, substituting
+# anything of the form <lit>@<var>VAR</var>@</lit> with the value
+# of <var>VAR</var>, where <var>VAR</var> is an output variable
+# as declared by <cmd><funcref>mk_declare</funcref> -o</cmd>.
+#
+# Both paths are resolved according to the usual target notation
+# (see <funcref>mk_resolve_target</funcref>).  In the most common
+# usage, the source will be in the source directory and the
+# destination will be in the object directory.
+#
+# If the second form is used, the input file is assumed to be
+# the same as the output file suffixed with <lit>.in</lit>.
+#>
 mk_output_file()
 {
     mk_push_vars INPUT OUTPUT
@@ -614,7 +752,7 @@ mk_output_file()
     {
         echo "{"
         
-        for _export in ${MK_EXPORTS}
+        for _export in ${_MK_OUTPUT_VARS}
         do
             mk_get "$_export"
             mk_quote_c_string "$result"
@@ -749,7 +887,7 @@ mk_msg_result()
 #>
 mk_check_cache()
 {
-    mk_declare_system_var "$1"
+    mk_declare -s -i "$1"
 
     _mk_define_name "CACHED_$MK_CANONICAL_SYSTEM"
     if mk_is_set "${1}__${result}"
@@ -843,6 +981,8 @@ option()
 
 configure()
 {
+    mk_declare -i _MK_OUTPUT_VARS
+
     # Check for best possible awk
     mk_check_program VAR=AWK FAIL=yes gawk awk
 

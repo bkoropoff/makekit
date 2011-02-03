@@ -86,7 +86,5 @@ option()
 
 configure()
 {
-    mk_export MK_PACKAGE_DIR
-
     mk_add_scrub_target "@package"
 }

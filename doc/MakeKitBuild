@@ -4,6 +4,7 @@ configure()
 {
     if mk_have_docbook
     then
+        mk_declare -o MK_DOCBOOK_XSL_DIR
         mk_output_file html.xsl
         mk_output_file man.xsl
     fi

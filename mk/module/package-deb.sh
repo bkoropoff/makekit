@@ -55,16 +55,14 @@ option()
 
 configure()
 {
-    mk_export MK_PACKAGE_DEB_DIR
-
     if mk_check_program PROGRAM=dpkg-buildpackage &&
        [ "$MK_PACKAGE_DEB" = "yes" ]
     then
         mk_msg "debian package building: enabled"
-        mk_export MK_PACKAGE_DEB_ENABLED=yes
+        MK_PACKAGE_DEB_ENABLED=yes
     else
         mk_msg "debian package building: disabled"
-        mk_export MK_PACKAGE_DEB_ENABLED=no
+        MK_PACKAGE_DEB_ENABLED=no
     fi
 }
 

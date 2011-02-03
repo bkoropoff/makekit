@@ -55,15 +55,13 @@ option()
 
 configure()
 {
-    mk_export MK_PACKAGE_RPM_DIR
-
     if mk_check_program PROGRAM=rpmbuild && [ "$MK_PACKAGE_RPM" = "yes" ]
     then
         mk_msg "RPM package building: enabled"
-        mk_export MK_PACKAGE_RPM_ENABLED=yes
+        MK_PACKAGE_RPM_ENABLED=yes
     else
         mk_msg "RPM package building: disabled"
-        mk_export MK_PACKAGE_RPM_ENABLED=no
+        MK_PACKAGE_RPM_ENABLED=no
     fi
 }
 

@@ -148,8 +148,6 @@ configure()
     fi
     
     mk_msg "moonunit available: $HAVE_MOONUNIT"
-
-    mk_export HAVE_MOONUNIT
 }
 
 make()

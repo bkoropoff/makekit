@@ -244,6 +244,35 @@ mk_run_with_extended_library_path()
 
 ### section configure
 
+_mk_declare_system()
+{
+    case " $MK_SYSTEM_VARS " in
+        " $1 ")
+            return 0
+            ;;
+    esac
+           
+    MK_SYSTEM_VARS="$MK_SYSTEM_VARS $1"
+
+    if ${_inherited}
+    then
+        for __target in ${MK_ALL_SYSTEMS}
+        do
+            _mk_define_name "$__target"
+            _mk_declare_inherited "$1_$result"
+        done
+    fi
+
+    if ${_exported}
+    then
+        for __target in ${MK_ALL_SYSTEMS}
+        do
+            _mk_define_name "$__target"
+            _mk_declare_exported "$1_$result"
+        done        
+    fi
+}
+
 #<
 # @brief Declare system variable
 # @usage var
@@ -256,29 +285,23 @@ mk_run_with_extended_library_path()
 #>
 mk_declare_system_var()
 {
+    mk_deprecated "mk_declare_system_var is deprecated; use mk_declare -s instead"
+
     mk_push_vars EXPORT
     mk_parse_params
 
-    for __var in "$@"
+    _inherited=true
+    _exported=true
+
+    if [ "$EXPORT" = "no" ]
+    then
+        _inherited=false
+        _exported=false
+    fi
+
+    for __var
     do
-        if ! _mk_contains "$__var" ${MK_SYSTEM_VARS}
-        then
-            MK_SYSTEM_VARS="$MK_SYSTEM_VARS $__var"
-            if [ "$EXPORT" != "no" ]
-            then
-                for __isa in ${MK_HOST_ISAS}
-                do
-                    _mk_define_name "host/${__isa}"
-                    mk_export "${__var}_$result"
-                done
-                
-                for __isa in ${MK_BUILD_ISAS}
-                do
-                    _mk_define_name "build/${__isa}"
-                    mk_export "${__var}_$result"
-                done
-            fi
-        fi
+        _mk_declare_system "$__var"
     done
 
     mk_pop_vars
@@ -627,15 +650,26 @@ option()
 
 configure()
 {
-    mk_export \
+    for _isa in ${MK_BUILD_ISAS}
+    do
+        MK_ALL_SYSTEMS="$MK_ALL_SYSTEMS build/$_isa"
+    done
+
+    for _isa in ${MK_HOST_ISAS}
+    do
+        MK_ALL_SYSTEMS="$MK_ALL_SYSTEMS host/$_isa"
+    done
+
+    mk_declare -e \
         MK_BUILD_OS MK_BUILD_DISTRO MK_BUILD_DISTRO_VERSION \
         MK_BUILD_DISTRO_ARCHETYPE MK_BUILD_ARCH MK_BUILD_ISAS \
         MK_BUILD_PRIMARY_ISA MK_HOST_OS MK_HOST_DISTRO \
         MK_HOST_DISTRO_VERSION MK_HOST_DISTRO_ARCHETYPE \
         MK_HOST_ARCH MK_HOST_ISAS MK_HOST_PRIMARY_ISA \
-        MK_SYSTEM_VARS MK_HOST_MULTIARCH MK_BUILD_MULTIARCH
+        MK_SYSTEM_VARS MK_HOST_MULTIARCH MK_BUILD_MULTIARCH \
+        MK_ALL_SYSTEMS
 
-    mk_declare_system_var \
+    mk_declare -s -e \
         MK_OS MK_DISTRO MK_DISTRO_VERSION MK_DISTRO_ARCHETYPE \
         MK_ARCH MK_ISAS MK_MULTIARCH MK_ISA MK_DLO_EXT MK_LIB_EXT
 
@@ -663,28 +697,29 @@ configure()
         mk_set_system_var SYSTEM="host/$_isa" MK_ISA "$_isa"
     done
 
+    for _sys in ${MK_ALL_SYSTEMS}
+    do
+        case "$MK_OS-${_sys#*/}" in
+            darwin-*)
+                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".dylib"
+                mk_set_system_var SYSTEM="$_sys" MK_DLO_EXT ".so"
+                ;;
+            hpux-hppa*)
+                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".sl"
+                mk_set_system_var SYSTEM="$_sys" MK_DLO_EXT ".sl"
+                ;;
+            *)
+                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".so"
+                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".so"
+                mk_set_system_var SYSTEM="$_sys" MK_DLO_EXT ".so"
+                ;;
+        esac
+    done
+
     for _sys in build host
     do
         mk_system "$_sys"
-        
-        for _isa in $MK_ISAS
-        do
-            case "$MK_OS-$_isa" in
-                darwin-*)
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".dylib"
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
-                    ;;
-                hpux-hppa*)
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".sl"
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".sl"
-                    ;;
-                *)
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_LIB_EXT ".so"
-                    mk_set_system_var SYSTEM="$_sys/$_isa" MK_DLO_EXT ".so"
-                    ;;
-            esac
-        done
-        
+
         mk_msg "$_sys operating system: $MK_OS"
         mk_msg "$_sys distribution: $MK_DISTRO"
         mk_msg "$_sys distribution version: $MK_DISTRO_VERSION"
@@ -731,7 +766,7 @@ configure()
     set -- ${_MK_MULTIARCH_SYS_MAKE}; shift
     _MK_MULTIARCH_COMPAT_MAKE="$*"
 
-    mk_export MK_CROSS_COMPILING
+    mk_declare -e MK_CROSS_COMPILING
 
     mk_msg "cross compiling: $MK_CROSS_COMPILING"
 

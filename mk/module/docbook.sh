@@ -73,7 +73,6 @@ configure()
     fi
 
     mk_msg "docbook enabled: $MK_HAVE_DOCBOOK"
-    mk_export MK_HAVE_DOCBOOK MK_DOCBOOK_XSL_DIR
 }
 
 mk_have_docbook()

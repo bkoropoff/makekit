@@ -1431,7 +1431,7 @@ mk_check_libraries()
         _mk_define_name "$LIB"
         DEFNAME="$result"
 
-        mk_declare_system_var "LIB_$DEFNAME"
+        mk_declare -s -i "LIB_$DEFNAME"
 
         mk_msg_checking "library $LIB"
 
@@ -2061,11 +2061,11 @@ _mk_compiler_check()
 
 configure()
 {
-    mk_export MK_CONFIG_HEADER="" MK_HEADERDEPS="" MK_LIBDEPS=""
-    mk_declare_system_var \
+    mk_declare -i MK_CONFIG_HEADER="" MK_HEADERDEPS="" MK_LIBDEPS=""
+    mk_declare -s -i -e \
         MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS \
         MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
-    mk_declare_system_var EXPORT=no MK_INTERNAL_LIBS
+    mk_declare -s MK_INTERNAL_LIBS
 
     mk_msg "default C compiler: $MK_DEFAULT_CC"
     mk_msg "default C++ compiler: $MK_DEFAULT_CXX"

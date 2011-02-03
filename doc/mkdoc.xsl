@@ -140,6 +140,12 @@
     </replaceable>
   </xsl:template>
 
+  <xsl:template match="cmd">
+    <literal>
+      <xsl:apply-templates/>
+    </literal>
+  </xsl:template>
+
   <xsl:template match="funcref">
     <function>
       <xref>

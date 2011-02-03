@@ -106,7 +106,7 @@ mk_check_program()
         mk_fail "could not find program: $PROGRAM"
     fi
    
-    mk_export "$VAR=$_res"
+    mk_declare -e "$VAR=$_res"
     
     mk_pop_vars
     [ -n "$_res" ]

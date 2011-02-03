@@ -458,9 +458,8 @@ configure()
 {
     mk_msg "build system string: $MK_AT_BUILD_STRING"
 
-    mk_export MK_AT_BUILD_STRING
-
-    mk_declare_system_var MK_AT_HOST_STRING
+    mk_declare -e MK_AT_BUILD_STRING
+    mk_declare -s -e MK_AT_HOST_STRING
     
     for _isa in ${MK_HOST_ISAS}
     do

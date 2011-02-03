@@ -187,8 +187,9 @@ _mk_process_build_recursive()
             _preorder_make=yes
             _mk_process_build_make "$1"
         else
+            _mk_push_inherited
             _mk_process_build_recursive "$1/${_dir}"
-            _mk_restore_exports "${MK_OBJECT_DIR}${1}/.MakeKitExports"
+            _mk_pop_inherited
         fi
     done
 
@@ -339,65 +340,51 @@ _mk_write_exports()
     } >"$1"
 }
 
-_mk_restore_exports()
-{
-    unset ${MK_EXPORTS}
+_MK_INHERIT_DEPTH="0"
 
-    . "$1"
+_mk_push_inherited()
+{
+    for _var in ${_MK_INHERITED_VARS} _MK_INHERITED_VARS
+    do
+        eval "_INHERIT_${_MK_INHERIT_DEPTH}_${_var}=\$$_var"
+    done
+
+    _MK_INHERIT_DEPTH=$(($_MK_INHERIT_DEPTH + 1))
 }
 
-#<
-# @brief Mark variables for export
-# @usage vars...
-# @usage var=value...
-#
-# Indicates that each variable in <param>vars</param> should
-# be "exported".  A variable exported in this way during the configure
-# phase will be available when the user actually runs make.  In addition,
-# exported variables are scoped with regard to subdirectories.  A subdirectory
-# inherits the value of an exported variable from its parent, but may
-# override it by simply setting it to a new value, which all of its
-# subdirectories in turn will inherit.
-#
-# If the second form is used for a variable, it will also be assigned
-# <param>value</param> at the same time it is exported.
-#
-# @example
-# configure()
-# {
-#     mk_export FOO="foo"
-#     BAR="bar"
-# }
-#
-# make()
-# {
-#     mk_target TARGET="foobar" my_custom_function '$@'
-# }
-#
-# my_custom_function()
-# {
-#     # The value of FOOBAR is available here because it was exported
-#     echo "$FOOBAR" > "$1"
-#     # The value of BAR is not available, so this will not print "bar"
-#     mk_msg "BAR=$BAR"
-# }
-#>
-mk_export()
+_mk_pop_inherited()
 {
-    for _export in "$@"
+    _MK_INHERIT_DEPTH=$(($_MK_INHERIT_DEPTH - 1))
+
+    unset ${_MK_INHERITED_VARS}
+    for _var in ${_MK_INHERITED_VARS} _MK_INHERITED_VARS
     do
-        case "$_export" in
-            *"="*)
-                _val="${_export#*=}"
-                _name="${_export%%=*}"
-                mk_set "$_name" "$_val"
-                _mk_contains "$_name" ${MK_EXPORTS} || MK_EXPORTS="$MK_EXPORTS $_name"
-                ;;
-            *)
-                _mk_contains "$_export" ${MK_EXPORTS} || MK_EXPORTS="$MK_EXPORTS $_export"
-                ;;
-        esac
+        eval "${_var}=\$_INHERIT_${_MK_INHERIT_DEPTH}_${_var}"
     done
+}
+
+_MK_INHERITED_VARS="MK_EXPORTS"
+
+_mk_declare_inherited()
+{
+    case " $_MK_INHERITED_VARS " in
+        *" $1 "*)
+            return 0
+            ;;
+    esac
+
+    _MK_INHERITED_VARS="$_MK_INHERITED_VARS $1"
+}
+
+_mk_declare_exported()
+{
+    case " $MK_EXPORTS " in
+        *" $1 "*)
+            return 0
+            ;;
+    esac
+
+    MK_EXPORTS="$MK_EXPORTS $1"
 }
 
 mk_add_configure_prehook()
