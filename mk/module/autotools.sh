@@ -374,13 +374,31 @@ mk_autotools()
     for _lib in ${LIBS}
     do
         mk_target \
-            TARGET="${MK_LIBDIR}/lib${_lib}.la" \
+            TARGET="${MK_LIBDIR}/lib${_lib%:*}.la" \
             DEPS="'$stamp'" \
             mk_at_la '$@'
-
+        
+        mk_target \
+            TARGET="${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}" \
+            DEPS="'$stamp'"
+        
         mk_add_all_target "$result"
 
-        MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $_lib"
+        MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS ${_lib%:*}"
+
+        case "$_lib" in
+            *:*)
+                _ver="${_lib#*:}"
+
+                mk_target \
+                    TARGET="${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver}" \
+                    DEPS="'$stamp'"
+
+                mk_target \
+                    TARGET="${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver%%.*}" \
+                    DEPS="'$stamp'"
+                ;;
+        esac
     done
 
     for _program in ${PROGRAMS}
