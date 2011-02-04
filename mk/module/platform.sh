@@ -490,7 +490,7 @@ option()
         freebsd)
             __release="`uname -r`"
             _default_MK_BUILD_DISTRO="`uname -s | tr 'A-Z' 'a-z'`"
-            _default_MK_BUILD_DISTRO_VERSION="${__release%-*}"
+            _default_MK_BUILD_DISTRO_VERSION="${__release%%-*}"
             _default_MK_BUILD_MULTIARCH="separate"
             ;;
         solaris)
