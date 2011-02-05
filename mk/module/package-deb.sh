@@ -185,12 +185,11 @@ mk_deb_done()
         _mk_build_deb "${DEB_PACKAGE}" "&${DEB_PKGDIR}"
     master="$result"
 
-    mk_add_phony_target "$master"
-    mk_add_subdir_target "$master"
-
     unset DEB_PACKAGE DEB_SUBPACKAGE DEB_INSTALLFILE DEB_SUBINSTALLFILE DEB_PKGDIR
     unset DEB_SUBPACKAGES
     unset -f mk_package_files mk_package_dirs mk_subpackage_do mk_subpackage_done
+
+    mk_add_package_target "$master"
 
     result="$master"
 }

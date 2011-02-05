@@ -416,12 +416,6 @@ mk_library()
         LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME %EXT \
         '$@'
 
-    case "$result" in
-        "@${MK_STAGE_DIR}/"*)
-            mk_add_all_target "$result"
-            ;;
-    esac
-
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     
     mk_pop_vars
@@ -549,12 +543,6 @@ mk_dlo()
         LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %EXT \
         '$@'
 
-    case "$result" in
-        "@${MK_STAGE_DIR}/"*)
-            mk_add_all_target "$result"
-            ;;
-    esac
-    
     mk_pop_vars
 }
 
@@ -764,12 +752,6 @@ mk_program()
         MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
     fi
 
-    case "$result" in
-        "@${MK_STAGE_DIR}/"*)
-            mk_add_all_target "$result"
-            ;;
-    esac
-    
     mk_pop_vars
 }
 

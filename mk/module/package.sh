@@ -106,6 +106,15 @@ mk_package_patterns()
     mk_pop_vars
 }
 
+mk_add_package_target()
+{
+    mk_push_vars result
+    mk_resolve_target "$1"
+    mk_quote "$result"
+    _MK_PACKAGE_TARGETS="$_MK_PACKAGE_TARGETS $result"
+    mk_pop_vars
+}
+
 option()
 {
     mk_option \
@@ -116,7 +125,13 @@ option()
         HELP="Subdirectory for built packages"
 }
 
-configure()
+make()
 {
+    mk_target \
+        TARGET="@package" \
+        DEPS="$_MK_PACKAGE_TARGETS"
+
+    mk_add_phony_target "$result"
+    
     mk_add_scrub_target "@package"
 }

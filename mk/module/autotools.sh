@@ -355,7 +355,7 @@ mk_autotools()
         stamp="$result"
     fi
 
-    mk_add_all_target "$stamp"
+    mk_add_subdir_target "$stamp"
 
     # Add dummy rules for target built by this component
     for _header in ${HEADERS}
@@ -365,8 +365,6 @@ mk_autotools()
         mk_target \
             TARGET="$result" \
             DEPS="'$stamp'"
-
-        mk_add_all_target "$result"
 
         MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
     done
@@ -382,8 +380,6 @@ mk_autotools()
             TARGET="${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}" \
             DEPS="'$stamp'"
         
-        mk_add_all_target "$result"
-
         MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS ${_lib%:*}"
 
         case "$_lib" in
@@ -505,5 +501,7 @@ mk_at_la()
     then
         mk_run_script link \
             MODE=la EXT="${MK_LIB_EXT}" "$1"
+    else
+        mk_run_or_fail touch "$1"
     fi
 }

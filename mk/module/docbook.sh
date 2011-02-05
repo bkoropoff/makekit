@@ -97,8 +97,6 @@ mk_docbook_html()
         DEPS="$DEPS $SOURCE $STYLESHEET $INCLUDES" \
         _mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
 
-    mk_add_all_target "$result"
-
     # Install CSS file
     [ -n "$CSS" ] && mk_stage SOURCE="$CSS" DESTDIR="${INSTALLDIR}"
 

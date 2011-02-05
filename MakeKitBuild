@@ -11,8 +11,6 @@ make()
 	TARGET="${MK_BINDIR}/makekit" \
 	DEPS="mk/makekit" \
 	install_bin_makekit "&${MK_BINDIR}/makekit" "&mk/makekit"
-
-    mk_add_all_target "$result"
 }
 
 install_bin_makekit()

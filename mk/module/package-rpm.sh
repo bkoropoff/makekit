@@ -175,12 +175,11 @@ mk_rpm_done()
         _mk_build_rpm "${RPM_PACKAGE}" "&${RPM_PKGDIR}" "&${RPM_SPECFILE}"
     master="$result"
 
-    mk_add_phony_target "$master"
-    mk_add_subdir_target "$master"
-
     unset RPM_PACKAGE RPM_SUBPACKAGE RPM_INSTALLFILE RPM_SUBINSTALLFILE RPM_PKGDIR
     unset RPM_SUBPACKAGES
     unset -f mk_package_files mk_package_dirs mk_subpackage_do mk_subpackage_done
+
+    mk_add_package_target "$master"
 
     result="$master"
 }

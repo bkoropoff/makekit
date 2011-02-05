@@ -109,6 +109,8 @@ create_libtool_archive()
         mk_quote "$result"
         echo "libdir=$result"
     } > "$object" || mk_fail "could not write $object"
+
+    mk_run_or_fail touch "$object"
 }
 
 object="$1"

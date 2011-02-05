@@ -204,7 +204,7 @@ mk_get_stage_targets()
 {
     mk_push_vars \
         SELECT="*" \
-        SUBDIRS STAGE_TARGETS DIR SUBDIR TARGETS # temporaries
+        SUBDIRS CLEAN_TARGETS STAGE_TARGETS DIR SUBDIR TARGETS # temporaries
     mk_parse_params
 
     for DIR
@@ -215,6 +215,43 @@ mk_get_stage_targets()
                 ;;
             *)
                 _mk_get_stage_targets_rec "${MK_OBJECT_DIR}${MK_SUBDIR}/${DIR}"
+                ;;
+        esac
+    done
+
+    result="${TARGETS# }"
+    mk_pop_vars
+}
+
+_mk_get_clean_targets_rec()
+{
+    mk_push_vars DIR="$1"
+    if mk_safe_source "$DIR/.MakeKitTargets"
+    then
+        TARGETS="$TARGETS $CLEAN_TARGETS"
+        mk_unquote_list "$SUBDIRS"
+        for SUBDIR
+        do
+            [ "$SUBDIR" != "." ] && _mk_get_clean_targets_rec "$DIR/$SUBDIR"
+        done
+    fi
+    mk_pop_vars
+}
+
+mk_get_clean_targets()
+{
+    mk_push_vars \
+        SUBDIRS CLEAN_TARGETS STAGE_TARGETS DIR SUBDIR TARGETS # temporaries
+    mk_parse_params
+
+    for DIR
+    do
+        case "$DIR" in
+            "@"*)
+                _mk_get_clean_targets_rec "${MK_OBJECT_DIR}/${DIR#@}"
+                ;;
+            *)
+                _mk_get_clean_targets_rec "${MK_OBJECT_DIR}${MK_SUBDIR}/${DIR}"
                 ;;
         esac
     done
@@ -564,8 +601,6 @@ mk_install_file()
         DEPS="'$_resolved' $*" \
         mk_run_script install %MODE '$@' "$_resolved"
 
-    mk_add_all_target "$result"
-
     mk_pop_vars
 }
 
@@ -637,8 +672,6 @@ mk_symlink()
         DEPS="$DEPS" \
         _mk_core_symlink "$TARGET" "&$LINK"
 
-    mk_add_all_target "$result"
-
     mk_pop_vars
 }
 
@@ -693,7 +726,6 @@ mk_stage()
             TARGET="$DEST" \
             DEPS="$SOURCE $DEPS" \
             _mk_core_stage "&$result" "&$SOURCE" "$MODE"
-        mk_add_all_target "$result"
     elif [ -n "$SOURCE" -a -n "$DESTDIR" ]
     then
         mk_stage \
@@ -1028,18 +1060,6 @@ configure()
 make()
 {
     mk_target \
-        TARGET="@all" \
-        DEPS="$MK_ALL_TARGETS"
-
-    mk_add_phony_target "$result"
-
-    mk_unquote_list "$MK_CLEAN_TARGETS"
-    for _clean
-    do
-        echo "${_clean#@}"
-    done > .MakeKitClean || mk_fail "could not write .MakeKitClean"
-
-    mk_target \
         TARGET="@clean" \
         mk_run_script clean '$(SUBDIR)'
 
@@ -1060,7 +1080,10 @@ make()
 
     mk_target \
         TARGET="@install" \
+        DEPS="@all" \
         _mk_core_install '$(DESTDIR)'
+    
+    mk_add_phony_target "$result"
 
     mk_target \
         TARGET="@.PHONY" \
@@ -1108,7 +1131,7 @@ _mk_core_configure_pre()
 
 _mk_core_write_subdir_rule()
 {
-    if [ "$MK_SUBDIR" != ":" -a "$MK_SUBDIR" != "" ]
+    if [ "$MK_SUBDIR" != ":" ]
     then
         _targets=""
         mk_unquote_list "$SUBDIRS"
@@ -1116,15 +1139,27 @@ _mk_core_write_subdir_rule()
         do
             if [ "$__subdir" != "." ]
             then
-                mk_quote "@${MK_SUBDIR#/}/$__subdir"
+                mk_quote "@${MK_OBJECT_DIR}${MK_SUBDIR}/$__subdir/.subdir_stamp"
                 _targets="$_targets $result"
             fi
         done
         mk_comment "virtual target for subdir ${MK_SUBDIR#/}"
 
         mk_target \
-            TARGET="@${MK_SUBDIR#/}" \
-            DEPS="$MK_SUBDIR_TARGETS $_targets"
+            TARGET=".subdir_stamp" \
+            DEPS="$MK_SUBDIR_TARGETS $_targets" \
+            mk_run_or_fail touch "&.subdir_stamp"
+
+        if [ "$MK_SUBDIR" = "" ]
+        then
+            _target="@all"
+        else
+            _target="@${MK_SUBDIR#/}"
+        fi
+
+        mk_target \
+            TARGET="$_target" \
+            DEPS="$result $MK_ALL_TARGETS"
 
         mk_add_phony_target "$result"
     fi
@@ -1141,11 +1176,13 @@ _mk_core_write_targets_file()
             echo "SUBDIRS=$result"
             mk_quote "$MK_STAGE_TARGETS"
             echo "STAGE_TARGETS=$result"
+            mk_quote "$MK_CLEAN_TARGETS"
+            echo "CLEAN_TARGETS=$result"
         } > "${MK_OBJECT_DIR}${MK_SUBDIR}/.MakeKitTargets" ||
         mk_fail "could not write ${MK_OBJECT_DIR}${MK_SUBDIR}/.MakeKitTargets"
     fi
 
-    unset MK_STAGE_TARGETS
+    unset MK_STAGE_TARGETS MK_CLEAN_TARGETS
 }
 
 ### section build
@@ -1155,19 +1192,17 @@ _mk_core_install()
     DESTDIR="${1%/}"
 
     mk_msg_domain "install"
-   
-    [ -d "${MK_STAGE_DIR}" ] || return 0
 
-    find "${MK_STAGE_DIR}" -type f -o -type l |
-    while read -r _file
+    mk_get_stage_targets SELECT="*" "@"
+    mk_unquote_list "$result"
+   
+    for _target
     do
-        _file="${_file#$MK_STAGE_DIR}"
+        _file="${_target#@$MK_STAGE_DIR}"
         mk_msg "$_file"
         mk_mkdir "${DESTDIR}${_file%/*}"
         mk_run_or_fail cp -RpPf "${MK_STAGE_DIR}${_file}" "${DESTDIR}${_file}"
     done
-
-    return 0
 }
 
 _mk_core_symlink()

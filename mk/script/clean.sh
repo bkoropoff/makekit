@@ -28,27 +28,14 @@
 
 MK_MSG_DOMAIN="clean"
 
-do_clean()
-{
-    for _target in "$@"
-    do
-        case "$_target" in
-            "${subdir:+$subdir/}"*)
-                if [ -e "$_target" ]
-                then
-                    mk_msg "${_target#${MK_OBJECT_DIR}/}"
-                    mk_safe_rm "$_target"
-                fi
-                ;;
-        esac
-    done
-}
-
-subdir="${1:+$MK_OBJECT_DIR/$1}"
-
-_IFS="$IFS"
-IFS='
-'
-set -- `cat .MakeKitClean` || mk_fail "could not read .MakeKitClean"
-IFS="$_IFS"
-do_clean "$@"
+mk_get_clean_targets "@$1"
+mk_unquote_list "$result"
+for _target
+do
+    _file="${_target#@}"
+    if [ -e "$_file" ]
+    then
+        mk_msg "$_file"
+        mk_safe_rm "$_file"
+    fi
+done
