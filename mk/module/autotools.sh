@@ -218,9 +218,6 @@ _mk_autotools()
 # depends on
 # @option DEPS=deps Specifies additional dependencies of the
 # component
-# @option SELECT=pathnames Specifies a list of pathnames (globs)
-# that should be cherry-picked from among all the files the
-# component installs.  Defaults to everything.
 # @option MAKE_BUILD_TARGET=name The target name to pass to make
 # when building the component.  Defaults to nothing (e.g. the
 # default target in the Makefile, usually "all").
@@ -264,13 +261,59 @@ mk_autotools()
 {
     mk_push_vars \
         SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
-        CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SELECT \
+        CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS \
         BUILDDIR DEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
         INSTALL_PRE INSTALL_POST SET_LIBRARY_PATH=yes \
 	MAKE_BUILD_TARGET="" MAKE_INSTALL_TARGET="install" \
         prefix dirname
     mk_parse_params
-    
+
+    # Process and merge targets
+    for _header in ${HEADERS}
+    do
+        MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
+
+        mk_resolve_header "$_header"
+        mk_quote "$result"
+
+        TARGETS="$TARGETS $result"
+    done
+
+    for _lib in ${LIBS}
+    do
+        MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS ${_lib%:*}"
+
+        mk_quote_list \
+            "${MK_LIBDIR}/lib${_lib%:*}.la" \
+            "${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}"
+
+        TARGETS="$TARGETS $result"
+
+        case "$_lib" in
+            *:*)
+                _ver="${_lib#*:}"
+                
+                mk_quote_list \
+                    "${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver}" \
+                    "${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver%%.*}"
+
+                TARGETS="$TARGETS $result"
+                ;;
+        esac
+    done
+
+    for _program in ${PROGRAMS}
+    do
+        MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $_program"
+       
+        mk_quote "@${MK_OBJECT_DIR}/build-run/bin/${_program}"
+        
+        TARGETS="$TARGETS $result"
+    done
+
+    mk_resolve_targets "$TARGETS"
+    TARGETS="$result"
+
     if ! [ -d "${MK_SOURCE_DIR}${MK_SUBDIR}/$SOURCEDIR" ]
     then
         mk_quote "$SOURCEDIR"
@@ -320,8 +363,8 @@ mk_autotools()
                 mk_run_script \
                 at-install \
                 DESTDIR="$DESTDIR" \
-                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
-                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
+                %SOURCEDIR %BUILDDIR %INSTALL %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
+                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@' "*$TARGETS"
             mk_quote "$result"
             parts="$parts $result"
         done
@@ -349,68 +392,33 @@ mk_autotools()
                 mk_run_script \
                 at-install \
                 DESTDIR="${MK_STAGE_DIR}" \
-                %SOURCEDIR %BUILDDIR %INSTALL %SELECT %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
-                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@'
+                %SOURCEDIR %BUILDDIR %INSTALL %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
+                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@' "*$TARGETS"
         fi
         stamp="$result"
     fi
 
     mk_add_subdir_target "$stamp"
 
-    # Add dummy rules for target built by this component
-    for _header in ${HEADERS}
-    do
-        mk_resolve_header "$_header"
-        
-        mk_target \
-            TARGET="$result" \
-            DEPS="'$stamp'"
+    mk_quote "$stamp"
+    quote_stamp="$result"
 
-        MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $_header"
+    mk_unquote_list "$TARGETS"
+
+    for _target
+    do
+        mk_target \
+            TARGET="$_target" \
+            DEPS="$quote_stamp"
     done
 
+    # Ensure we get .la files for all libraries
     for _lib in ${LIBS}
     do
         mk_target \
             TARGET="${MK_LIBDIR}/lib${_lib%:*}.la" \
-            DEPS="'$stamp'" \
+            DEPS="$quote_stamp" \
             mk_at_la '$@'
-        
-        mk_target \
-            TARGET="${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}" \
-            DEPS="'$stamp'"
-        
-        MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS ${_lib%:*}"
-
-        case "$_lib" in
-            *:*)
-                _ver="${_lib#*:}"
-
-                mk_target \
-                    TARGET="${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver}" \
-                    DEPS="'$stamp'"
-
-                mk_target \
-                    TARGET="${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver%%.*}" \
-                    DEPS="'$stamp'"
-                ;;
-        esac
-    done
-
-    for _program in ${PROGRAMS}
-    do
-        mk_target \
-            TARGET="@${MK_OBJECT_DIR}/build-run/bin/${_program}" \
-            DEPS="'$stamp'"
-
-        MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $_program"
-    done
-
-    for _target in ${TARGETS}
-    do
-        mk_target \
-            TARGET="$_target" \
-            DEPS="'$stamp'"
     done
 
     if [ -n "$SOURCEDIR" ]
