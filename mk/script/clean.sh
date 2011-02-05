@@ -28,14 +28,23 @@
 
 MK_MSG_DOMAIN="clean"
 
-mk_get_clean_targets "@$1"
-mk_unquote_list "$result"
+SUBDIR="$1"
+shift
+
+if [ -z "$SUBDIR" ]
+then
+    mk_quote_list "$@"
+    EXTRA_TARGETS="$result"
+fi
+
+mk_get_clean_targets "@$SUBDIR"
+mk_unquote_list "$result $EXTRA_TARGETS"
 for _target
 do
     _file="${_target#@}"
     if [ -e "$_file" ]
     then
-        mk_msg "$_file"
+        mk_msg "${_file#$MK_OBJECT_DIR/}"
         mk_safe_rm "$_file"
     fi
 done

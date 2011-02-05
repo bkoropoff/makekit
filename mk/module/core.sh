@@ -837,7 +837,7 @@ mk_add_clean_target()
 mk_add_scrub_target()
 {
     mk_push_vars result
-    mk_quote "${1#@}"
+    mk_quote "$1"
     MK_SCRUB_TARGETS="$MK_SCRUB_TARGETS $result"
     mk_pop_vars
 }
@@ -1022,7 +1022,7 @@ configure()
     MK_CLEAN_TARGETS="@${MK_RUN_DIR}"
 
     # Default scrub targets
-    MK_SCRUB_TARGETS="${MK_STAGE_DIR}"
+    MK_SCRUB_TARGETS=""
 
     # Default nuke targets (scrub targets implicitly included)
     MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps .MakeKitClean"
@@ -1061,14 +1061,14 @@ make()
 {
     mk_target \
         TARGET="@clean" \
-        mk_run_script clean '$(SUBDIR)'
+        mk_run_script clean '$(SUBDIR)' "*$MK_CLEAN_TARGETS"
 
     mk_add_phony_target "$result"
 
     mk_target \
         TARGET="@scrub" \
         DEPS="@clean" \
-        mk_run_script scrub "*$MK_SCRUB_TARGETS"
+        mk_run_script scrub '$(SUBDIR)' "*$MK_SCRUB_TARGETS"
 
     mk_add_phony_target "$result"
 
