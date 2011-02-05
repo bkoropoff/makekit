@@ -1164,7 +1164,7 @@ _mk_core_install()
         _file="${_file#$MK_STAGE_DIR}"
         mk_msg "$_file"
         mk_mkdir "${DESTDIR}${_file%/*}"
-        mk_run_or_fail cp -pPf "${MK_STAGE_DIR}${_file}" "${DESTDIR}${_file}"
+        mk_run_or_fail cp -RpPf "${MK_STAGE_DIR}${_file}" "${DESTDIR}${_file}"
     done
 
     return 0
