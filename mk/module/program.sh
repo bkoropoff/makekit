@@ -77,11 +77,16 @@ mk_check_program()
 
     for _cand
     do
-        mk_msg_checking "program $_cand"
+        mk_msg_checking "program ${_cand##*/}"
         if _mk_contains "$_cand" "$MK_INTERNAL_PROGRAMS"
         then
             mk_msg_result "(internal)"
             _res="${MK_RUN_BINDIR}/${_cand}"
+            break
+        elif [ -x "$_cand" ]
+        then
+            _res="$_cand"
+            mk_msg_result "$_cand"
             break
         else
             _IFS="$IFS"
@@ -92,7 +97,7 @@ mk_check_program()
                 then
                     _res="${__dir}/${_cand}"
                     mk_msg_result "$_res"
-                    break;
+                    break
                 fi
             done
             IFS="$_IFS"
