@@ -36,11 +36,46 @@ DEPENDS="core"
 
 ### section configure
 
+#<
+# @brief Test if doxygen was found
+# @usage
+#
+# Returns <lit>0</lit> (logical true) if doxygen was successfully
+# found by <funcref>mk_check_doxygen</funcref>, or <lit>1</lit>
+# (logical false) otherwise.
+#>
 mk_have_doxygen()
 {
     [ -n "$DOXYGEN" ]
 }
 
+#<
+# @brief Generate html documentation
+# @usage INPUT=input_list
+# @option INPUT=input_list a list of files that should be
+# processed by <cmd>doxygen</cmd>
+# @option HEADERDIRS=dir_list a list of source directories
+# relative to the current MakeKitBuild where public header
+# files are installed (e.g. by <funcref>mk_headers</funcref>).
+# The headers will be added to the input list automatically.
+# @option DOXYFILE a Doxygen configuration file to use. If
+# not specified, defaults to <lit>Doxyfile</lit>.  The file
+# should not specify any options controlling input or output
+# files as they will be filled in automatically.
+# @option INSTALLDIR=dir where to install the html documentation.
+# Defaults to <lit>$MK_HTMLDIR/doxygen</lit>.
+#
+# Processes the specified input file and headers with doxygen
+# and outputs documentation in html format.  You must provide
+# a Doxyfile in the current directory (or override the path
+# using <lit>DOXYFILE=</lit><param>doxyfile</param>) to control
+# any customizable Doxygen settings.
+#
+# To use this function, you must use <funcref>mk_check_doxygen</funcref>
+# in a <lit>configure</lit> section of your project, and it must succeed.
+# You can test whether Doxygen was found with <funcref>mk_have_doxygen</funcref>.
+# This function will abort if Doxygen is unavailable.
+#>
 mk_doxygen_html()
 {
     mk_push_vars \
@@ -66,12 +101,22 @@ mk_doxygen_html()
 
     mk_target \
         TARGET="${INSTALLDIR}" \
-        DEPS="$HEADERS $DOXYFILE" \
+        DEPS="$HEADERS $INPUT $DOXYFILE" \
         _mk_doxygen_html %EXAMPLES '$@' "&$DOXYFILE" "*$HEADERS" "*$INPUT"
     
     mk_pop_vars
 }
 
+#<
+# @brief Check for Doxygen on the build system
+# @usage
+#
+# Checks for the availability of Doxygen on the build system.
+# The result can be tested with <funcref>mk_have_doxygen</funcref>.
+# If successful, you may then use functions such as
+# <funcref>mk_doxygen_html</funcref> to build Doxygen documentation
+# as part of your project.
+#>
 mk_check_doxygen()
 {
     mk_check_program doxygen
@@ -95,6 +140,7 @@ _mk_doxygen_html()
     
     {
         cat "$2"
+        echo "GENERATE_LATEX = no"
         echo "GENERATE_HTML = yes"
         echo "OUTPUT_DIRECTORY ="
         echo "HTML_OUTPUT = $1"
@@ -114,7 +160,7 @@ _mk_doxygen_html()
         do
             echo "EXAMPLE_PATH += $example"
         done
-    } | mk_run_or_fail doxygen -
+    } | doxygen - || mk_fail "failed to run doxygen"
 
     mk_pop_vars
 }
