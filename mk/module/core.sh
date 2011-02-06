@@ -330,6 +330,52 @@ mk_safe_rm()
 }
 
 #<
+# @brief Strip last component from filename
+# @usage filename
+#
+# Strips the last component from a filename,
+# leaving the name of the directory containing
+# the file, and sets <var>result</var> to the
+# result.
+#>
+mk_dirname()
+{
+    result="."
+    case "$1" in
+        */*)
+            result="${1%/*}"
+    esac
+}
+
+#<
+# @brief Strip leading directory from filename
+# @usage filename
+#
+# Strips the leading directory components
+# from a filename and sets <var>result</var>
+# to the result.
+#>
+mk_basename()
+{
+    result="${1##*/}"
+}
+
+#<
+# @brief Create leading directories for filename
+# @usage filename
+#
+# Creates all leading directory components
+# for a filename.
+#>
+mk_mkdirname()
+{
+    _result="$result"
+    mk_dirname "$1"
+    mk_mkdir "$result"
+    result="$_result"
+}
+
+#<
 # @brief Print warning
 # @usage message...
 #
@@ -1200,9 +1246,40 @@ _mk_core_write_targets_file()
 
 ### section build
 
+_mk_core_copy()
+{
+    mk_mkdir "${DESTDIR}${1%/*}"
+    
+    if [ -d "${MK_STAGE_DIR}${1}" ]
+    then
+        find "${MK_STAGE_DIR}${1}" -type f -o -type l |
+        while read -r _file
+        do
+            _mk_core_copy "${_file#$MK_STAGE_DIR}"
+        done || exit 1
+    else
+        mk_msg "$1"
+        if [ -f "${DESTDIR}${1}" -o -h "${DESTDIR}${1}" ]
+        then
+            mk_run_or_fail rm -f -- "${DESTDIR}${1}"
+        fi
+        mk_mkdirname "${DESTDIR}${1}"
+        mk_run_or_fail cp ${CP_ARGS} -- "${MK_STAGE_DIR}${1}" "${DESTDIR}${1}"
+    fi
+}
+
 _mk_core_install()
 {
     DESTDIR="${1%/}"
+
+    case "$MK_BUILD_OS" in
+        hpux)
+            CP_ARGS="-Rpf"
+            ;;
+        *)
+            CP_ARGS="-RpPf"
+            ;;
+    esac
 
     mk_msg_domain "install"
 
@@ -1211,10 +1288,7 @@ _mk_core_install()
    
     for _target
     do
-        _file="${_target#@$MK_STAGE_DIR}"
-        mk_msg "$_file"
-        mk_mkdir "${DESTDIR}${_file%/*}"
-        mk_run_or_fail cp -RpPf "${MK_STAGE_DIR}${_file}" "${DESTDIR}${_file}"
+        _mk_core_copy "${_target#@$MK_STAGE_DIR}"
     done
 }
 
