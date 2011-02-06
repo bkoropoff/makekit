@@ -92,6 +92,11 @@ make()
             --title "Autotools Module" \
             --module autotools
 
+        reference \
+            OUTPUT="reference/doxygen.xml" -- \
+            --title "Doxygen Module" \
+            --module doxygen
+
         reference_end
 
         mk_docbook_html \
