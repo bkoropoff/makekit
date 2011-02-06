@@ -162,7 +162,11 @@ _mk_docbook()
 
     for f
     do
-        mk_mkdir "$TMPDIR/${f%/*}"
+        case "$f" in
+            *'/'*)
+                mk_mkdir "$TMPDIR/${f%/*}"
+                ;;
+        esac
         mk_resolve_file "$f"
         mk_run_or_fail cp "$result" "$TMPDIR/$f"
     done
