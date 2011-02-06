@@ -1168,9 +1168,11 @@ _mk_core_write_subdir_rule()
             _target="@${MK_SUBDIR#/}"
         fi
 
+        mk_quote "$result"
+
         mk_target \
             TARGET="$_target" \
-            DEPS="$result $MK_ALL_TARGETS"
+            DEPS="$result"
 
         mk_add_phony_target "$result"
     fi
