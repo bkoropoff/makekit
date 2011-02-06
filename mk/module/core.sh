@@ -990,6 +990,13 @@ _mk_load_cache()
 option()
 {
     mk_option \
+        OPTION="log-dir" \
+        VAR="MK_LOG_DIR" \
+        PARAM="dir" \
+        DEFAULT="log" \
+        HELP="Directory where misc. logs should be placed"
+
+    mk_option \
         OPTION="warn-deprecated" \
         VAR="MK_WARN_DEPRECATED" \
         PARAM="yes|no" \
@@ -1014,18 +1021,19 @@ option()
 configure()
 {
     mk_declare -i _MK_OUTPUT_VARS
+    mk_declare -e MK_LOG_DIR
 
     # Check for best possible awk
     mk_check_program VAR=AWK FAIL=yes gawk awk
 
     # Default clean targets
-    MK_CLEAN_TARGETS="@${MK_RUN_DIR}"
+    MK_CLEAN_TARGETS="@${MK_RUN_DIR} @${MK_LOG_DIR}"
 
     # Default scrub targets
     MK_SCRUB_TARGETS=""
 
     # Default nuke targets (scrub targets implicitly included)
-    MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps .MakeKitClean"
+    MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} ${MK_LOG_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps .MakeKitClean"
 
     MK_BUILD_FILES=""
 
