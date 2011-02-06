@@ -51,7 +51,7 @@ done
 
 if [ -d "$MK_STAGE_DIR" ]
 then
-    find "${MK_STAGE_DIR}" -type d | tac |
+    find "${MK_STAGE_DIR}" -type d | sed '1!G;h;$!d' |
     while read -r _dir
     do
         if rmdir -- "$_dir" >/dev/null 2>&1
