@@ -729,11 +729,11 @@ _mk_emit_make_header
 # Process build files
 _mk_process_build
 
-# Run completion hooks
-_mk_complete_hooks
-
 # Emit Makefile footer
 _mk_emit_make_footer
+
+# Run completion hooks
+_mk_complete_hooks
 
 # Close and atomically replace Makefile
 exec 6>&-
