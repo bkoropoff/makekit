@@ -1026,15 +1026,9 @@ configure()
     # Check for best possible awk
     mk_check_program VAR=AWK FAIL=yes gawk awk
 
-    # Default clean targets
-    MK_CLEAN_TARGETS="@${MK_RUN_DIR} @${MK_LOG_DIR}"
-
-    # Default scrub targets
+    MK_CLEAN_TARGETS=""
     MK_SCRUB_TARGETS=""
-
-    # Default nuke targets (scrub targets implicitly included)
-    MK_NUKE_TARGETS="${MK_OBJECT_DIR} ${MK_RUN_DIR} ${MK_LOG_DIR} Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps .MakeKitClean"
-
+    MK_NUKE_TARGETS=""    
     MK_BUILD_FILES=""
 
     for _module in ${MK_MODULE_LIST}
@@ -1067,6 +1061,9 @@ configure()
 
 make()
 {
+    MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR"
+    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps"
+
     mk_target \
         TARGET="@clean" \
         mk_run_script clean '$(SUBDIR)' "*$MK_CLEAN_TARGETS"
@@ -1082,7 +1079,7 @@ make()
 
     mk_target \
         TARGET="@nuke" \
-        mk_run_script nuke "*$MK_SCRUB_TARGETS" "*$MK_NUKE_TARGETS"
+        mk_run_script nuke "*$MK_CLEAN_TARGETS" "*$MK_SCRUB_TARGETS" "*$MK_NUKE_TARGETS"
 
     mk_add_phony_target "$result"
 
@@ -1194,9 +1191,9 @@ _mk_core_write_targets_file()
             echo "CLEAN_TARGETS=$result"
         } > "${MK_OBJECT_DIR}${MK_SUBDIR}/.MakeKitTargets" ||
         mk_fail "could not write ${MK_OBJECT_DIR}${MK_SUBDIR}/.MakeKitTargets"
-    fi
 
-    unset MK_STAGE_TARGETS MK_CLEAN_TARGETS
+        unset MK_STAGE_TARGETS MK_CLEAN_TARGETS
+    fi
 }
 
 ### section build
