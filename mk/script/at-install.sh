@@ -87,7 +87,7 @@ else
     then
         ${INSTALL_PRE} "${PWD}/.install"
     fi
-    mk_run_quiet_or_fail ${MAKE} ${MFLAGS} DESTDIR="${PWD}/.install" ${MAKE_INSTALL_TARGET}
+    mk_at_log_command "$dirname" "stage" ${MAKE} ${MFLAGS} DESTDIR="${PWD}/.install" ${MAKE_INSTALL_TARGET}
     if [ -n "$INSTALL_POST" ]
     then
         ${INSTALL_POST} "${PWD}/.install"

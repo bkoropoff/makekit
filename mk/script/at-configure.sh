@@ -137,7 +137,7 @@ then
 fi
 
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" && \
-mk_run_quiet_or_fail "${_src_dir}/configure" \
+mk_at_log_command "$dirname" "configure" "${_src_dir}/configure" \
     CC="$MK_CC" \
     CXX="$MK_CXX" \
     CPPFLAGS="-I${_include_dir} $_cppflags $CPPFLAGS" \

@@ -513,3 +513,33 @@ mk_at_la()
         mk_run_or_fail touch "$1"
     fi
 }
+
+mk_at_log_command()
+{
+    # $1 = source directory
+    # $2 = step
+
+    _mk_slashless_name "$1_$2"
+    _log="${MK_ROOT_DIR}/${MK_LOG_DIR}/${result}.log"
+
+    shift 2
+
+    mk_mkdir "${MK_ROOT_DIR}/${MK_LOG_DIR}"
+
+    if [ -n "$MK_VERBOSE" ]
+    then
+        mk_quote_list "$@"
+        mk_msg_verbose "+ $result"
+    fi
+
+    if ! "$@" >"$_log" 2>&1
+    then
+        mk_quote_list "$@"
+        mk_msg "FAILED: $result"
+        echo ""
+        echo "Last 100 lines of ${_log#$MK_ROOT_DIR/}:"
+        echo ""
+        tail -100 "$_log"
+        exit 1
+    fi
+}
