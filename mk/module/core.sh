@@ -1086,6 +1086,12 @@ make()
     mk_add_phony_target "$result"
 
     mk_target \
+        TARGET="@uninstall" \
+        _mk_core_uninstall
+    
+    mk_add_phony_target "$result"
+
+    mk_target \
         TARGET="@.PHONY" \
         DEPS="$MK_PHONY_TARGETS"
 
@@ -1235,4 +1241,48 @@ _mk_core_stage()
     then
         mk_run_or_fail chmod "$3" "$1"
     fi
+}
+
+_mk_core_confirm_uninstall()
+{
+    response=""
+
+    while true
+    do
+        printf "Remove directory %s (y/n): " "$1"
+        read response
+        case "$response" in
+            y)
+                return 0
+                ;;
+            n)
+                return 1
+                ;;
+        esac
+    done
+}
+
+_mk_core_uninstall()
+{
+    mk_msg_domain "uninstall"
+
+    mk_get_stage_targets "@$1"
+    mk_unquote_list "$result"
+
+    for _target
+    do
+        _file="${_target#@$MK_STAGE_DIR}"
+        if [ -d "$_file" ]
+        then
+            if _mk_core_confirm_uninstall "$_file"
+            then
+                mk_msg "$_file"
+                rm -rf "$_file"
+            fi
+        elif [ -e "$_file" -o -h "$_file" ]
+        then
+            mk_msg "$_file"
+            rm -f "$_file"
+        fi
+    done
 }
