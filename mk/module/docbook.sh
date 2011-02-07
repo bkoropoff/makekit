@@ -60,12 +60,24 @@ option()
         HELP="Location of DocBook XSL stylesheets"
 }
 
-configure()
+mk_check_docbook()
 {
-    mk_msg "xsl dir: $MK_DOCBOOK_XSL_DIR"
     mk_check_program "xsltproc"
 
+    mk_msg_checking "docbook xsl dir"
+
     if [ -d "$MK_DOCBOOK_XSL_DIR" -a -n "$XSLTPROC" ]
+    then
+        MK_HAVE_DOCBOOK_XSL=yes
+        result="$MK_DOCBOOK_XSL_DIR"
+    else
+        MK_HAVE_DOCBOOK_XSL=no
+        result="no"
+    fi
+    
+    mk_msg_result "$result"
+
+    if [ -n "$XSLTPROC" -a "$MK_HAVE_DOCBOOK_XSL" = "yes" ]
     then
         MK_HAVE_DOCBOOK=yes
     else
@@ -73,6 +85,8 @@ configure()
     fi
 
     mk_msg "docbook enabled: $MK_HAVE_DOCBOOK"
+
+    mk_declare -i MK_HAVE_DOCBOOK_XSL MK_HAVE_DOCBOOK
 }
 
 mk_have_docbook()
@@ -82,6 +96,8 @@ mk_have_docbook()
 
 mk_docbook_html()
 {
+    mk_have_docbook || mk_fail "mk_docbook_html: docbook unavailable"
+
     mk_push_vars \
         STYLESHEET="@$MK_DOCBOOK_XSL_DIR/xhtml/profile-chunk.xsl" \
         IMAGES="@$MK_DOCBOOK_XSL_DIR/images" \
@@ -108,6 +124,8 @@ mk_docbook_html()
 
 mk_docbook_man()
 {
+    mk_have_docbook || mk_fail "mk_docbook_html: docbook unavailable"
+
     mk_push_vars \
         STYLESHEET="@$MK_DOCBOOK_XSL_DIR/manpages/profile-docbook.xsl" \
         INSTALLDIR="${MK_MANDIR}" \

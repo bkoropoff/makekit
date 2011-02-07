@@ -2,6 +2,8 @@ MODULES="docbook"
 
 configure()
 {
+    mk_check_docbook
+
     if mk_have_docbook
     then
         mk_declare -o MK_DOCBOOK_XSL_DIR
