@@ -18,6 +18,7 @@
     <xi:include href="reference/core.xml"/>
     <xi:include href="reference/compiler.xml"/>
     <xi:include href="reference/autotools.xml"/>
+    <xi:include href="reference/docbook.xml"/>
     <xi:include href="reference/doxygen.xml"/>
   </part>
 </book>
