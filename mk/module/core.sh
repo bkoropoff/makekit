@@ -1264,7 +1264,19 @@ _mk_core_copy()
             mk_run_or_fail rm -f -- "${DESTDIR}${1}"
         fi
         mk_mkdirname "${DESTDIR}${1}"
-        mk_run_or_fail cp ${CP_ARGS} -- "${MK_STAGE_DIR}${1}" "${DESTDIR}${1}"
+        ${CP_CMD} "${MK_STAGE_DIR}${1}" "${DESTDIR}${1}"
+    fi
+}
+
+_mk_core_solaris_cp()
+{
+    if [ -h "$1" ]
+    then
+        _dest=`file -h "$1"`
+        _dest=${_dest#*"symbolic link to "}
+        mk_run_or_fail ln -s -- "$_dest" "$2"
+    else
+        mk_run_or_fail cp -f -- "$1" "$2"
     fi
 }
 
@@ -1272,12 +1284,19 @@ _mk_core_install()
 {
     DESTDIR="${1%/}"
 
+    # We need to select a command that will preserve symlinks
     case "$MK_BUILD_OS" in
         hpux)
-            CP_ARGS="-Rpf"
+            # HP-UX does not support -P, but behaves correctly by default
+            CP_CMD="mk_run_or_fail cp -Rf --"
+            ;;
+        solaris)
+            # Solaris cp cannot preserve symlinks, so improvise
+            CP_CMD="_mk_core_solaris_cp"
             ;;
         *)
-            CP_ARGS="-RpPf"
+            # This is works if cp is POSIX-comliant
+            CP_CMD="mk_run_or_fail cp -RPf --"
             ;;
     esac
 
