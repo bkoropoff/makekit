@@ -49,7 +49,7 @@ mk_msg_domain combine
 
 if [ -n "$SOURCEDIR" ]
 then
-    dirname="${MK_SUBDIR#/}/$SOURCEDIR"
+    dirname="${MK_SUBDIR:+${MK_SUBDIR#/}/}$SOURCEDIR"
 elif [ -n "$MK_SUBDIR" ]
 then
     dirname="${MK_SUBDIR#/}"
