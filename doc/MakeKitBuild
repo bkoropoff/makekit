@@ -104,6 +104,11 @@ make()
             --title "Doxygen Module" \
             --module doxygen
 
+        reference \
+            OUTPUT="reference/package.xml" -- \
+            --title "Package Modules" \
+            --module package package-rpm package-deb
+
         reference_end
 
         mk_docbook_html \

@@ -62,10 +62,10 @@
 # API overview
 #
 # mk_{PACKAGE_TYPE}_do
-#   mk_package_files
+#   mk_package_targets
 #   mk_package_dirs
 #   mk_subpackage_do
-#     mk_package_files
+#     mk_package_targets
 #     mk_package_dirs
 #   mk_subpackage_done
 # mk_{PACKAGE_TYPE}_done
@@ -74,6 +74,60 @@
 
 DEPENDS="core"
 
+#<
+# @function mk_package_targets
+# @brief Include specified targets in current package
+# @usage targets...
+#
+# Includes the specified targets in the current package
+# or subpackage.  The targets must be specified in
+# fully-qualified form.
+#>
+
+#<
+# @function mk_package_dirs
+# @brief Include empty directories in current package
+# @usage dirs...
+#
+# Adds empty directories to the current package or subpackage.
+#>
+
+#<
+# @function mk_subpackage_do
+# @brief Begin definition of subpackage
+# @usage SUBPACKAGE=name
+#
+# Begins the definition of a subpackage within the current
+# package.  It should be terminated with
+# <funcref>mk_subpackage_done</funcref>
+#>
+
+#<
+# @function mk_subpackage_done
+# @brief End definition of subpackage.
+# @usage
+#
+# Ends the definition of the current subpackage.
+#>
+
+#<
+# @brief Package targets matching a set of patterns
+# @usage patterns...
+# @option SUBDIRS=subdir_list a list of subdirectories
+# relative to the current MakeKitBuild file from which
+# to select targets.  Targets will be selected from all
+# of the specified directories and their transitive
+# subdirectories.  A directory in the list may begin
+# with <lit>@</lit> to indicate that it is relative
+# to the top source directory of the project.  Defaults
+# to the entire project.
+#
+# Packages all targets in the staging area matching any
+# of the file patterns in <param>patterns</param>.
+# The selected targets may be limited to those within
+# certain subsets of the current project by using
+# the <param>subdir_list</param> option.
+#>
 mk_package_patterns()
 {
     mk_push_vars SUBDIRS="@" SELECT PATTERN TARGET

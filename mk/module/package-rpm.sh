@@ -67,11 +67,40 @@ configure()
     fi
 }
 
+#<
+# @brief Test if RPM building is enabled
+# @usage
+#
+# Returns <lit>0</lit> (logical true) if RPM packaging is available
+# and was enabled by the user and <lit>1</lit> (logical false)
+# otherwise.
+#>
 mk_rpm_enabled()
 {
     [ "$MK_PACKAGE_RPM_ENABLED" = "yes" ]
 }
 
+#<
+# @brief Begin RPM package definition
+# @usage PACKAGE=name SPECFILE=specfile
+# @option PACKAGE=name sets the name of the package
+# @option SPECFILE=specfile designates a template
+# RPM spec file to use
+#
+# Begins the definition of an RPM package to be built.
+# You must provide a template spec file which contains
+# basic metadata about the package, such as its name,
+# dependencies, and description.  The template should
+# omit any sections which control build behavior or
+# file lists -- these will be filled in automatically.
+#
+# After invoking this function, you can use functions
+# such as <funcref>mk_package_targets</funcref> or
+# <funcref>mk_package_patterns</funcref> to add files
+# to the package, or <funcref>mk_subpackage_do</funcref>
+# to define subpackages.  End the definition of the
+# package with <funcref>mk_rpm_done</funcref>.
+#>
 mk_rpm_do()
 {
     mk_push_vars PACKAGE SPECFILE VERSION
@@ -165,6 +194,13 @@ EOF
     mk_pop_vars
 }
 
+#<
+# @brief End RPM package definition
+# @usage
+#
+# Ends an RPM packages definition started
+# with <funcref>mk_rpm_do</funcref>.
+#>
 mk_rpm_done()
 {
     _mk_rpm_files_end

@@ -210,6 +210,16 @@ _mk_autotools()
 # @option HEADERS=headers Specifies system headers installed
 # by the component
 # @option LIBS=libs Specifies libraries installed by the component
+# Each library should be specified as its base name with no
+# file extension or <lit>lib</lit> prefix.  Each name should be
+# followed by a colon (<lit>:</lit>) and a version
+# number of the form
+# <param>major</param><lit>.</lit><param>minor</param><lit>.</lit><param>micro</param>.
+# This allows all of the version links associated
+# with the library to be found and properly installed to the staging area.
+# If a version number is omitted, only the <lit>.la</lit> file
+# (e.g. <lit>libfoo.la</lit>) and the version-less library file
+# name (e.g. <lit>libfoo.so</lit>) will be installed.
 # @option TARGETS=targets Specifies additional targets which
 # are installed by the component
 # @option LIBDEPS=libdeps Specifies libraries the component
@@ -228,19 +238,25 @@ _mk_autotools()
 # @option CXXFLAGS=flags Additional C++ compiler flags
 # @option LDFLAGS=flags Additional linker flags
 # @option INSTALL_PRE=func Specifies a custom function to run
-# before installing the component into the staging area.
+# before installing the component into a temporary directory
+# The function is passed the path to the temporary install
+# directory as the first argument.
 # @option INSTALL_POST=func Specifies a custom function to
-# run after installing the component into the staging area.
-# @option configure_options Additional parameters to pass to
+# run after installing the component into a temporary directory.
+# The function is passed the path to the temporary install
+# directory as the first arguments
+# @option configure_params Additional parameters to pass to
 # the component's configure script.
 #
 # Builds and installs an autotools (autoconf, automake, libtool) source
-# project as part of the MakeKit project.  It is important that you specify
-# the products and dependencies of the component to ensure that
-# it is built in the right order with the rest of your MakeKit project.
-# For example, if it produces a library 'foo' that you link to elsewhere
-# in your project, you need to specify that using the <lit>LIBS</lit>
-# option.
+# component as part of the MakeKit project.  The component is taken through
+# the usual <lit>configure</lit>, <lit>make</lit>, <lit>make install</lit>
+# procedure to install it into a temporary location.  All files indicated
+# by the <param>libs</param>, <param>headers</param>, and
+# <param>targets</param> parameters are then moved into the staging area.
+#
+# For each library specified in <param>libs</param>, a <lit>.la</lit> file
+# will be synthesized if the component did not create one itself.
 #
 # The remaining positional arguments to this function are passed verbatim
 # to the configure script of the component.  In addition, flags such as
