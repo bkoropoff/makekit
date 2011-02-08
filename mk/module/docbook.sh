@@ -249,6 +249,17 @@ _mk_docbook()
     SHEET="$3"
     TMPDIR=".docbook$$"
 
+    case "$SHEET" in
+        /*)
+            # Absolute path -- leave alone
+            :
+            ;;
+        *)
+            # Convert to absolute path
+            SHEET="${MK_ROOT_DIR}/${SHEET}"
+            ;;
+    esac
+
     trap "cd \"$MK_ROOT_DIR\"; mk_safe_rm \"$TMPDIR\"" EXIT
 
     mk_mkdir "$TMPDIR"
@@ -275,7 +286,7 @@ _mk_docbook()
         "${XSLTPROC}" \
         --xinclude \
         --output "$MK_ROOT_DIR/$OUTPUT" \
-        "$MK_ROOT_DIR/$SHEET" \
+        "$SHEET" \
         "in.xml"
     mk_cd_or_fail "$MK_ROOT_DIR"
     mk_run_or_fail touch "$OUTPUT"
