@@ -187,7 +187,7 @@ _mk_autotools()
         at-configure \
         %SOURCEDIR %BUILDDIR %CPPFLAGS %CFLAGS %CXXFLAGS %LDFLAGS \
 	%SET_LIBRARY_PATH \
-        DIR="$dir" '$@' "$@" "*$_MK_AT_PASS_VARS"
+        DIR="$dir" '$@' "*$PARAMS" "*$_MK_AT_PASS_VARS"
 
     __configure_stamp="$result"
 
@@ -281,8 +281,12 @@ mk_autotools()
         BUILDDIR DEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
         INSTALL_PRE INSTALL_POST SET_LIBRARY_PATH=yes \
 	MAKE_BUILD_TARGET="" MAKE_INSTALL_TARGET="install" \
-        prefix dirname
+        VERSION MAJOR MINOR MICRO LINKS LIB SONAME EXT="$MK_LIB_EXT" \
+        PARAMS EXTRA_TARGETS prefix dirname
     mk_parse_params
+
+    mk_quote_list "$@"
+    PARAMS="$result"
 
     # Process and merge targets
     for _header in ${HEADERS}
@@ -295,27 +299,32 @@ mk_autotools()
         TARGETS="$TARGETS $result"
     done
 
-    for _lib in ${LIBS}
+    for LIB in ${LIBS}
     do
-        MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS ${_lib%:*}"
+        MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS ${LIB%%:*}"
 
-        mk_quote_list \
-            "${MK_LIBDIR}/lib${_lib%:*}.la" \
-            "${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}"
+        mk_resolve_target "${MK_LIBDIR}/lib${LIB%%:*}.la"
+        EXTRA_TARGETS="$EXTRA_TARGETS $result"
 
-        TARGETS="$TARGETS $result"
-
-        case "$_lib" in
+        case "$LIB" in
             *:*)
-                _ver="${_lib#*:}"
-                
-                mk_quote_list \
-                    "${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver}" \
-                    "${MK_LIBDIR}/lib${_lib%:*}${MK_LIB_EXT}.${_ver%%.*}"
-
-                TARGETS="$TARGETS $result"
+                VERSION="${LIB#*:}"
+                LIB="${LIB%%:*}"
+                _mk_library_process_version
+                ;;
+            *)
+                mk_quote "lib${LIB%%:*}${MK_LIB_EXT}"
+                LINKS="$result"
                 ;;
         esac
+        
+        mk_unquote_list "$LINKS"
+
+        for link
+        do
+            mk_quote "${MK_LIBDIR}/$link"
+            TARGETS="$TARGETS $result"
+        done
     done
 
     for _program in ${PROGRAMS}
@@ -380,7 +389,7 @@ mk_autotools()
                 at-install \
                 DESTDIR="$DESTDIR" \
                 %SOURCEDIR %BUILDDIR %INSTALL %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
-                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@' "*$TARGETS"
+                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@' "*$TARGETS $EXTRA_TARGETS"
             mk_quote "$result"
             parts="$parts $result"
         done
@@ -409,7 +418,7 @@ mk_autotools()
                 at-install \
                 DESTDIR="${MK_STAGE_DIR}" \
                 %SOURCEDIR %BUILDDIR %INSTALL %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
-                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@' "*$TARGETS"
+                MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@' "*$TARGETS $EXTRA_TARGETS"
         fi
         stamp="$result"
     fi
@@ -432,7 +441,7 @@ mk_autotools()
     for _lib in ${LIBS}
     do
         mk_target \
-            TARGET="${MK_LIBDIR}/lib${_lib%:*}.la" \
+            TARGET="${MK_LIBDIR}/lib${_lib%%:*}.la" \
             DEPS="$quote_stamp" \
             mk_at_la '$@'
     done

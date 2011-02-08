@@ -239,12 +239,47 @@ _mk_library_process_version()
 {
     if [ "$VERSION" != "no" ]
     then
-        _rest="${VERSION}."
-        MAJOR="${_rest%%.*}"
-        _rest="${_rest#*.}"
-        MINOR="${_rest%%.*}"
-        _rest="${_rest#*.}"
-        MICRO="${_rest%.}"
+        case "$VERSION" in
+            *:*)
+                _rest="${VERSION}:"
+                _cur="${_rest%%:*}"
+                _rest="${_rest#*:}"
+                _rev="${_rest%%:*}"
+                _rest="${_rest#*:}"
+                _age="${_rest%:}"
+                case "$MK_OS" in
+                    freebsd)
+                        MAJOR="$_cur"
+                        MINOR=""
+                        MICRO=""
+                        ;;
+                    darwin)
+                        MAJOR="$(($_cur - $_age))"
+                        MINOR=""
+                        MICRO=""
+                        ;;
+                    *)
+                        MAJOR="$(($_cur - $_age))"
+                        MINOR="$(($_age))"
+                        MICRO="$_rev"
+                        ;;
+                esac
+                ;;
+            *)
+                _rest="${VERSION}."
+                MAJOR="${_rest%%.*}"
+                _rest="${_rest#*.}"
+                MINOR="${_rest%%.*}"
+                _rest="${_rest#*.}"
+                MICRO="${_rest%.}"
+                case "$MK_OS" in
+                    freebsd|darwin)
+                        MINOR=""
+                        MICRO=""
+                        ;;
+                esac
+                ;;
+        esac
     fi
 
     _mk_library_form_name "$LIB" "" "$EXT"
@@ -347,7 +382,7 @@ mk_library()
 {
     mk_push_vars \
         INSTALLDIR="$MK_LIBDIR" LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
-        HEADERDEPS LIBDIRS INCLUDEDIRS VERSION=0.0.0 DEPS OBJECTS \
+        HEADERDEPS LIBDIRS INCLUDEDIRS VERSION=0:0:0 DEPS OBJECTS \
         SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" PIC=yes \
         SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM TARGET
     mk_parse_params
