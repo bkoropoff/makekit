@@ -648,6 +648,25 @@ option()
     MK_HOST_PRIMARY_ISA="${MK_HOST_ISAS%% *}"
 }
 
+_mk_platform_set_ext()
+{
+    case "$1:${2#*/}" in
+        darwin:*)
+            mk_set_system_var SYSTEM="$2" MK_LIB_EXT ".dylib"
+            mk_set_system_var SYSTEM="$2" MK_DLO_EXT ".so"
+            ;;
+        hpux:hppa*)
+            mk_set_system_var SYSTEM="$2" MK_LIB_EXT ".sl"
+            mk_set_system_var SYSTEM="$2" MK_DLO_EXT ".sl"
+            ;;
+        *)
+            mk_set_system_var SYSTEM="$2" MK_LIB_EXT ".so"
+            mk_set_system_var SYSTEM="$2" MK_LIB_EXT ".so"
+            mk_set_system_var SYSTEM="$2" MK_DLO_EXT ".so"
+            ;;
+    esac   
+}
+
 configure()
 {
     for _isa in ${MK_BUILD_ISAS}
@@ -683,6 +702,7 @@ configure()
         mk_set_system_var SYSTEM="build/$_isa" MK_ISAS "$MK_BUILD_ISAS"
         mk_set_system_var SYSTEM="build/$_isa" MK_MULTIARCH "$MK_BUILD_MULTIARCH"
         mk_set_system_var SYSTEM="build/$_isa" MK_ISA "$_isa"
+        _mk_platform_set_ext "$MK_BUILD_OS" "build/$_isa"
     done
 
     for _isa in ${MK_HOST_ISAS}
@@ -695,25 +715,7 @@ configure()
         mk_set_system_var SYSTEM="host/$_isa" MK_MULTIARCH "$MK_HOST_MULTIARCH"
         mk_set_system_var SYSTEM="host/$_isa" MK_ISAS "$MK_HOST_ISAS"
         mk_set_system_var SYSTEM="host/$_isa" MK_ISA "$_isa"
-    done
-
-    for _sys in ${MK_ALL_SYSTEMS}
-    do
-        case "$MK_OS-${_sys#*/}" in
-            darwin-*)
-                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".dylib"
-                mk_set_system_var SYSTEM="$_sys" MK_DLO_EXT ".so"
-                ;;
-            hpux-hppa*)
-                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".sl"
-                mk_set_system_var SYSTEM="$_sys" MK_DLO_EXT ".sl"
-                ;;
-            *)
-                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".so"
-                mk_set_system_var SYSTEM="$_sys" MK_LIB_EXT ".so"
-                mk_set_system_var SYSTEM="$_sys" MK_DLO_EXT ".so"
-                ;;
-        esac
+        _mk_platform_set_ext "$MK_HOST_OS" "host/$_isa"
     done
 
     for _sys in build host
