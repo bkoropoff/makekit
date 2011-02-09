@@ -98,7 +98,7 @@ else
         _file="${_target#$MK_STAGE_DIR}"
         if [ -e ".install${_file}" -o -h ".install${_file}" ]
         then
-            mk_msg "$_file"
+            [ "$DESTDIR" = "$MK_STAGE_DIR" ] && mk_msg "$_file"
             _dest="${_stage_dir}${_file}"
             mk_mkdir "${_dest%/*}"
             mv -f ".install${_file}" "$_dest" || mk_fail "failed to copy file: $_file"
