@@ -544,7 +544,7 @@ mk_at_log_command()
     # $1 = source directory
     # $2 = step
 
-    _mk_slashless_name "$1_$2"
+    _mk_slashless_name "$1_$2_$MK_CANONICAL_SYSTEM"
     _log="${MK_ROOT_DIR}/${MK_LOG_DIR}/${result}.log"
 
     shift 2
