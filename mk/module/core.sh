@@ -1152,8 +1152,8 @@ make()
         TARGET="@Makefile" \
         DEPS="$MK_BUILD_FILES $MK_CONFIGURE_INPUTS" \
         mk_msg "regenerating Makefile" '%;' \
-        set -- "#$MK_OPTIONS" '%;' \
-        . "$MK_HOME/command/configure.sh" '%;' \
+        export MK_HOME MK_SHELL MK_SOURCE_DIR PATH '%;' \
+        "$MK_SHELL" "$MK_HOME/command/configure.sh" "#$MK_OPTIONS" '%;' \
         exit 0
 
     mk_comment "Dummy targets for files needed by configure"
