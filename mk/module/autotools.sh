@@ -118,8 +118,11 @@ _mk_at_system_string()
         sparc*)
             __arch="sparc-sun"
             ;;
-        hppa*)
+        hppa32)
             __arch="hppa2.0-hp"
+            ;;
+        hppa64)
+            __arch="hppa64-hp"
             ;;
         ia64*)
             case "$__os" in
