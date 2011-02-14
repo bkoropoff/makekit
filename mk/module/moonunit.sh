@@ -107,7 +107,7 @@ mk_moonunit()
         LDFLAGS="$LDFLAGS" \
         LIBDIRS="$LIBDIRS" \
         INCLUDEDIRS="$INCLUDEDIRS" \
-        LIBDEPS="$LIBDEPS" \
+        LIBDEPS="$LIBDEPS moonunit" \
         HEADERDEPS="$HEADERDEPS" \
         GROUPS="$GROUPS" \
         DEPS="$DEPS"
@@ -131,8 +131,9 @@ mk_check_moonunit()
 {
     mk_check_program moonunit-stub
     mk_check_headers moonunit/moonunit.h
+    mk_check_libraries moonunit
     
-    if [ -n "$MOONUNIT_STUB" -a "$HAVE_MOONUNIT_MOONUNIT_H" != no ]
+    if [ -n "$MOONUNIT_STUB" -a "$HAVE_MOONUNIT_MOONUNIT_H" != no -a "$HAVE_LIB_MOOUNIT" != no ]
     then
         HAVE_MOONUNIT=yes
     else
