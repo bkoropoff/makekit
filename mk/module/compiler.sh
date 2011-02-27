@@ -117,7 +117,7 @@ _mk_compile_detect()
 {
     # Invokes _mk_compile after autodetecting COMPILER
     case "${SOURCE##*.}" in
-        c)
+        c|s)
             COMPILER="c"
             ;;
         [cC][pP]|[cC][pP][pP]|[cC][xX][xX]|[cC][cC]|C)
@@ -127,7 +127,7 @@ _mk_compile_detect()
             mk_fail "unsupport source file type: .${SOURCE##*.}"
             ;;
     esac
-
+    
     _mk_compile
 }
 
