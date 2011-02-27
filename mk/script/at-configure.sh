@@ -141,9 +141,9 @@ mk_at_log_command "$dirname" "configure" "${_src_dir}/configure" \
     CC="$MK_CC" \
     CXX="$MK_CXX" \
     CPPFLAGS="-I${_include_dir} $_cppflags $CPPFLAGS" \
-    CFLAGS="$MK_CFLAGS $CFLAGS" \
-    CXXFLAGS="$MK_CXXFLAGS $CXXFLAGS" \
-    LDFLAGS="${_ldflags} $MK_LDFLAGS $LDFLAGS" \
+    CFLAGS="$MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS" \
+    CXXFLAGS="$MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS" \
+    LDFLAGS="$MK_ISA_LDFLAGS $MK_LDFLAGS $LDFLAGS ${_ldflags}" \
     --build="${MK_AT_BUILD_STRING}" \
     --host="${MK_AT_HOST_STRING}" \
     --prefix="${_prefix}" \

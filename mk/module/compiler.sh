@@ -1819,33 +1819,33 @@ option()
         VAR="CPPFLAGS" \
         PARAM="flags" \
         DEFAULT="" \
-        HELP="Default C preprocessor flags"
+        HELP="C preprocessor flags"
 
-    MK_DEFAULT_CPPFLAGS="$CPPFLAGS"
+    MK_CPPFLAGS="$CPPFLAGS"
 
     mk_option \
         VAR="CFLAGS" \
         PARAM="flags" \
         DEFAULT="$_default_OPTFLAGS" \
-        HELP="Default C compiler flags"
+        HELP="C compiler flags"
 
-    MK_DEFAULT_CFLAGS="$CFLAGS"
+    MK_CFLAGS="$CFLAGS"
 
     mk_option \
         VAR="CXXFLAGS" \
         PARAM="flags" \
         DEFAULT="$_default_OPTFLAGS" \
-        HELP="Default C++ compiler flags"
+        HELP="C++ compiler flags"
 
-    MK_DEFAULT_CXXFLAGS="$CXXFLAGS"
+    MK_CXXFLAGS="$CXXFLAGS"
 
     mk_option \
         VAR="LDFLAGS" \
         PARAM="flags" \
-        DEFAULT="$_default_OPTFLAGS" \
-        HELP="Default linker flags"
+        DEFAULT="" \
+        HELP="Linker flags"
 
-    MK_DEFAULT_LDFLAGS="$LDFLAGS"
+    MK_LDFLAGS="$LDFLAGS"
 
     unset CC CXX CPPFLAGS CFLAGS CXXFLAGS LDFLAGS
 
@@ -1862,58 +1862,61 @@ option()
             _mk_define_name "MK_${_sys}_OS"
             mk_get "$result"
             
+            _default_cc="$MK_DEFAULT_CC"
+            _default_cxx="$MK_DEFAULT_CXX"
+
             case "${MK_DEFAULT_CC}-${result}-${_isa}" in
                 *-darwin-x86_32)
-                    _default_cc="$MK_DEFAULT_CC -arch i386"
-                    _default_cxx="$MK_DEFAULT_CXX -arch i386"
+                    _default_cflags="-arch i386"
+                    _default_cxxflags="-arch i386"
                     ;;
                 *-darwin-x86_64)
-                    _default_cc="$MK_DEFAULT_CC -arch x86_64"
-                    _default_cxx="$MK_DEFAULT_CXX -arch x86_64"
+                    _default_cflags="-arch x86_64"
+                    _default_cxxflags="-arch x86_64"
                     ;;
                 *-darwin-ppc32)
-                    _default_cc="$MK_DEFAULT_CC -arch ppc"
-                    _default_cxx="$MK_DEFAULT_CXX -arch ppc"
+                    _default_cflags="-arch ppc"
+                    _default_cxxflags="-arch ppc"
                     ;;
                 *-darwin-ppc64)
-                    _default_cc="$MK_DEFAULT_CC -arch ppc64"
-                    _default_cxx="$MK_DEFAULT_CXX -arch ppc64"
+                    _default_cflags="-arch ppc64"
+                    _default_cxxflags="-arch ppc64"
                     ;;
                 *-*-x86_32)
-                    _default_cc="$MK_DEFAULT_CC -m32"
-                    _default_cxx="$MK_DEFAULT_CXX -m32"
+                    _default_cflags="-m32"
+                    _default_cxxflags="-m32"
                     ;;
                 *-*-x86_64)
-                    _default_cc="$MK_DEFAULT_CC -m64"
-                    _default_cxx="$MK_DEFAULT_CXX -m64"
+                    _default_cflags="-m64"
+                    _default_cxxflags="-m64"
                     ;;
                 *-*-sparc_32)
-                    _default_cc="$MK_DEFAULT_CC -m32"
-                    _default_cxx="$MK_DEFAULT_CXX -m32"
+                    _default_cflags="-m32"
+                    _default_cxxflags="-m32"
                     ;;
                 *-*-sparc_64)
-                    _default_cc="$MK_DEFAULT_CC -m64"
-                    _default_cxx="$MK_DEFAULT_CXX -m64"
+                    _default_cflags="-m64"
+                    _default_cxxflags="-m64"
                     ;;
                 *-aix-ppc32)
-                    _default_cc="$MK_DEFAULT_CC -maix32"
-                    _default_cxx="$MK_DEFAULT_CXX -maix32"
+                    _default_cflags="-maix32"
+                    _default_cxxflags="-maix32"
                     ;;
                 *-aix-ppc64)
-                    _default_cc="$MK_DEFAULT_CC -maix64"
-                    _default_cxx="$MK_DEFAULT_CXX -maix64"
+                    _default_cflags="-maix64"
+                    _default_cxxflags="-maix64"
                     ;;
                 *-hpux-ia64_32)
-                    _default_cc="$MK_DEFAULT_CC -milp32"
-                    _default_cxx="$MK_DEFAULT_CXX -milp32"
+                    _default_cflags="-milp32"
+                    _default_cxxflags="-milp32"
                     ;;
                 *-hpux-ia64_64)
-                    _default_cc="$MK_DEFAULT_CC -mlp64"
-                    _default_cxx="$MK_DEFAULT_CXX -mlp64"
+                    _default_cflags="-mlp64"
+                    _default_cxxflags="-mlp64"
                     ;;
                 *)
-                    _default_cc="$MK_DEFAULT_CC"
-                    _default_cxx="$MK_DEFAULT_CXX"
+                    _default_cflags=""
+                    _default_cxxflags=""
                     ;;
             esac
             
@@ -1932,25 +1935,25 @@ option()
             mk_option \
                 VAR="${_def}_CPPFLAGS" \
                 PARAM="flags" \
-                DEFAULT="$MK_DEFAULT_CPPFLAGS" \
+                DEFAULT="" \
                 HELP="C preprocessor flags ($_sys/$_isa)"
             
             mk_option \
                 VAR="${_def}_CFLAGS" \
                 PARAM="flags" \
-                DEFAULT="$MK_DEFAULT_CFLAGS" \
+                DEFAULT="$_default_cflags" \
                 HELP="C compiler flags ($_sys/$_isa)"
 
             mk_option \
                 VAR="${_def}_CXXFLAGS" \
                 PARAM="flags" \
-                DEFAULT="$MK_DEFAULT_CXXFLAGS" \
+                DEFAULT="$_default_cxxflags" \
                 HELP="C++ compiler flags ($_sys/$_isa)"
             
             mk_option \
                 VAR="${_def}_LDFLAGS" \
                 PARAM="flags" \
-                DEFAULT="$MK_DEFAULT_LDFLAGS" \
+                DEFAULT="" \
                 HELP="Linker flags ($_sys/$_isa)"
         done
     done
@@ -2079,8 +2082,10 @@ _mk_compiler_check()
 configure()
 {
     mk_declare -i MK_CONFIG_HEADER="" MK_HEADERDEPS="" MK_LIBDEPS=""
+    mk_declare -i -e MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS
     mk_declare -s -i -e \
-        MK_CC MK_CXX MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS \
+        MK_CC MK_CXX \
+        MK_ISA_CPPFLAGS MK_ISA_CFLAGS MK_ISA_CXXFLAGS MK_ISA_LDFLAGS \
         MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
     mk_declare -s MK_INTERNAL_LIBS
 
@@ -2111,19 +2116,19 @@ configure()
 
             mk_get "${_def}_CPPFLAGS"
             mk_msg "C preprocessor flags ($_sys/$_isa): $result"
-            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CPPFLAGS "$result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_ISA_CPPFLAGS "$result"
 
             mk_get "${_def}_CFLAGS"
             mk_msg "C compiler flags ($_sys/$_isa): $result"
-            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CFLAGS "$result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_ISA_CFLAGS "$result"
 
             mk_get "${_def}_CXXFLAGS"
             mk_msg "C++ compiler flags ($_sys/$_isa): $result"
-            mk_set_system_var SYSTEM="$_sys/$_isa" MK_CXXFLAGS "$result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_ISA_CXXFLAGS "$result"
 
             mk_get "${_def}_LDFLAGS"
             mk_msg "linker flags ($_sys/$_isa): $result"
-            mk_set_system_var SYSTEM="$_sys/$_isa" MK_LDFLAGS "$result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_ISA_LDFLAGS "$result"
         done
     done
 
