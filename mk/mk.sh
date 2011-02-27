@@ -594,7 +594,7 @@ _mk_slashless_name()
 #>
 mk_quote()
 {
-    result=""
+    result="'"
     __rem="$1"
     while true
     do
@@ -617,8 +617,8 @@ mk_quote()
         fi
     done
 
-    # Affix enclosing single quotes
-    result="'${result}'"
+    # Add end quote
+    result="${result}'"
 }
 
 #<
