@@ -122,8 +122,8 @@ mk_rpm_do()
         mk_mkdir "$RPM_RES_PKGDIR/$i"
     done
 
-    RPM_SPECFILE="${RPM_PKGDIR}/SPECS/${SPECFILE##*/}"
-    RPM_RES_SPECFILE="${RPM_RES_PKGDIR}/SPECS/${SPECFILE##*/}"
+    RPM_SPECFILE="${RPM_PKGDIR}/SPECS/package.spec"
+    RPM_RES_SPECFILE="${RPM_RES_PKGDIR}/SPECS/package.spec"
     
     mk_output_file INPUT="$SPECFILE" OUTPUT="$RPM_SPECFILE"
     mk_quote "$result"
