@@ -959,7 +959,7 @@ _mk_find_resource()
     for __dir in ${MK_SEARCH_DIRS}
     do
         __file="${__dir}/$1"
-        if [ -f "$__file" ]   
+        if [ -e "$__file" ]   
         then
             result="$__file"
             return 0
@@ -967,6 +967,24 @@ _mk_find_resource()
     done
 
     return 1
+}
+
+#<
+# @brief Find resource in search path
+# @usage relpath
+#
+# Locates a resource by searching the resource path
+# list and sets <var>result</var> to the result.
+# If the resource is not found, this function will abort.
+#
+# The resource path list includes any directories specified
+# by the <var>MKLOCAL</var> variable in <lit>MakeKitBuild</lit>
+# files in the current project, as well as the MakeKit home
+# directory.
+#>
+mk_resolve_resource()
+{
+    _mk_find_resource "$1" || mk_fail "could not resolve resource: $1"
 }
 
 _mk_contains()
