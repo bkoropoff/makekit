@@ -48,10 +48,11 @@ _mk_emitf()
     printf "$@" >&6
 }
 
-_mk_find_module_imports_recursive()
+_mk_find_resources_recursive()
 {
     unset MODULES SUBDIRS
-   
+    MKLOCAL=mklocal
+
     if ! [ -e "${MK_SOURCE_DIR}${1}/MakeKitBuild" ]
     then
         return 0
@@ -59,13 +60,21 @@ _mk_find_module_imports_recursive()
 
     mk_safe_source "${MK_SOURCE_DIR}${1}/MakeKitBuild" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCE_DIR}${1}"
 
-    result="$result $MODULES"
+    _MK_MODULES="$_MK_MODULES $MODULES"
+
+    for _dir in ${MKLOCAL}
+    do
+        if [ -d "${MK_SOURCE_DIR}${1}/$_dir" ]
+        then
+            MK_SEARCH_DIRS="$MK_SEARCH_DIRS ${MK_SOURCE_DIR}${1}/$_dir"
+        fi
+    done
     
     for _dir in ${SUBDIRS}
     do
         if [ "$_dir" != "." ]
         then
-            _mk_find_module_imports_recursive "$1/${_dir}"
+            _mk_find_resources_recursive "$1/${_dir}"
         fi
     done
 }
@@ -79,10 +88,11 @@ _mk_set_defaults()
     [ -z "$PROJECT_NAME" ] && PROJECT_NAME="$(cd "${MK_SOURCE_DIR}" && basename "$(pwd)")"
 }
 
-_mk_find_module_imports()
+_mk_find_resources()
 {
-    result=""
-    _mk_find_module_imports_recursive ""
+    _MK_MODULES=""
+    _mk_find_resources_recursive ""
+    _mk_module_list $_MK_MODULES
 }
 
 _mk_modules_rec()
@@ -678,15 +688,8 @@ _basic_options
 
 MK_SEARCH_DIRS="${MK_HOME}"
 
-# Look for local modules and scripts in source directory
-if [ -d "${MK_SOURCE_DIR}/mklocal" ]
-then
-    MK_SEARCH_DIRS="${MK_SEARCH_DIRS} ${MK_SOURCE_DIR}/mklocal"
-fi
-
-# Find all required modules
-_mk_find_module_imports
-_mk_module_list ${result}
+# Find all required resources
+_mk_find_resources
 
 # Allow top-level MakeKitBuild to set default settings
 _mk_set_defaults
