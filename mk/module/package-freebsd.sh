@@ -154,7 +154,7 @@ mk_freebsd_do()
         mk_quote "$PACKING"
         FREEBSD_DEPS="$FREEBSD_DEPS $result"
     else
-        mk_run_or_fail echo "@name $PACKAGE" > "$FREEBSD_PACKING"
+        mk_run_or_fail echo "@name $PACKAGE-$VERSION" > "$FREEBSD_PACKING"
     fi
 
     case "$SHORT" in
@@ -236,19 +236,10 @@ mk_freebsd_do()
     
     mk_package_dirs()
     {
-        for _i
-        do
-            mk_target \
-                TARGET="$_i" \
-                mk_mkdir "&$_i"
-            
-            mk_quote "$result"
-            FREEBSD_DEPS="$FREEBSD_DEPS $result"
-        done
-
         for _i in "$@"
         do
-            echo "${_i#/}"
+            mk_quote "$_i"
+            echo "@exec mkdir -p $result"
         done >> "${FREEBSD_PACKING}"
     }
 
