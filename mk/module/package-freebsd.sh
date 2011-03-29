@@ -84,21 +84,40 @@ mk_freebsd_enabled()
 
 #<
 # @brief Begin FreeBSD package definition
-# @usage PACKAGE=name PACKING=file
+# @usage PACKAGE=name VERSION=ver SHORT=shortdesc LONG=longdesc
 # @option PACKAGE=name sets the name of the package
+# @option VERSION=ver sets the version of the package
+# @option SHORT=shortdesc sets the short description.  If
+# <param>shortdesc</param> begins with a <lit>-</lit>, the
+# rest of the string is treated as the description.  Otherwise,
+# <param>shortdesc</param> is treated as a file which will first
+# be processed as by <funcref>mk_output_file</funcref> to yield
+# the final short description.
+# @option LONG=longdesc sets the long description.  If
+# <param>longdesc</param> begins with a <lit>-</lit>, the
+# rest of the string is treated as the description.  Otherwise,
+# <param>longdesc</param> is treated as a file which will first
+# be processed as by <funcref>mk_output_file</funcref> to yield
+# the final long description.
 # @option PACKING=file designates a template packing list
-# file to use
-# @option SHORT=shortfile fetches a short description
-# of the package from <param>shortfile</param>.
-# @option LONG=longfile fetches a long description of
-# the package from <param>longfile</param>.
+# file to use.  The file needs to specify the <lit>@name</lit>
+# directive at a minimum.  If this option is not specified, one
+# will be generated automatically.  The file will be processed
+# as by <funcref>mk_output_file</funcref>.
+# @option PREINST=preinst specifies a script to run before the
+# package is installed.  The file will be processed as by
+# <funcref>mk_output_file</funcref>.
+# @option POSTINST=postinst specifies a script to run after the
+# package is installed.  The file will be processed as by
+# <funcref>mk_output_file</funcref>.
+# @option PRERM=prerm specifies a script to run before the
+# package is uninstalled.  The file will be processed as by
+# <funcref>mk_output_file</funcref>.
+# @option POSTRM=postrm specifies a script to run before the
+# package is installed.  The file will be processed as by
+# <funcref>mk_output_file</funcref>.
 #
 # Begins the definition of a FreeBSD package to be built.
-# You must provide a template packing file which contains
-# basic metadata about the package, such as its name,
-# dependencies, and description.  The template should not
-# list any files to be included -- this will be filled
-# in automatically.
 #
 # After invoking this function, you can use functions
 # such as <funcref>mk_package_targets</funcref> or
