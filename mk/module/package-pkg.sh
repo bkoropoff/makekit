@@ -96,22 +96,17 @@ _mk_pkg_process_infofiles()
 
 #<
 # @brief Begin Solaris package definition
-# @usage PACKAGE=name VERSION=ver INFOFILES=files
-# @option PACKAGE=name sets the name of the package
-# @option VERSION=ver sets the version of the package
-# @option INFOFILES=files specifies a list of info files
-# to put in the package.  Each file will be processed
-# as if by <funcref>mk_output_file</funcref>.  If the file
-# name ends with <lit>.in</lit>, it will be stripped during
-# processing.
+# @usage PACKAGE=name VERSION=ver
+# @option PACKAGE=name Sets the name of the package
+# @option VERSION=ver Sets the version of the package
 #
-# Begins the definition of a Solaris package to be built.
+# Begins the definition of a Solaris .pkg file.
+# A .pkg file is a tar-like archive which contains one
+# or more actual Solaris packages.  You must specify one
+# or more of these "subpackages" with <funcref>mk_pkg_sub_do</funcref>
+# and <funcref>mk_pkg_sub_done</funcref>.
 #
-# After invoking this function, you can use functions
-# such as <funcref>mk_package_targets</funcref> or
-# <funcref>mk_package_patterns</funcref> to add files
-# to the package.  End the definition of the
-# package with <funcref>mk_pkg_done</funcref>.
+# Use <funcref>mk_pkg_done</funcref> to complete the definition.
 #>
 mk_pkg_do()
 {
@@ -160,32 +155,76 @@ mk_pkg_do()
         done >> "${PKG_MANIFEST}.dirs"
     }
 
-    mk_subpackage_do()
-    {
-        mk_push_vars SUBPACKAGE INFOFILES
-        mk_parse_params
+    mk_pop_vars
+}
 
-        PKG_SUBPACKAGE="$SUBPACKAGE"
-        PKG_SUBPKGDIR="$PKG_RES_PKGDIR/subpkg-$PKG_SUBPACKAGE"
-        PKG_MANIFEST="$PKG_SUBPKGDIR/manifest"
-        PKG_SUBPKGS="$PKG_SUBPKGS $PKG_SUBPACKAGE"
-
-        mk_mkdir "$PKG_SUBPKGDIR"
-
-        _mk_pkg_process_infofiles
-        _mk_pkg_files_begin
-
-        mk_pop_vars
-    }
-
-    mk_subpackage_done()
-    {
-        _mk_pkg_files_end
-
-        unset PKG_SUBPACKAGE PKG_SUBPKGDIR PKG_MANIFEST PKG_INFOFILES
-    }
+#<
+# @brief Begin Solaris subpackage
+# @usage SUBPACKAGE=name INFOFILES=infofiles
+# @option SUBPACKAGE=name Sets the name of the subpackage.
+# Solaris package names must be very short (no more than
+# 20 characters), and are typically formed from an abbreviation
+# of the vendor's name in uppercase, followed by
+# an abbreviation of the product name in lowercase, followed
+# by a one- or two-character abbreviation of what the subpackage
+# contains. For example: <lit>VENDprodu</lit>, <lit>VENDprodr</lit>,
+# for files going in <lit>/usr</lit> and <lit>/</lit> (root),
+# respectively.
+# @option INFOFILES=infofiles Specifies a list of info files
+# that should be included.  The files will be processed as
+# by <funcref>mk_output_file</funcref> and have <lit>.in</lit>
+# stripped from the end of the name if present.  You must provide
+# a <lit>pkginfo</lit> file at a minimum.
+#
+# Begins the definition of a "real" Solaris package within the
+# current .pkg archive being defined.  Use functions such as
+# <funcref>mk_package_patterns</funcref> to include files.
+#
+# By default, all intermediate directories for included files
+# will be specified with "don't care" permissions, meaning they
+# are expected to already exist on the system.  This is usually
+# the desired behavior, e.g. your package should not try to
+# override permissions on <lit>/usr/lib</lit>. If you want a
+# directory to be owned by the package, specify it with
+# <funcref>mk_package_dirs</funcref>.
+#
+# Typically, subpackages must be used to separate files that
+# end up in different mount points, e.g. <lit>/usr</lit> versus
+# <lit>/opt</lit> versus <lit>/</lit>.  This prevents conflicts
+# when certain filesystems are shared via NFS or Solaris Zones.
+#
+# Use <funcref>mk_pkg_sub_done</funcref> to complete the definition.
+#>
+mk_pkg_sub_do()
+{
+    mk_push_vars SUBPACKAGE INFOFILES
+    mk_parse_params
+    
+    PKG_SUBPACKAGE="$SUBPACKAGE"
+    PKG_SUBPKGDIR="$PKG_RES_PKGDIR/subpkg-$PKG_SUBPACKAGE"
+    PKG_MANIFEST="$PKG_SUBPKGDIR/manifest"
+    PKG_SUBPKGS="$PKG_SUBPKGS $PKG_SUBPACKAGE"
+    
+    mk_mkdir "$PKG_SUBPKGDIR"
+    
+    _mk_pkg_process_infofiles
+    _mk_pkg_files_begin
     
     mk_pop_vars
+}
+
+#<
+# @brief End Solaris subpackage
+# @usage
+#
+# Ends the subpackage defininition started with
+# <funcref>mk_pkg_sub_do</funcref>.
+#>
+mk_pkg_sub_done()
+{
+    _mk_pkg_files_end
+    
+    unset PKG_SUBPACKAGE PKG_SUBPKGDIR PKG_MANIFEST PKG_INFOFILES
 }
 
 #<
@@ -207,7 +246,7 @@ mk_pkg_done()
     master="$result"
 
     unset PKG_PACKAGE PKG_VERSION PKG_PKGDIR PKG_SUBPKGS
-    unset -f mk_package_files mk_package_dirs mk_subpackage_do mk_subpackage_done
+    unset -f mk_package_files mk_package_dirs
 
     mk_add_package_target "$master"
 
