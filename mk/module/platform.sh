@@ -171,7 +171,7 @@ mk_set_all_isas()
 # Certain shell variables are considered "system" variables and will have
 # their values swapped out appropriately when switching the target system,
 # e.g. <var>MK_LIBDIR</var>.  You can declare your own system variables with
-# <funcref>mk_declare_system_var</funcref>.
+# <lit><funcref>mk_declare</funcref> -s</lit>.
 #
 # This function gives fine-grained control that may not be necessary
 # if all you need is multiarchitecture support.  In this case, use
