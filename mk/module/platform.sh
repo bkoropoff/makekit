@@ -273,16 +273,6 @@ _mk_declare_system()
     fi
 }
 
-#<
-# @brief Declare system variable
-# @usage var
-#
-# Declares that the variable <var>var</var> might need to take on
-# different values when targetting different systems or ISAs.  Once
-# so declared, the value of the variable will be saved and restored
-# whenever switching the target system with <funcref>mk_system</funcref>,
-# <funcref>mk_multiarch_do</funcref>, etc.
-#>
 mk_declare_system_var()
 {
     mk_deprecated "mk_declare_system_var is deprecated; use mk_declare -s instead"
