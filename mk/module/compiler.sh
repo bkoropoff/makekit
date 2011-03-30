@@ -209,11 +209,22 @@ _mk_process_symfile_gnu_ld()
     DEPS="$DEPS @$__output"
 }
 
+_mk_process_symfile_aix()
+{
+    mk_resolve_file "$SYMFILE"
+
+    LDFLAGS="$LDFLAGS -Wl,-bexport:$result"
+    DEPS="$DEPS @$result"
+}
+
 _mk_process_symfile()
 {
-    case "$MK_OS" in
-        linux)
+    case "$MK_OS:$MK_CC_LD_STYLE" in
+        *:gnu)
             _mk_process_symfile_gnu_ld "$@"
+            ;;
+        aix:native)
+            _mk_process_symfile_aix
             ;;
         *)
             ;;
