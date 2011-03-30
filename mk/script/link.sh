@@ -212,7 +212,7 @@ case "${MK_OS}:${LD_STYLE}" in
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module -Wl,-arch_errors_fatal"
         ;;
     aix:native)
-        DLO_LINK="-shared"
+        DLO_LINK="-shared -Wl,-berok"
         LIB_LINK="-shared"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-brtl"
 
