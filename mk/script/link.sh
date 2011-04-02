@@ -214,7 +214,7 @@ case "${MK_OS}:${LD_STYLE}" in
     aix:native)
         DLO_LINK="-shared -Wl,-berok"
         LIB_LINK="-shared"
-        COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-brtl"
+        COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-brtl -Wl,-blibpath:${RPATH_LIBDIR}:/usr/lib:/lib"
 
         if [ "$MODE" = "library" -o "$MODE" = "dlo" ]
         then
