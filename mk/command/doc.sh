@@ -74,7 +74,7 @@ process_docbook()
     if ! $INDEX
     then
         mk_quote_c_string "$1"
-        printf '<include format="docbook" file=%s/>\n' "$result"
+        printf '<include format="docbook" name="%s" file=%s/>\n' "${1##*/}" "$result"
     fi
 }
 
