@@ -58,6 +58,10 @@ process_file()
         awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" |
         grep "^<function" |
         sed -e 's/<function name="//' -e 's/".*$//' || mk_fail "awk failed"
+
+        awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" |
+        grep "^<variable" |
+        sed -e 's/<variable name="//' -e 's/".*$//' || mk_fail "awk failed"
     else
         awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" || mk_fail "awk failed"
     fi
