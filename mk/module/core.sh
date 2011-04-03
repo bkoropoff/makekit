@@ -34,6 +34,20 @@
 
 DEPENDS="platform program"
 
+#<
+# @var MK_DEBUG
+# @brief Controls debug mode
+# @value yes Debug mode is turned on
+# @value no Debug mode is turned off
+#
+# Decides whether build products should be created
+# in "debug" mode.  This is an abstract setting which
+# is respected by other modules in whatever way is appropriate.
+# For example, when debug mode is on the compiler module
+# turns off optimization compiler flags and the package-deb
+# module builds .deb package with unstripped binaries.
+#>
+
 ### section common
 
 _mk_declare_output()
