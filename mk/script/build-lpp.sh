@@ -78,7 +78,7 @@ _mk_lpp_filesystem()
                 DEST="${LPP_DIR}/image/usr/lpp/${LPP_NAMEDOT}/inst_root${result}"
                 SRC="${MK_STAGE_DIR}${result}"
                 mk_mkdirname "${DEST}"
-                mk_run_or_fail cp -RP "$SRC" "$DEST"
+                _mk_lpp_transfer "$SRC" "$DEST"
             done
         } < "$LPP_MANIFEST.root.files"
 
@@ -88,10 +88,35 @@ _mk_lpp_filesystem()
                 DEST="${LPP_DIR}/image${result}"
                 SRC="${MK_STAGE_DIR}${result}"
                 mk_mkdirname "${DEST}"
-                mk_run_or_fail cp -RP "$SRC" "$DEST"
+                _mk_lpp_transfer "$SRC" "$DEST"
             done
         } < "$LPP_MANIFEST.usr.files"
     done
+}
+
+_mk_lpp_transfer()
+{
+    mk_run_or_fail cp -RP "$1" "$2"
+
+    if [ "$MK_DEBUG" = "no" ]
+    then
+        case "`file -h "$2"`" in
+            *"64-bit"*"not stripped")
+                mk_get_file_mode "$2"
+                _old_mode="$result"
+                mk_run_or_fail chmod u+w "$2"
+                mk_run_or_fail strip -X64 "$2"
+                mk_run_or_fail chmod "$_old_mode" "$2"
+                ;;
+            *"not stripped")
+                mk_get_file_mode "$2"
+                _old_mode="$result"
+                mk_run_or_fail chmod u+w "$2"
+                mk_run_or_fail strip "$2"
+                mk_run_or_fail chmod "$_old_mode" "$2"
+                ;;
+        esac
+    fi
 }
 
 _mk_lpp_size()
