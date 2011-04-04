@@ -52,6 +52,7 @@ _mk_lpp_filesystem()
     mk_safe_rm "$LPP_DIR/image"
 
     mk_mkdir "${LPP_DIR}/image/usr/lpp/${LPP_NAMEDOT}"
+    mk_mkdir "${LPP_DIR}/image/usr/lpp/${LPP_NAMEDOT}/inst_root"
 
     for LPP_SUB
     do
