@@ -37,6 +37,7 @@ DEPENDS="platform program"
 #<
 # @var MK_DEBUG
 # @brief Controls debug mode
+# @export
 # @value yes Debug mode is turned on
 # @value no Debug mode is turned off
 #
@@ -1081,7 +1082,7 @@ option()
 configure()
 {
     mk_declare -i _MK_OUTPUT_VARS
-    mk_declare -e MK_LOG_DIR
+    mk_declare -e MK_LOG_DIR MK_DEBUG
 
     # Check for best possible awk
     mk_check_program VAR=AWK FAIL=yes gawk awk
