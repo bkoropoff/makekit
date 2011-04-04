@@ -2286,7 +2286,7 @@ _mk_compiler_check()
 configure()
 {
     mk_declare -i MK_CONFIG_HEADER="" MK_HEADERDEPS="" MK_LIBDEPS=""
-    mk_decalre -s -e \
+    mk_declare -s -e \
         MK_CC MK_CXX MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
     mk_declare -i -e MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS
     mk_declare -s -i -e \
