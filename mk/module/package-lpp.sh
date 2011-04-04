@@ -57,9 +57,7 @@ configure()
 {
     mk_declare -e MK_PACKAGE_LPP_DIR
 
-    mk_check_program mkinstallp
-
-    if [ "$MK_PACKAGE_LPP" = "yes" -a "$MK_HOST_OS" = "aix" -a -n "$MKINSTALLP" ]
+    if [ "$MK_PACKAGE_LPP" = "yes" -a "$MK_HOST_OS" = "aix" ]
     then
         mk_msg "AIX package building: enabled"
         MK_PACKAGE_LPP_ENABLED=yes
