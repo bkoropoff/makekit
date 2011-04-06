@@ -452,6 +452,11 @@ _mk_library_process_version()
                 _rest="${_rest#*:}"
                 _age="${_rest%:}"
                 case "$MK_OS" in
+                    hpux)
+                        MAJOR="$_cur"
+                        MINOR="$_rev"
+                        MICRO=""
+                        ;;
                     freebsd)
                         MAJOR="$_cur"
                         MINOR=""
@@ -479,6 +484,9 @@ _mk_library_process_version()
                 case "$MK_OS" in
                     freebsd|darwin)
                         MINOR=""
+                        MICRO=""
+                        ;;
+                    hpux)
                         MICRO=""
                         ;;
                 esac
