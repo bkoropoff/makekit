@@ -453,6 +453,9 @@ option()
                         # extraneous double quotes
                         _default_MK_BUILD_DISTRO="`lsb_release -sd | sed 's/\"//g' | awk '{print $1;}' | tr 'A-Z' 'a-z'`"
                         ;;
+                    "RedHatEnterprise"*)
+                        _default_MK_BUILD_DISTRO="rhel"
+                        ;;                    
                     *)
                         _default_MK_BUILD_DISTRO="`lsb_release -si | awk '{print $1;}' | tr 'A-Z' 'a-z'`"
                         ;;
