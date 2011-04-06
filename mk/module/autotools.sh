@@ -98,7 +98,7 @@ _mk_at_system_string()
                     __arch="powerpc-ibm"
                     ;;
                 *)
-                    __arch="ppc-unknown"
+                    __arch="powerpc-unknown"
                     ;;
             esac
             ;;
@@ -111,7 +111,7 @@ _mk_at_system_string()
                     __arch="powerpc-ibm"
                     ;;
                 *)
-                    __arch="ppc64-unknown"
+                    __arch="powerpc-unknown"
                     ;;
             esac
             ;;

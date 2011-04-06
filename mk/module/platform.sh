@@ -399,6 +399,9 @@ option()
                 x86_64|amd64)
                     _default_MK_BUILD_ARCH="x86_64"
                     ;;
+                ppc)
+                    _default_MK_BUILD_ARCH="powerpc"
+                    ;;
                 *)
                     mk_fail "unknown architecture: `uname -m`"
                     ;;
