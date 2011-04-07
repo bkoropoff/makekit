@@ -455,7 +455,10 @@ option()
                         ;;
                     "RedHatEnterprise"*)
                         _default_MK_BUILD_DISTRO="rhel"
-                        ;;                    
+                        ;;           
+                    "FedoraCore")
+                        _default_MK_BUILD_DISTRO="fedora"
+                        ;;
                     *)
                         _default_MK_BUILD_DISTRO="`lsb_release -si | awk '{print $1;}' | tr 'A-Z' 'a-z'`"
                         ;;
