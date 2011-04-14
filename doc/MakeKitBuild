@@ -108,7 +108,8 @@ make()
             OUTPUT="reference/package.xml" -- \
             --title "Package Modules" \
             --module package package-rpm package-deb \
-            package-freebsd package-pkg package-lpp
+            package-freebsd package-pkg package-lpp \
+            package-depot
 
         reference_end
 
