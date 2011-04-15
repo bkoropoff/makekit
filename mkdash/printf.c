@@ -317,15 +317,16 @@ static char *
 mklong(const char *str, const char *ch)
 {
 	char *copy;
-	size_t len;	
+	size_t len;
+	size_t pridmax_len = strlen(PRIdMAX);
 
-	len = ch - str + 3;
+	len = ch - str + pridmax_len;
 	STARTSTACKSTR(copy);
-	copy = makestrspace(len, copy);
-	memcpy(copy, str, len - 3);
-	copy[len - 3] = 'j';
-	copy[len - 2] = *ch;
-	copy[len - 1] = '\0';
+	copy = makestrspace(len + 1, copy);
+	memcpy(copy, str, len - pridmax_len);
+	memcpy(copy + len - pridmax_len, PRIdMAX, pridmax_len - 1);
+	copy[len - 1] = *ch;
+	copy[len] = '\0';
 	return (copy);	
 }
 
