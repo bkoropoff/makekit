@@ -114,7 +114,7 @@ make()
             --title "Package Modules" \
             --module package package-rpm package-deb \
             package-freebsd package-pkg package-lpp \
-            package-depot
+            package-depot package-mac
 
         reference_end
 
