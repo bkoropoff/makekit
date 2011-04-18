@@ -98,7 +98,7 @@ _transfer()
     mk_mkdirname "$2"
     mk_run_or_fail cp -R "$1" "$2"
     
-    if [ "$MK_DEBUG" = "yes" ]
+    if [ "$MK_DEBUG" = "no" ]
     then
         case "`file -h "$2"`" in
             *"not stripped"|*"ELF-32"*|*"ELF-64"*)
