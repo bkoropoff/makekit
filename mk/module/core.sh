@@ -1006,7 +1006,7 @@ configure()
 make()
 {
     MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR"
-    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps"
+    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps"
 
     mk_target \
         TARGET="@clean" \
