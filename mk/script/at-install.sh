@@ -63,11 +63,6 @@ case "$MK_OS:$MK_ISA" in
         ;;
 esac
 
-for _target
-do
-    mk_safe_rm "${_target}"
-done
-
 cd "${MK_OBJECT_DIR}${MK_SUBDIR}/$BUILDDIR" || mk_fail "could not change directory"
 if [ "${MK_SYSTEM%/*}" = "build" ]
 then
@@ -100,8 +95,13 @@ else
         then
             [ "$DESTDIR" = "$MK_STAGE_DIR" ] && mk_msg "$_file"
             _dest="${_stage_dir}${_file}"
-            mk_mkdir "${_dest%/*}"
-            mv -f ".install${_file}" "$_dest" || mk_fail "failed to copy file: $_file"
+
+            if ! diff ".install${_file}" "$_dest" >/dev/null 2>&1
+            then
+                mk_safe_rm "$_dest"
+                mk_mkdirname "$_dest"
+                mv -f ".install${_file}" "$_dest" || mk_fail "failed to move file: $_file"
+            fi
         else
             case "$_file" in
                 "${MK_LIBDIR}/"*.la)

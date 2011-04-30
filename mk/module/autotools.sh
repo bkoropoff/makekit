@@ -193,11 +193,12 @@ _mk_autotools()
         DIR="$dir" '$@' "*$PARAMS" "*$_MK_AT_PASS_VARS"
 
     __configure_stamp="$result"
+    mk_quote "$result"
 
     mk_target \
         SYSTEM="$SYSTEM" \
         TARGET=".${BUILDDIR}_build" \
-        DEPS="'$__configure_stamp'" \
+        DEPS="$BUILDDEPS $result" \
         mk_run_script \
         at-build \
         %SOURCEDIR %BUILDDIR %INSTALL %MAKE_BUILD_TARGET \
@@ -281,15 +282,19 @@ mk_autotools()
     mk_push_vars \
         SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
         CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS \
-        BUILDDIR DEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
+        BUILDDIR DEPS BUILDDEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
         INSTALL_PRE INSTALL_POST SET_LIBRARY_PATH=yes \
 	MAKE_BUILD_TARGET="" MAKE_INSTALL_TARGET="install" \
         VERSION MAJOR MINOR MICRO LINKS LIB SONAME EXT="$MK_LIB_EXT" \
-        PARAMS EXTRA_TARGETS prefix dirname
+        PARAMS EXTRA_TARGETS BUILDDEP_PATTERNS="$_MK_AT_BUILDDEP_PATTERNS" \
+        prefix dirname
     mk_parse_params
 
     mk_quote_list "$@"
     PARAMS="$result"
+
+    _mk_at_expand_srcdir_patterns "$_MK_AT_BUILDDEP_PATTERNS"
+    BUILDDEPS="$BUILDDEPS $result"
 
     # Process and merge targets
     for _header in ${HEADERS}
@@ -462,6 +467,20 @@ mk_autotools()
     mk_pop_vars
 }
 
+_mk_at_expand_srcdir_patterns()
+{
+    _patterns="$1"
+    _srcdeps=""
+
+    _IFS="$IFS"
+    IFS='
+'
+    set -- `find "$MK_SOURCE_DIR$MK_SUBDIR${SOURCEDIR:+/$SOURCEDIR}" | sed 's/^/@/g'`
+    IFS="$_IFS"
+
+    mk_fnmatch_filter "$_patterns" "$@"
+}
+
 option()
 {
     _mk_at_system_string BUILD "${MK_BUILD_PRIMARY_ISA}"
@@ -517,6 +536,8 @@ configure()
     do
         _MK_AT_PASS_VARS="${_MK_AT_PASS_VARS} %$_var"
     done
+
+    _MK_AT_BUILDDEP_PATTERNS="Makefile.am configure.in configure.ac *.c *.h *.cpp *.C *.cp *.s"
 }
 
 ### section build
