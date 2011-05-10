@@ -938,6 +938,9 @@ mk_cache()
 _mk_save_cache()
 {
     {
+        mk_quote "$MK_OPTIONS"
+        echo "__OPTIONS=$result"
+        echo 'if [ "$MK_OPTIONS" = "$__OPTIONS" ]; then'
         for __var in ${MK_CACHE_VARS}
         do
             mk_get "$__var"
@@ -945,6 +948,7 @@ _mk_save_cache()
             echo "$__var=$result"
         done
         echo "MK_CACHE_VARS='${MK_CACHE_VARS# }'"
+        echo 'fi'
     } > .MakeKitCache
 }
 
