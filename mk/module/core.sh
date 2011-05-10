@@ -203,15 +203,32 @@ _mk_get_stage_targets_filter()
 _mk_get_stage_targets_rec()
 {
     mk_push_vars DIR="$1"
-    if mk_safe_source "$DIR/.MakeKitTargets"
+
+    STAGE_TARGETS=""
+    TARGET_SUBDIRS=""
+
+    if [ "${DIR%/}" = "${MK_OBJECT_DIR}${MK_SUBDIR}" ]
+    then
+        STAGE_TARGETS="$MK_SUBDIR_TARGETS"
+        TARGET_SUBDIRS="$SUBDIRS"
+    else 
+        mk_safe_source "$DIR/.MakeKitTargets"
+    fi
+
+    if [ -n "$STAGE_TARGETS" ]
     then
         _mk_get_stage_targets_filter
-        mk_unquote_list "$SUBDIRS"
+    fi
+
+    if [ -n "$TARGET_SUBDIRS" ]
+    then
+        mk_unquote_list "$TARGET_SUBDIRS"
         for SUBDIR
         do
             [ "$SUBDIR" != "." ] && _mk_get_stage_targets_rec "$DIR/$SUBDIR"
         done
     fi
+
     mk_pop_vars
 }
 
@@ -219,7 +236,8 @@ mk_get_stage_targets()
 {
     mk_push_vars \
         SELECT="*" \
-        SUBDIRS CLEAN_TARGETS STAGE_TARGETS DIR SUBDIR TARGETS # temporaries
+        CLEAN_TARGETS STAGE_TARGETS TARGET_SUBDIRS \
+        DIR SUBDIR TARGETS
     mk_parse_params
 
     for DIR
@@ -244,7 +262,7 @@ _mk_get_clean_targets_rec()
     if mk_safe_source "$DIR/.MakeKitTargets"
     then
         TARGETS="$TARGETS $CLEAN_TARGETS"
-        mk_unquote_list "$SUBDIRS"
+        mk_unquote_list "$TARGET_SUBDIRS"
         for SUBDIR
         do
             [ "$SUBDIR" != "." ] && _mk_get_clean_targets_rec "$DIR/$SUBDIR"
@@ -256,7 +274,7 @@ _mk_get_clean_targets_rec()
 mk_get_clean_targets()
 {
     mk_push_vars \
-        SUBDIRS CLEAN_TARGETS STAGE_TARGETS DIR SUBDIR TARGETS # temporaries
+        TARGET_SUBDIRS CLEAN_TARGETS STAGE_TARGETS DIR SUBDIR TARGETS # temporaries
     mk_parse_params
 
     for DIR
@@ -1130,7 +1148,7 @@ _mk_core_write_targets_file()
     then
         {
             mk_quote "$SUBDIRS"
-            echo "SUBDIRS=$result"
+            echo "TARGET_SUBDIRS=$result"
             mk_quote "$MK_STAGE_TARGETS"
             echo "STAGE_TARGETS=$result"
             mk_quote "$MK_CLEAN_TARGETS"
