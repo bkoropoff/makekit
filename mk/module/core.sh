@@ -441,6 +441,10 @@ mk_skip_subdir()
         [ "$__subdir" = "$__skip" ] || SUBDIRS="$SUBDIRS $__subdir"
     done
 
+    # Trim skipped directory out of object tree if it
+    # exists from a previous configure run
+    mk_safe_rm "${MK_OBJECT_DIR}${MK_SUBDIR}/$__skip"
+
     unset __skip __subdir
 }
 
