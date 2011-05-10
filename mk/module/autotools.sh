@@ -431,8 +431,6 @@ mk_autotools()
         stamp="$result"
     fi
 
-    mk_add_subdir_target "$stamp"
-
     mk_quote "$stamp"
     quote_stamp="$result"
 
