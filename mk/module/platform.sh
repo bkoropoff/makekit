@@ -660,7 +660,6 @@ _mk_platform_set_ext()
             ;;
         *)
             mk_set_system_var SYSTEM="$2" MK_LIB_EXT ".so"
-            mk_set_system_var SYSTEM="$2" MK_LIB_EXT ".so"
             mk_set_system_var SYSTEM="$2" MK_DLO_EXT ".so"
             ;;
     esac   
