@@ -426,8 +426,8 @@ configure()
             mk_set_system_var SYSTEM="host/$_isa" MK_LIBDIR "$result"
         done
     else
-        mk_msg "library dir: $MK_BASELIBDIR"
-        mk_declare -e MK_LIBDIR="$MK_BASELIBDIR"
+        mk_msg "library dir: $BASELIBDIR"
+        mk_set_system_var SYSTEM="host" MK_LIBDIR "$BASELIBDIR"
     fi
 
     mk_msg "include dir: $MK_INCLUDEDIR"
