@@ -1229,3 +1229,23 @@ mk_get_file_mode()
 
     result=`printf "0%o" "$_res"`
 }
+
+#<
+# @brief Read target of symlink
+# @usage path
+#
+# Sets <var>result</var> to the target of <param>path</param>,
+# which must be a symlink.
+#>
+mk_readlink()
+{
+    [ -h "$1" ] || mk_fail "mk_readlink: $1 is not a symlink"
+
+    if type readlink >/dev/null 2>&1
+    then
+        result=`readlink "$1"`
+    else
+        result=`ls -ld "$1"`
+        result="${result#*-> }"
+    fi
+}
