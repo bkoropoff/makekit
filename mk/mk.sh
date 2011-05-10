@@ -1171,7 +1171,7 @@ mk_read_line()
 # @brief Get mode of file or directory in octal
 # @usage path
 #
-# Sets <var>result</var> to the mode of <param>file</param>
+# Sets <var>result</var> to the mode of <param>path</param>
 # in octal.  If the mode could not be read, this function
 # aborts via <funcref>mk_fail</funcref>.
 #>
