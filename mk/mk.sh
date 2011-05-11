@@ -879,7 +879,7 @@ _mk_fnmatch_transform()
     unset __tmp __i
 }
 
-#>
+#<
 # @brief Perform glob matching on path
 # @usage path pattern
 #
