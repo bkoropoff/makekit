@@ -196,8 +196,14 @@ mk_get_export()
 _mk_get_stage_targets_filter()
 {
     mk_unquote_list "$STAGE_TARGETS"
-    mk_fnmatch_filter "$SELECT" "$@"
-    TARGETS="$TARGETS${result:+ $result}"
+    for _target
+    do
+        if "$SELECT" "$_target"
+        then
+            mk_quote "$_target"
+            TARGETS="$TARGETS $result"
+        fi
+    done
 }
 
 _mk_get_stage_targets_rec()
@@ -232,6 +238,15 @@ _mk_get_stage_targets_rec()
     mk_pop_vars
 }
 
+_mk_compile_select()
+{
+    set -f
+    mk_unquote_list "$SELECT"
+    set +f
+    mk_fnmatch_compile "$@"
+    SELECT="$result"
+}
+
 mk_get_stage_targets()
 {
     mk_push_vars \
@@ -239,6 +254,8 @@ mk_get_stage_targets()
         CLEAN_TARGETS STAGE_TARGETS TARGET_SUBDIRS \
         DIR SUBDIR TARGETS
     mk_parse_params
+
+    _mk_compile_select
 
     for DIR
     do
@@ -254,6 +271,7 @@ mk_get_stage_targets()
 
     result="${TARGETS# }"
     mk_pop_vars
+    unset -f "$SELECT"
 }
 
 _mk_get_clean_targets_rec()
