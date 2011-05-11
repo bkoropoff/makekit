@@ -919,6 +919,61 @@ mk_fnmatch()
     return 1
 }
 
+_MK_COUNTER=0
+
+#<
+# @brief Compile glob patterns to a function
+# @usage patterns...
+#
+# Generates a new shell function which acts
+# as a matching predicate for <param>patterns</param>.
+# When the generated function is invoked with the
+# string <param>path</param>, it will return 0
+# (logical true) if
+# <lit><funcref>mk_fnmatch</funcref> <param>path</param> <param>pattern</param></lit>
+# would succeed for any <param>pattern</param> in
+# <param>patterns</param>, and 1 (logical false)
+# otherwise.
+#
+# Sets <var>result</var> to the generated function.
+# Be sure to use <lit>unset -f</lit> to undefine it
+# when you are done.
+#>
+mk_fnmatch_compile()
+{
+    # ... = patterns
+    __func="__fnmatch$_MK_COUNTER"
+    _MK_COUNTER=$(($_MK_COUNTER+1))
+    __trans=""
+    __varlist=""
+    __var="2"
+
+    for _pat
+    do
+        _mk_fnmatch_transform "$_pat"
+        mk_quote "$result"
+        __trans="$__trans $result"
+        __varlist="$__varlist|\${$__var}"
+        __var=$(($__var+1))
+    done
+
+    eval "
+$__func()
+{
+    _mk_fnmatch_transform \"\$1\"
+    set -- \"\$result\" $__trans
+    case \"\$1\" in
+        ${__varlist#|})
+            return 0
+        ;;
+    esac
+    return 1
+}"
+
+    result="$__func"
+    unset __func __trans __varlist __var
+}
+
 mk_fnmatch_filter()
 {
     __patterns="$1"
