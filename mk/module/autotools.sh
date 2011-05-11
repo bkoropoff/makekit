@@ -467,16 +467,26 @@ mk_autotools()
 
 _mk_at_expand_srcdir_patterns()
 {
-    _patterns="$1"
-    _srcdeps=""
+    _args=""
+    set -f
+    mk_unquote_list "$1"
+    set +f
+    for _pattern
+    do
+        mk_quote_list -o -name "$_pattern"
+        _args="$_args $result"
+    done
+
+    mk_unquote_list "$_args"
+    shift
 
     _IFS="$IFS"
     IFS='
 '
-    set -- `find "$MK_SOURCE_DIR$MK_SUBDIR${SOURCEDIR:+/$SOURCEDIR}" | sed 's/^/@/g'`
+    set -- `find "$MK_SOURCE_DIR$MK_SUBDIR${SOURCEDIR:+/$SOURCEDIR}" "$@" | sed 's/^/@/g'`
     IFS="$_IFS"
 
-    mk_fnmatch_filter "$_patterns" "$@"
+    mk_quote_list "$@"
 }
 
 option()
