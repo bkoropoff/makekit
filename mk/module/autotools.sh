@@ -213,12 +213,13 @@ _mk_autotools()
 # MakeKitBuild.
 # @option HEADERS=headers Specifies system headers installed
 # by the component
-# @option LIBS=libs Specifies libraries installed by the component
+# @option LIBS=libs Specifies libraries installed by the component.
 # Each library should be specified as its base name with no
 # file extension or <lit>lib</lit> prefix.  Each name should be
 # followed by a colon (<lit>:</lit>) and a version
 # number of the form
-# <param>major</param><lit>.</lit><param>minor</param><lit>.</lit><param>micro</param>.
+# <param>major</param><lit>:</lit><param>minor</param><lit>:</lit><param>micro</param>
+# which is the libtool version triple that the library will be built with.
 # This allows all of the version links associated
 # with the library to be found and properly installed to the staging area.
 # If a version number is omitted, only the <lit>.la</lit> file
@@ -242,13 +243,23 @@ _mk_autotools()
 # @option CXXFLAGS=flags Additional C++ compiler flags
 # @option LDFLAGS=flags Additional linker flags
 # @option INSTALL_PRE=func Specifies a custom function to run
-# before installing the component into a temporary directory
+# before installing the component into a temporary directory.
 # The function is passed the path to the temporary install
 # directory as the first argument.
 # @option INSTALL_POST=func Specifies a custom function to
 # run after installing the component into a temporary directory.
 # The function is passed the path to the temporary install
 # directory as the first arguments
+# @option BUILDDEP_PATTERNS=inc_patterns An optional list of patterns
+# that will be passed to <lit>find</lit> to identify files within
+# the source tree that should trigger a rebuild when changed.
+# A reasonable default will be used if not specified that works
+# for most C/C++ autotools projects.
+# @option BUILDDEP_EXCLUDE_PATTERNS=exc_patterns An optional list
+# of patterns that will be passed to <lit>find</lit> to prune when
+# looking for files in the source tree.  A reasonable default that
+# skips all hidden files and directories will be used if not
+# specified.
 # @option configure_params Additional parameters to pass to
 # the component's configure script.
 #
@@ -287,13 +298,14 @@ mk_autotools()
 	MAKE_BUILD_TARGET="" MAKE_INSTALL_TARGET="install" \
         VERSION MAJOR MINOR MICRO LINKS LIB SONAME EXT="$MK_LIB_EXT" \
         PARAMS EXTRA_TARGETS BUILDDEP_PATTERNS="$_MK_AT_BUILDDEP_PATTERNS" \
+        BUILDDEP_EXCLUDE_PATTERNS="$_MK_AT_BUILDDEP_EXCLUDE_PATTERNS" \
         prefix dirname
     mk_parse_params
 
     mk_quote_list "$@"
     PARAMS="$result"
 
-    _mk_at_expand_srcdir_patterns "$_MK_AT_BUILDDEP_PATTERNS"
+    _mk_at_expand_srcdir_patterns "$BUILDDEP_PATTERNS" "$BUILDDEP_EXCLUDE_PATTERNS"
     BUILDDEPS="$BUILDDEPS $result"
 
     # Process and merge targets
@@ -467,9 +479,23 @@ mk_autotools()
 
 _mk_at_expand_srcdir_patterns()
 {
+    _include="$1"
+    _exclude="$2"
     _args=""
+
     set -f
-    mk_unquote_list "$1"
+    mk_unquote_list "$_exclude"
+    set +f
+    for _pattern
+    do
+        mk_quote_list -o -name "$_pattern"
+        _args="$_args $result"
+    done
+    
+    _args="$_args -prune"
+
+    set -f
+    mk_unquote_list "$_include"
     set +f
     for _pattern
     do
@@ -477,12 +503,15 @@ _mk_at_expand_srcdir_patterns()
         _args="$_args $result"
     done
 
+    _args="$_args -print"
+
     mk_unquote_list "$_args"
     shift
 
     _IFS="$IFS"
     IFS='
 '
+    echo find "$MK_SOURCE_DIR$MK_SUBDIR${SOURCEDIR:+/$SOURCEDIR}" "$@"
     set -- `find "$MK_SOURCE_DIR$MK_SUBDIR${SOURCEDIR:+/$SOURCEDIR}" "$@" | sed 's/^/@/g'`
     IFS="$_IFS"
 
@@ -546,6 +575,7 @@ configure()
     done
 
     _MK_AT_BUILDDEP_PATTERNS="Makefile.am configure.in configure.ac *.c *.h *.cpp *.C *.cp *.s"
+    _MK_AT_BUILDDEP_EXCLUDE_PATTERNS=".*"
 }
 
 ### section build
