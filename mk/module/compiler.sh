@@ -1222,7 +1222,7 @@ _mk_build_test()
                 MK_LOG_FD=""
                 mk_run_script compile \
                     COMPILER="$MK_CHECK_LANG" \
-                    DISABLE_DEPGEN=yes \
+                    CONFTEST=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
                     "${__test}.o" "${__test}.c"
@@ -1239,7 +1239,7 @@ _mk_build_test()
                 MK_LOG_FD=""
                 mk_run_script compile \
                     COMPILER="$MK_CHECK_LANG" \
-                    DISABLE_DEPGEN=yes \
+                    CONFTEST=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
                     "${__test}.o" "${__test}.c"
