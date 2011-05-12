@@ -740,7 +740,7 @@ mk_stage()
 #<
 # @brief Output a file with variable substitutions
 #
-# @usage INPUT=source_path DEST=dest_path
+# @usage INPUT=source_path OUTPUT=dest_path
 # @usage dest_path
 #
 # Processes the given <param>source_path</param>, substituting

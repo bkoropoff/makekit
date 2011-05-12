@@ -1850,6 +1850,9 @@ _mk_check_sizeof()
 # Runs a test for the size of <param>type</param> and sets
 # <var>result</var> to the result.  If the type cannot be
 # found at all, configuration will be aborted.
+#
+# This test will work in cross-compiling configurations.
+# It will not work on types with sizes over 1024 bytes.
 #>
 mk_check_sizeof()
 {
@@ -1914,6 +1917,8 @@ mk_check_sizeofs()
 # <var>ENDIANNESS</var> to the result ("little" or "big").  If the
 # result was "big", it also defines <def>WORDS_BIGENDIAN</def> in
 # the current config header.
+#
+# This function will work in cross-compiling configurations.
 #>
 mk_check_endian()
 {

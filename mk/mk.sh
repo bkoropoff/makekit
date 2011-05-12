@@ -625,7 +625,7 @@ _mk_slashless_name()
 # @brief Quote string for the shell
 # @usage str
 #
-# Quotes <param>str</param> so that it can be safely reintepreted by the shell
+# Quotes <param>str</param> so that it can be safely reinterpreted by the shell
 # and sets <var>result</var> to the result.
 #
 # @example
@@ -663,7 +663,7 @@ mk_quote()
 
 #<
 # @brief Quote list of strings for the shell
-# @usage strings..
+# @usage strings...
 #
 # Quotes each string in <param>strings</param> as by
 # <funcref>mk_quote</funcref> and sets <var>result</var>
