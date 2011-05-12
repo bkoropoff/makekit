@@ -946,32 +946,57 @@ mk_fnmatch_compile()
     _MK_COUNTER=$(($_MK_COUNTER+1))
     __trans=""
     __varlist=""
-    __var="2"
+    __varlist2=""
+    __var="3"
 
     for _pat
     do
-        _mk_fnmatch_transform "$_pat"
-        mk_quote "$result"
-        __trans="$__trans $result"
-        __varlist="$__varlist|\${$__var}"
+        case "$_pat" in
+            */*)
+                _mk_fnmatch_transform "$_pat"
+                mk_quote "$result"
+                __trans="$__trans $result"
+                __varlist="$__varlist|\${$__var}"
+                ;;
+            *)
+                mk_quote "$_pat"
+                __trans="$__trans $result"
+                __varlist2="$__varlist2|\${$__var}"
+                ;;
+        esac
         __var=$(($__var+1))
     done
 
-    eval "
+    __eval="
 $__func()
 {
+    _result=\"\$result\"
     _mk_fnmatch_transform \"\$1\"
-    set -- \"\$result\" $__trans
-    case \"\$1\" in
+    set -- \"\$1\" \"\$result\" $__trans
+    result=\"\$_result\""
+
+    [ -n "$__varlist" ] && __eval="$__eval
+    case \"\$2\" in
         ${__varlist#|})
             return 0
         ;;
-    esac
+    esac"
+
+    [ -n "$__varlist2" ] && __eval="$__eval
+    case \"\$1\" in
+        ${__varlist2#|})
+            return 0
+        ;;
+    esac"
+
+    __eval="$__eval
     return 1
 }"
 
+    eval "$__eval"
+
     result="$__func"
-    unset __func __trans __varlist __var
+    unset __func __trans __varlist __varlist2 __var __eval
 }
 
 mk_fnmatch_filter()
