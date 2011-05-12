@@ -1968,7 +1968,7 @@ EOF
             then
                 result="little"
             else
-                #rm -f .check.o
+                rm -f .check.o
                 mk_fail "could not determine endianness"
             fi
         else
