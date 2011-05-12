@@ -775,5 +775,60 @@ configure()
 	<function>mk_check_type</function>.
       </para>
     </section>
+    <section xml:id="c-check-sizes">
+      <title>Checking For Sizes of Types</title>
+      <para>
+	<function>mk_check_sizeofs</function> allows you to test for the
+	sizes of a list of types.  For each type it will then do the following:
+      </para>
+      <itemizedlist>
+	<listitem>
+	  Set the variable <varname>SIZEOF_<replaceable>varname</replaceable></varname>
+	  to the result of the test.
+	</listitem>
+	<listitem>
+	  Define <varname>SIZEOF_<replaceable>varname</replaceable></varname>
+	  to the result of the test.
+	</listitem>
+      </itemizedlist>
+      <para>
+	You can use a <literal>HEADERDEPS=</literal> parameter to
+	<function>mk_check_types</function> to specify header
+	files necessary to find the type definitions.  Note that
+	if this function fails to determine the size of a type
+	it will abort configuration, so you might want to first check
+	that the types exist with <function>mk_check_types</function>.
+      </para>
+      <example xml:id="c-mk-check-sizeofs">
+	<title>Using <function>mk_check_sizeofs</function></title>
+<programlisting><![CDATA[
+configure()
+{
+    mk_config_header "include/config.h"
+
+    # Check for sizes of some types
+    mk_check_types \
+        HEADERDEPS="stdlib.h inttypes.h" \
+        size_t int64_t "void*"
+    
+    # On a typical 32-bit UNIX system, the following variables will be set:
+    #
+    # SIZEOF_SIZE_T=4
+    # SIZEOF_INT64_T=8
+    # SIZEOF_VOIDP=4
+    #
+    # The following defines will be written into config.h:
+    #
+    # #define SIZEOF_SIZE_T 4
+    # #define SIZEOF_INT64_T 8
+    # #define SIZEOF_VOIDP 4
+}
+]]></programlisting>
+      </example>
+      <para>
+	If these side effects are undesirable, you can use the singular form
+	<function>mk_check_sizeof</function>.
+      </para>
+    </section>
   </section>
 </chapter>
