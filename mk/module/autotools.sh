@@ -511,7 +511,6 @@ _mk_at_expand_srcdir_patterns()
     _IFS="$IFS"
     IFS='
 '
-    echo find "$MK_SOURCE_DIR$MK_SUBDIR${SOURCEDIR:+/$SOURCEDIR}" "$@"
     set -- `find "$MK_SOURCE_DIR$MK_SUBDIR${SOURCEDIR:+/$SOURCEDIR}" "$@" | sed 's/^/@/g'`
     IFS="$_IFS"
 
