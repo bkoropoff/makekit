@@ -1245,6 +1245,7 @@ _mk_build_test()
                     "${__test}.o" "${__test}.c"
                 mk_run_script link \
                     COMPILER="$MK_CHECK_LANG" \
+                    CONFTEST=yes \
                     MODE=program \
                     LIBDEPS="$LIBDEPS" \
                     LDFLAGS="$LDFLAGS" \
