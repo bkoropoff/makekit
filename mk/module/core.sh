@@ -216,7 +216,7 @@ _mk_get_stage_targets_rec()
     if [ "${DIR%/}" = "${MK_OBJECT_DIR}${MK_SUBDIR}" ]
     then
         STAGE_TARGETS="$MK_SUBDIR_TARGETS"
-        TARGET_SUBDIRS="$SUBDIRS"
+        TARGET_SUBDIRS="$MK_SUBDIRS"
     else 
         mk_safe_source "$DIR/.MakeKitTargets"
     fi
