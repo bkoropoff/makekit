@@ -1530,7 +1530,7 @@ EOF
 # @usage funcs...
 #
 # For each function in <param>funcs</param>, <funcref>mk_check_function</funcref>
-# is invoked to check for its availability.  <var>HAVE_<varname>header</varname></var>
+# is invoked to check for its availability.  <var>HAVE_<varname>func</varname></var>
 # is set to the result, and if the function was available, <def>HAVE_<varname>func</varname></def>
 # is defined in the current config header.  <def>HAVE_DECL_<varname>func</varname></def>
 # is defined to 1 if the function was available and 0 otherwise.  A message is printed indicating
@@ -1584,7 +1584,7 @@ mk_check_functions()
 # @brief Check for a library
 # @usage LIB=lib
 #
-# @option LIBDEPS=headers Specifies any additional
+# @option LIBDEPS=libs Specifies any additional
 # libraries might be needed in order to link against
 # <param>lib</param>.  Note that MakeKit will respect
 # .la files when checking for linkability, so
@@ -1639,7 +1639,7 @@ EOF
 # @usage libs...
 #
 # For each library in <param>libs</param>, <funcref>mk_check_library</funcref>
-# is invoked to check for its availability.  <var>HAVE_<varname>lib</varname></var>
+# is invoked to check for its availability.  <var>HAVE_LIB_<varname>lib</varname></var>
 # is set to the result.  If the library was available, <def>HAVE_LIB_<varname>lib</varname></def>
 # is defined in the current config header and <var>LIB_<varname>lib</varname></var> is
 # set to <param>lib</param> (this is useful for conditionally linking to the library
