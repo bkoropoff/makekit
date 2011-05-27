@@ -422,13 +422,14 @@ _mk_library_form_name()
 {
     # $1 = name
     # $2 = version
-    # $3 = ext
+    # $3 = release
+    # $4 = ext
     case "$MK_OS" in
         darwin)
-            result="lib${1}${2:+.$2}${3}"
+            result="lib${1}${3:+-$3}${2:+.$2}${4}"
             ;;
         *)
-            result="lib${1}${3}${2:+.$2}"
+            result="lib${1}${3:+-$3}${4}${2:+.$2}"
             ;;
     esac
 }
@@ -437,6 +438,16 @@ _mk_library_process_version()
 {
     if [ "$VERSION" != "no" ]
     then
+        case "$VERSION" in
+            *-*)
+                RELEASE="${VERSION#*-}"
+                VERSION="${VERSION%-*}"
+                ;;
+            *)
+                RELEASE=""
+                ;;
+        esac
+
         case "$VERSION" in
             *:*)
                 _rest="${VERSION}:"
@@ -486,15 +497,20 @@ _mk_library_process_version()
                 esac
                 ;;
         esac
+    else
+        MAJOR=""
+        MINOR=""
+        MICRO=""
+        RELEASE=""
     fi
 
-    _mk_library_form_name "$LIB" "" "$EXT"
+    _mk_library_form_name "$LIB" "" "" "$EXT"
     SONAME="$result"
     LINKS="$result"
 
     if [ -n "$MAJOR" ]
     then
-        _mk_library_form_name "$LIB" "$MAJOR" "$EXT"
+        _mk_library_form_name "$LIB" "$MAJOR" "$RELEASE" "$EXT"
         SONAME="$result"
         mk_quote "$SONAME"
         LINKS="$result $LINKS"
@@ -502,7 +518,113 @@ _mk_library_process_version()
     
     if [ -n "$MINOR" ]
     then
-        _mk_library_form_name "$LIB" "$MAJOR.$MINOR${MICRO:+.$MICRO}" "$EXT"
+        _mk_library_form_name "$LIB" "$MAJOR.$MINOR${MICRO:+.$MICRO}" "$RELEASE" "$EXT"
+        mk_quote "$result"
+        LINKS="$result $LINKS"
+    fi
+}
+
+_mk_dlo_form_name()
+{
+    # $1 = name
+    # $2 = version
+    # $3 = release
+    # $4 = ext
+    case "$MK_OS" in
+        darwin)
+            result="${1%.la}${3:+-$3}${2:+.$2}${4}"
+            ;;
+        *)
+            result="${1%.la}${3:+-$3}${4}${2:+.$2}"
+            ;;
+    esac
+}
+
+_mk_dlo_process_version()
+{
+    if [ "$VERSION" != "no" ]
+    then
+        case "$VERSION" in
+            *-*)
+                RELEASE="${VERSION#*-}"
+                VERSION="${VERSION%-*}"
+                ;;
+            *)
+                RELEASE=""
+                ;;
+        esac
+
+        case "$VERSION" in
+            *:*)
+                _rest="${VERSION}:"
+                _cur="${_rest%%:*}"
+                _rest="${_rest#*:}"
+                _rev="${_rest%%:*}"
+                _rest="${_rest#*:}"
+                _age="${_rest%:}"
+                case "$MK_OS" in
+                    hpux)
+                        MAJOR="$_cur"
+                        MINOR="$_rev"
+                        MICRO=""
+                        ;;
+                    freebsd)
+                        MAJOR="$_cur"
+                        MINOR=""
+                        MICRO=""
+                        ;;
+                    darwin)
+                        MAJOR="$(($_cur - $_age))"
+                        MINOR=""
+                        MICRO=""
+                        ;;
+                    *)
+                        MAJOR="$(($_cur - $_age))"
+                        MINOR="$(($_age))"
+                        MICRO="$_rev"
+                        ;;
+                esac
+                ;;
+            *)
+                _rest="${VERSION}."
+                MAJOR="${_rest%%.*}"
+                _rest="${_rest#*.}"
+                MINOR="${_rest%%.*}"
+                _rest="${_rest#*.}"
+                MICRO="${_rest%.}"
+                case "$MK_OS" in
+                    freebsd|darwin)
+                        MINOR=""
+                        MICRO=""
+                        ;;
+                    hpux)
+                        MICRO=""
+                        ;;
+                esac
+                ;;
+        esac
+    else
+        MAJOR=""
+        MINOR=""
+        MICRO=""
+        RELEASE=""
+    fi
+
+    _mk_dlo_form_name "$DLO" "" "" "$EXT"
+    SONAME="$result"
+    LINKS="$result"
+
+    if [ -n "$MAJOR" ]
+    then
+        _mk_dlo_form_name "$DLO" "$MAJOR" "$RELEASE" "$EXT"
+        SONAME="$result"
+        mk_quote "$SONAME"
+        LINKS="$result $LINKS"
+    fi
+    
+    if [ -n "$MINOR" ]
+    then
+        _mk_dlo_form_name "$DLO" "$MAJOR.$MINOR${MICRO:+.$MICRO}" "$RELEASE" "$EXT"
         mk_quote "$result"
         LINKS="$result $LINKS"
     fi
@@ -732,8 +854,8 @@ mk_dlo()
 {
     mk_push_vars \
         DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
-        LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION \
-        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE COMPILER=c \
+        LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION="no" \
+        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE SONAME COMPILER=c \
         IS_CXX=false OSUFFIX PIC=yes SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM
     mk_parse_params
 
@@ -752,6 +874,8 @@ mk_dlo()
         _mk_process_symfile
     fi
 
+    _mk_dlo_process_version
+
     if _mk_is_fat
     then
         _mk_do_fat "$DLO" "$EXT" _mk_dlo "$@"
@@ -759,7 +883,8 @@ mk_dlo()
 
         mk_comment "library ${LIB} (host) from ${MK_SUBDIR#/}"
 
-        TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
+        mk_unquote_list "$LINKS"
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}$1"
         mk_resolve_target "$TARGET"
 
         mk_target \
@@ -767,7 +892,8 @@ mk_dlo()
             DEPS="$_PARTS" \
             _mk_compiler_multiarch_combine "$result" "*$_PARTS"
     else
-        TARGET="${INSTALLDIR:+$INSTALLDIR/}${DLO}${EXT}"
+        mk_unquote_list "$LINKS"
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}$1"
 
         mk_canonical_system "$SYSTEM"
         CANONICAL_SYSTEM="$result"
@@ -775,11 +901,27 @@ mk_dlo()
         _mk_dlo "$@"
     fi
 
-    mk_quote "$result"
+    _dlo_target="$result"
+
+    mk_unquote_list "$LINKS"
+    _dlo="$1"
+    _links=""
+    shift
+    
+    for _link
+    do
+        mk_symlink \
+            TARGET="$_dlo" \
+            LINK="${INSTALLDIR}/$_link"
+        mk_quote "$result"
+        _links="$_links $result"
+    done
+
+    mk_quote "$_dlo_target"
 
     mk_target \
         TARGET="${INSTALLDIR}/${DLO}.la" \
-        DEPS="$result" \
+        DEPS="$_links $result" \
         mk_run_script link MODE=la \
         LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %EXT \
         '$@'
