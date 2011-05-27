@@ -249,16 +249,19 @@ case "$MODE" in
         mk_msg_domain "link"
         mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
         mk_run_or_fail ${CPROG} ${LIB_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_link_posthooks "$object"
         ;;
     dlo)
         mk_msg_domain "link"
         mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
         mk_run_or_fail ${CPROG} ${DLO_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_link_posthooks "$object"
         ;;
     program)
         mk_msg_domain "link"
         mk_msg "${object#${MK_STAGE_DIR}} ($MK_CANONICAL_SYSTEM)"
         mk_run_or_fail ${CPROG} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${_LIBS}
+        mk_run_link_posthooks "$object"
         ;;
     la)
         mk_msg_domain "la"

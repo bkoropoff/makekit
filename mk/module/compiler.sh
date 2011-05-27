@@ -244,6 +244,30 @@ mk_resolve_header()
 }
 
 #
+# Extension functions
+#
+
+mk_add_link_target_posthook()
+{
+    _MK_LINK_TARGET_HOOKS="$_MK_LINK_TARGET_HOOKS $*"
+}
+
+mk_add_link_posthook()
+{
+    _MK_LINK_HOOKS="$_MK_LINK_HOOKS $*"
+}
+
+mk_run_link_target_posthooks()
+{
+    mk_push_vars result
+    for _hook in ${_MK_LINK_TARGET_HOOKS}
+    do
+        ${_hook} "$@"
+    done
+    mk_pop_vars
+}
+
+#
 # Helper functions for make() stage
 #
 
@@ -761,6 +785,9 @@ mk_library()
     _links=""
     shift
     
+    mk_resolve_target "$INSTALLDIR/$_lib"
+    mk_run_link_target_posthooks "$result"
+
     for _link
     do
         mk_symlink \
@@ -908,6 +935,9 @@ mk_dlo()
     _links=""
     shift
     
+    mk_resolve_target "$INSTALLDIR/$_dlo"
+    mk_run_link_target_posthooks "$result"
+
     for _link
     do
         mk_symlink \
@@ -1134,6 +1164,8 @@ mk_program()
     then
         MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $PROGRAM"
     fi
+
+    mk_run_link_target_posthooks "$result"
 
     mk_pop_vars
 }
@@ -2435,6 +2467,10 @@ _mk_compiler_check()
 
 configure()
 {
+    _MK_LINK_TARGET_HOOKS=""
+    _MK_LINK_HOOKS=""
+
+    mk_declare -e _MK_LINK_HOOKS
     mk_declare -i MK_CONFIG_HEADER="" MK_HEADERDEPS="" MK_LIBDEPS=""
     mk_declare -s -e \
         MK_CC MK_CXX MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
@@ -2519,4 +2555,12 @@ _mk_compiler_multiarch_combine()
             mk_fail "unsupported OS"
             ;;
     esac
+}
+
+mk_run_link_posthooks()
+{
+    for _hook in ${_MK_LINK_HOOKS}
+    do
+        ${_hook} "$@"
+    done
 }
