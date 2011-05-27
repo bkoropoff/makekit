@@ -119,5 +119,11 @@ else
     rm -rf ".install"
 fi
 
+mk_unquote_list "$LINK_TARGETS"
+for _ltarget
+do
+    mk_run_link_posthooks "${_ltarget}"
+done
+
 mk_run_or_fail touch "$_stamp"
 mk_msg "end ${__msg}"

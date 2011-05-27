@@ -72,4 +72,10 @@ case "$MK_OS" in
         ;;
 esac
 
+mk_unquote_list "$LINK_TARGETS"
+for _ltarget
+do
+    mk_run_link_posthooks "${_ltarget}"
+done
+
 mk_msg "end ${__msg}"

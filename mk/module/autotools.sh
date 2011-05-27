@@ -291,15 +291,15 @@ _mk_autotools()
 mk_autotools()
 {
     mk_push_vars \
-        SOURCEDIR HEADERS LIBS PROGRAMS LIBDEPS HEADERDEPS \
-        CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS \
+        SOURCEDIR HEADERS LIBS PROGRAMS DLOS LIBDEPS HEADERDEPS \
+        CPPFLAGS CFLAGS CXXFLAGS LDFLAGS INSTALL TARGETS SONAME \
         BUILDDIR DEPS BUILDDEPS SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
         INSTALL_PRE INSTALL_POST SET_LIBRARY_PATH=yes \
 	MAKE_BUILD_TARGET="" MAKE_INSTALL_TARGET="install" \
-        VERSION MAJOR MINOR MICRO LINKS LIB SONAME EXT="$MK_LIB_EXT" \
+        VERSION MAJOR MINOR MICRO LINKS LIB SONAME EXT \
         PARAMS EXTRA_TARGETS BUILDDEP_PATTERNS="$_MK_AT_BUILDDEP_PATTERNS" \
         BUILDDEP_EXCLUDE_PATTERNS="$_MK_AT_BUILDDEP_EXCLUDE_PATTERNS" \
-        prefix dirname
+        LINK_TARGETS prefix dirname
     mk_parse_params
 
     mk_quote_list "$@"
@@ -319,6 +319,7 @@ mk_autotools()
         TARGETS="$TARGETS $result"
     done
 
+    EXT="$MK_LIB_EXT"
     for LIB in ${LIBS}
     do
         MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS ${LIB%%:*}"
@@ -340,6 +341,10 @@ mk_autotools()
         
         mk_unquote_list "$LINKS"
 
+        mk_resolve_target "${MK_LIBDIR}/$1"
+        LINK_TARGETS="$LINK_TARGETS ${result#@}"
+        mk_run_link_target_posthooks "$result"
+
         for link
         do
             mk_quote "${MK_LIBDIR}/$link"
@@ -347,13 +352,59 @@ mk_autotools()
         done
     done
 
-    for _program in ${PROGRAMS}
+    EXT="$MK_DLO_EXT"
+    for DLO in ${DLOS}
     do
-        MK_INTERNAL_PROGRAMS="$MK_INTERNAL_PROGRAMS $_program"
-       
-        mk_quote "@${MK_OBJECT_DIR}/build-run/bin/${_program}"
+        mk_resolve_target "${DLO%%:*}"
+        EXTRA_TARGETS="$EXTRA_TARGETS $result"
+
+        mk_dirname "$DLO"
+        _dlodir="$result"
+        mk_basename "$DLO"
+        DLO="$result"
+
+        case "$DLO" in
+            *:*)
+                VERSION="${DLO#*:}"
+                DLO="${DLO%%:*}"
+                _mk_dlo_process_version
+                ;;
+            *)
+                mk_quote "${DLO%.la}${MK_DLO_EXT}"
+                LINKS="$result"
+                ;;
+        esac
         
+        mk_unquote_list "$LINKS"
+
+        mk_resolve_target "$_dlodir/$1"
+        LINK_TARGETS="$LINK_TARGETS ${result#@}"
+        mk_run_link_target_posthooks "$result"
+
+        for link
+        do
+            mk_quote "$_dlodir/$link"
+            TARGETS="$TARGETS $result"
+        done
+    done
+
+    for PROGRAM in ${PROGRAMS}
+    do
+        case "$PROGRAM" in
+            /*|@*)
+                mk_resolve_target "$PROGRAM"
+                ;;
+            *)
+                mk_resolve_target "$MK_BINDIR/$PROGRAM"
+                ;;
+        esac
+
         TARGETS="$TARGETS $result"
+
+        mk_run_link_target_posthooks "$result"
+
+        mk_quote "${result#@}"
+        LINK_TARGETS="$LINK_TARGETS $result"
     done
 
     mk_resolve_targets "$TARGETS"
@@ -419,7 +470,7 @@ mk_autotools()
         mk_target \
             TARGET=".${result}_stage" \
             DEPS="$parts" \
-            mk_run_script at-combine '$@' "*$parts"
+            mk_run_script at-combine %LINK_TARGETS '$@' "*$parts"
         stamp="$result"
     else
         mk_canonical_system "$SYSTEM"
@@ -437,7 +488,7 @@ mk_autotools()
                 mk_run_script \
                 at-install \
                 DESTDIR="${MK_STAGE_DIR}" \
-                %SOURCEDIR %BUILDDIR %INSTALL %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET \
+                %SOURCEDIR %BUILDDIR %INSTALL %INSTALL_PRE %INSTALL_POST %MAKE_INSTALL_TARGET %LINK_TARGETS \
                 MAKE='$(MAKE)' MFLAGS='$(MFLAGS)' '$@' "*$TARGETS $EXTRA_TARGETS"
         fi
         stamp="$result"
@@ -460,6 +511,14 @@ mk_autotools()
     do
         mk_target \
             TARGET="${MK_LIBDIR}/lib${_lib%%:*}.la" \
+            DEPS="$quote_stamp" \
+            mk_at_la '$@'
+    done
+
+    for _dlo in ${DLOS}
+    do
+        mk_target \
+            TARGET="${_dlo%%:*}" \
             DEPS="$quote_stamp" \
             mk_at_la '$@'
     done
