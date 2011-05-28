@@ -696,7 +696,7 @@ configure()
         MK_HOST_DISTRO_VERSION MK_HOST_DISTRO_ARCHETYPE \
         MK_HOST_ARCH MK_HOST_ISAS MK_HOST_PRIMARY_ISA \
         MK_SYSTEM_VARS MK_HOST_MULTIARCH MK_BUILD_MULTIARCH \
-        MK_ALL_SYSTEMS
+        MK_ALL_SYSTEMS MK_LIBPATH_VAR
 
     mk_declare -s -e \
         MK_OS MK_DISTRO MK_DISTRO_VERSION MK_DISTRO_ARCHETYPE \
@@ -781,6 +781,21 @@ configure()
     mk_declare -e MK_CROSS_COMPILING
 
     mk_msg "cross compiling: $MK_CROSS_COMPILING"
+
+    case "$MK_BUILD_OS" in
+        aix)
+            MK_LIBPATH_VAR=LIBPATH
+            ;;
+        hpux)
+            MK_LIBPATH_VAR=SHLIB_PATH
+            ;;
+        darwin)
+            MK_LIBPATH_VAR=DYLD_LIBRARY_PATH
+            ;;
+        *)
+            MK_LIBPATH_VAR=LD_LIBRARY_PATH
+            ;;
+    esac
 
     # Register hooks that set the target system to the default
     # or restore any modified system variables at the start of

@@ -39,5 +39,5 @@ mk_unquote_list "$LIBS"
 
 mk_msg "moonunit"
 mk_run_or_fail \
-    env LD_LIBRARY_PATH="${MK_STAGE_DIR}${MK_LIBDIR}" \
+    env "$MK_LIBPATH_VAR"="${MK_STAGE_DIR}${MK_LIBDIR}" \
     ${MOONUNIT} "$@"
