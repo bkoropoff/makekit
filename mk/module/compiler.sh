@@ -2481,10 +2481,10 @@ configure()
 
     mk_msg "default C compiler: $MK_DEFAULT_CC"
     mk_msg "default C++ compiler: $MK_DEFAULT_CXX"
-    mk_msg "default C preprocessor flags: $MK_DEFAULT_CPPFLAGS"
-    mk_msg "default C compiler flags: $MK_DEFAULT_CFLAGS"
-    mk_msg "default C++ compiler flags: $MK_DEFAULT_CXXFLAGS"
-    mk_msg "default linker flags: $MK_DEFAULT_LDFLAGS"
+    mk_msg "global C preprocessor flags: $MK_CPPFLAGS"
+    mk_msg "global C compiler flags: $MK_CFLAGS"
+    mk_msg "global C++ compiler flags: $MK_CXXFLAGS"
+    mk_msg "global linker flags: $MK_LDFLAGS"
 
     for _sys in build host
     do
