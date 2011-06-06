@@ -507,20 +507,44 @@ mk_autotools()
     done
 
     # Ensure we get .la files for all libraries
-    for _lib in ${LIBS}
+    for LIB in ${LIBS}
     do
+        case "$LIB" in
+            *:*)
+                VERSION="${LIB#*:}"
+                LIB="${LIB%%:*}"
+                _mk_library_process_version
+                ;;
+            *)
+                mk_quote "lib${LIB%%:*}${MK_LIB_EXT}"
+                LINKS="$result"
+                ;;
+        esac
+
         mk_target \
-            TARGET="${MK_LIBDIR}/lib${_lib%%:*}.la" \
+            TARGET="${MK_LIBDIR}/lib${LIB}.la" \
             DEPS="$quote_stamp" \
-            mk_at_la '$@'
+            mk_at_la %LINKS '$@'
     done
 
-    for _dlo in ${DLOS}
+    for DLO in ${DLOS}
     do
+        case "$DLO" in
+            *:*)
+                VERSION="${DLO#*:}"
+                DLO="${DLO%%:*}"
+                _mk_dlo_process_version
+                ;;
+            *)
+                mk_quote "${DLO%.la}${MK_DLO_EXT}"
+                LINKS="$result"
+                ;;
+        esac
+
         mk_target \
-            TARGET="${_dlo%%:*}" \
+            TARGET="${DLO}" \
             DEPS="$quote_stamp" \
-            mk_at_la '$@'
+            mk_at_la %LINKS '$@'
     done
 
     if [ -n "$SOURCEDIR" ]
@@ -640,13 +664,18 @@ configure()
 
 mk_at_la()
 {
+    mk_push_vars LINKS
+    mk_parse_params
+
     if ! [ -f "$1" ]
     then
         mk_run_script link \
-            MODE=la EXT="${MK_LIB_EXT}" "$1"
+            MODE=la EXT="${MK_LIB_EXT}" LINKS="$LINKS" "$1"
     else
         mk_run_or_fail touch "$1"
     fi
+
+    mk_pop_vars
 }
 
 mk_at_log_command()
