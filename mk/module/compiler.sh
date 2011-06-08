@@ -1980,7 +1980,7 @@ int main(int argc, char** argv)
 }
 EOF
     } > .check.c
-    mk_log "running run test for sizeof($TYPE)"
+    mk_log "running compile test for sizeof($TYPE)"
     if _mk_build_test 'compile' .check.c
     then
         result="yes"
