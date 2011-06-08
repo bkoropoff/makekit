@@ -2060,6 +2060,114 @@ mk_check_types()
     mk_pop_vars
 }
 
+_mk_check_member()
+{
+    {
+        _mk_c_check_prologue
+        for _header in ${HEADERDEPS}
+        do
+            mk_might_have_header "$_header" && echo "#include <${_header}>"
+        done
+        
+        echo ""
+        
+        cat <<EOF
+int main(int argc, char** argv)
+{ 
+    return argc + sizeof(&(($TYPE *)0)->$MEMBER);
+}
+EOF
+    } > .check.c
+    mk_log "running compile test for $TYPE.$MEMBER"
+    if _mk_build_test 'compile' .check.c
+    then
+        result="yes"
+    else
+        result="no"
+    fi
+
+    [ "$result" != "no" ]
+}
+
+#<
+# @brief Check for a member of type
+# @usage TYPE=type MEMBER=member
+# @option HEADERDEPS=headers Specifies any headers that
+# are necessary to find a declaration of the type.
+#
+# Checks if the specified type has the specified member
+# (e.g. struct field, union arm) and sets <var>result</var>
+# to the result ("yes" or "no").
+#>
+mk_check_member()
+{
+    mk_push_vars TYPE MEMBER HEADERDEPS CPPFLAGS CFLAGS
+    mk_parse_params
+
+    [ -n "$TYPE" -a -n "$MEMBER" ] ||
+       mk_fail "invalid parameters to mk_check_member"
+
+    CFLAGS="$CFLAGS -Wall -Werror"
+
+    _mk_check_member
+
+    mk_pop_vars
+    [ "$result" != "no" ]
+}
+
+#<
+# @brief Check for members of types
+# @usage specs...
+#
+# For for each type/member pair in <param>specs</param>,
+# specified as <param>type</param><lit>.</lit><param>member</param>,
+# <funcref>mk_check_member</funcref> is invoked to check
+# for its availability.  <var>HAVE_<varname>type</varname>_<varname>member</varname></var>
+# is set to the result.  If the member was available, <def>HAVE_<varname>type</varname>_<varname>member</varname></def>
+# is defined in the current config header. A messsage is printed indicating the result of
+# each test.
+#>
+mk_check_members()
+{
+    mk_push_vars HEADERDEPS CPPFLAGS CFLAGS SPEC TYPE MEMBER FAIL DEFNAME
+    mk_parse_params
+
+    CFLAGS="$CFLAGS -Wall -Werror"
+
+    for SPEC
+    do
+        TYPE="${SPEC%%.*}"
+        MEMBER="${SPEC#*.}"
+
+        [ -n "$TYPE" -a -n "$MEMBER" ] ||
+            mk_fail "invalid parameter to mk_check_members: $SPEC"
+
+        mk_defname "${TYPE}_${MEMBER}"
+        DEFNAME="$result"
+
+        mk_msg_checking "member $TYPE.$MEMBER"
+
+        if ! mk_check_cache "HAVE_$DEFNAME"
+        then
+            _mk_check_member
+            
+            mk_cache "HAVE_$DEFNAME" "$result"
+        fi
+
+        mk_msg_result "$result"
+
+        if [ "$result" = "yes" ]
+        then
+            mk_define "HAVE_$DEFNAME" "1"
+        elif [ "$FAIL" = "yes" ]
+        then
+            mk_fail "missing type: $TYPE"
+        fi
+    done
+
+    mk_pop_vars
+}
+
 mk_check_static_predicate()
 {
     mk_push_vars EXPR
