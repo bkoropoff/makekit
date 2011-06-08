@@ -64,7 +64,7 @@ mk_check_program()
 
     if [ -z "$VAR" ]
     then
-        _mk_define_name "$PROGRAM"
+        mk_varname "$PROGRAM"
         VAR="$result"
     fi
 

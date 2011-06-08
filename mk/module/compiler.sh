@@ -226,6 +226,53 @@ DEPENDS="core platform path"
 # and incurs startup time and memory overhead at runtime.
 #>
 
+### section common
+
+
+#<
+# @brief Convert a string to #define form 
+# @usage str
+#
+# Converts a string to a form suitable for use as a variable name
+# or #define.  This implements the same rules that autoconf uses:
+# all letters are uppercased, all non-letter, non-number characters
+# are converted to _, except for *, which is converted to P.
+# Sets <var>result</var> to the result.
+#>
+mk_defname()
+{
+    __rem="$1"
+    result=""
+
+    while [ -n "$__rem" ]
+    do
+        # This little dance sets __char to the first character of
+        # the string and __rem to the rest of it
+        __rem2="${__rem#?}"
+        __char="${__rem%"$__rem2"}"
+        __rem="$__rem2"
+        
+        case "$__char" in
+            # Convert lowercase letters to uppercase
+            a) __char="A";; h) __char="H";; o) __char="O";; v) __char="V";;
+            b) __char="B";; i) __char="I";; p) __char="P";; w) __char="W";; 
+            c) __char="C";; j) __char="J";; q) __char="Q";; x) __char="X";; 
+            d) __char="D";; k) __char="K";; r) __char="R";; y) __char="Y";; 
+            e) __char="E";; l) __char="L";; s) __char="S";; z) __char="Z";; 
+            f) __char="F";; m) __char="M";; t) __char="T";;
+            g) __char="G";; n) __char="N";; u) __char="U";;
+            # Leave uppercase letters and numbers alone
+            A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|T|S|U|V|W|X|Y|Z|1|2|3|4|5|6|7|8|9) :;;
+            # Convert * to P
+            \*) __char="P";;
+            # Convert everything else to _
+            *) __char="_";;
+        esac
+
+        result="${result}${__char}"
+    done
+}
+
 ### section configure
 
 #
@@ -312,7 +359,7 @@ _mk_process_headerdeps()
             mk_quote "$result"
             DEPS="$DEPS $result"
         else
-            _mk_define_name "HAVE_${_header}"
+            mk_defname "HAVE_${_header}"
             mk_get "$result"
             
             if [ "$result" = "no" ]
@@ -379,7 +426,7 @@ _mk_verify_libdeps()
     for __dep in ${2}
     do
         _mk_contains "$__dep" ${MK_INTERNAL_LIBS} && continue
-        _mk_define_name "HAVE_LIB_${__dep}"
+        mk_defname "HAVE_LIB_${__dep}"
         
         mk_get "$result"
 
@@ -1284,7 +1331,7 @@ mk_define()
     then
         _name="$1"
         
-        _mk_define_name "$MK_SYSTEM"
+        mk_defname "$MK_SYSTEM"
         cond="_MK_$result"
         
         if [ "$#" -eq '2' ]
@@ -1569,7 +1616,7 @@ mk_check_headers()
     
     for HEADER
     do
-        _mk_define_name "$HEADER"
+        mk_defname "$HEADER"
         DEFNAME="$result"
 
         mk_msg_checking "header $HEADER"
@@ -1602,14 +1649,14 @@ mk_check_headers()
 
 mk_have_header()
 {
-    _mk_define_name "HAVE_$1"
+    mk_defname "HAVE_$1"
     mk_get "$result"
     [ "$result" = "external" -o "$result" = "internal" ]
 }
 
 mk_might_have_header()
 {
-    _mk_define_name "HAVE_$1"
+    mk_defname "HAVE_$1"
     mk_get "$result"
     [ "$result" != "no" ]
 }
@@ -1719,7 +1766,7 @@ mk_check_functions()
     
     for PROTOTYPE
     do
-        _mk_define_name "$PROTOTYPE"
+        mk_defname "$PROTOTYPE"
         DEFNAME="$result"
 
         mk_msg_checking "function $PROTOTYPE"
@@ -1826,7 +1873,7 @@ mk_check_libraries()
     
     for LIB
     do
-        _mk_define_name "$LIB"
+        mk_defname "$LIB"
         DEFNAME="$result"
 
         mk_declare -s -i "LIB_$DEFNAME"
@@ -1932,7 +1979,7 @@ mk_check_types()
 
     for TYPE
     do
-        _mk_define_name "$TYPE"
+        mk_defname "$TYPE"
         DEFNAME="$result"
 
         mk_msg_checking "type $TYPE"
@@ -2064,7 +2111,7 @@ mk_check_sizeofs()
 
     for TYPE
     do
-        _mk_define_name "$TYPE"
+        mk_defname "$TYPE"
         DEFNAME="$result"
 
         mk_msg_checking "sizeof $TYPE"
@@ -2237,15 +2284,15 @@ option()
 
     for _sys in build host
     do
-        _mk_define_name "MK_${_sys}_ISAS"
+        mk_defname "MK_${_sys}_ISAS"
         mk_get "$result"
         
         for _isa in ${result}
         do
-            _mk_define_name "$_sys/${_isa}"
+            mk_defname "$_sys/${_isa}"
             _def="$result"
 
-            _mk_define_name "MK_${_sys}_OS"
+            mk_defname "MK_${_sys}_OS"
             mk_get "$result"
             
             _default_cc="$MK_DEFAULT_CC"
@@ -2488,12 +2535,12 @@ configure()
 
     for _sys in build host
     do
-        _mk_define_name "MK_${_sys}_ISAS"
+        mk_varname "MK_${_sys}_ISAS"
         mk_get "$result"
         
         for _isa in ${result}
         do
-            _mk_define_name "$_sys/$_isa"
+            mk_varname "$_sys/$_isa"
             _def="$result"
 
             mk_get "${_def}_CC"

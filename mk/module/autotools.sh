@@ -612,7 +612,7 @@ option()
 
     for _isa in ${MK_HOST_ISAS}
     do   
-        _mk_define_name "$_isa"
+        mk_varname "$_isa"
         _var="MK_AT_HOST_STRING_$result"
         _option="at-host-string-$(echo $_isa | tr '_' '-')"
 
@@ -641,7 +641,7 @@ configure()
     
     for _isa in ${MK_HOST_ISAS}
     do
-        _mk_define_name "$_isa"
+        mk_varname "$_isa"
         mk_get "MK_AT_HOST_STRING_$result"
         mk_msg "host system string ($_isa): $result"
         mk_set_system_var SYSTEM="host/$_isa" MK_AT_HOST_STRING "$result"

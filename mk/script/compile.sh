@@ -58,9 +58,9 @@ if [ -z "$CONFTEST" ]
 then
     FLAGS="$FLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}"
 fi
-_mk_define_name "$MK_CANONICAL_SYSTEM"
+mk_defname "$MK_CANONICAL_SYSTEM"
 FLAGS="$FLAGS -DHAVE_CONFIG_H -D_MK_$result"
-_mk_define_name "${MK_CANONICAL_SYSTEM%/*}"
+mk_defname "${MK_CANONICAL_SYSTEM%/*}"
 FLAGS="$FLAGS -D_MK_$result"
 
 MK_MSG_DOMAIN="compile"

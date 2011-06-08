@@ -43,7 +43,7 @@ mk_pkg_config()
         for __lib in ${__libs}
         do
             libs="$libs ${__lib#-l}"
-            _mk_define_name "HAVE_LIB_${__lib#-l}"
+            mk_defname "HAVE_LIB_${__lib#-l}"
             mk_declare -i "$result=external"
         done
         

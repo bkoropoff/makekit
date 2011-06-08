@@ -905,7 +905,7 @@ mk_check_cache()
 {
     mk_declare -s -i "$1"
 
-    _mk_define_name "CACHED_$MK_CANONICAL_SYSTEM"
+    mk_varname "CACHED_$MK_CANONICAL_SYSTEM"
     if mk_is_set "${1}__${result}"
     then
         if [ "${MK_SYSTEM%/*}" = "$MK_SYSTEM" ]
@@ -944,7 +944,7 @@ mk_cache()
     fi    
     for __system in ${__systems}
     do
-        _mk_define_name "CACHED_$MK_CANONICAL_SYSTEM"
+        mk_varname "CACHED_$MK_CANONICAL_SYSTEM"
         MK_CACHE_VARS="$MK_CACHE_VARS ${1}__${result}"
         mk_set "${1}__${result}" "$2"
         mk_set_system_var SYSTEM="$__system" "$1" "$2"

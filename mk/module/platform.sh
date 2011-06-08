@@ -108,7 +108,7 @@ mk_get_system_var()
     then
         mk_get "$1"
     else
-        _mk_define_name "${1}_$SYSTEM"
+        mk_varname "${1}_$SYSTEM"
         mk_get "$result"
     fi
 
@@ -136,7 +136,7 @@ mk_set_system_var()
             mk_set_system_var SYSTEM="$SYSTEM/$__isa" "$@"
         done
     else
-        _mk_define_name "${1}_$SYSTEM"
+        mk_varname "${1}_$SYSTEM"
         mk_set "$result" "$2"
     fi
 
@@ -203,7 +203,7 @@ mk_system()
         if [ -n "$MK_CANONICAL_SYSTEM" ]
         then
             # Save all current variable values
-            _mk_define_name "$MK_CANONICAL_SYSTEM"
+            mk_varname "$MK_CANONICAL_SYSTEM"
             suffix="$result"
             for var in ${MK_SYSTEM_VARS}
             do
@@ -215,7 +215,7 @@ mk_system()
         MK_CANONICAL_SYSTEM="$canon"
 
         # Restore variable values
-        _mk_define_name "$MK_CANONICAL_SYSTEM"
+        mk_varname "$MK_CANONICAL_SYSTEM"
         suffix="$result"
         for var in ${MK_SYSTEM_VARS}
         do
@@ -270,7 +270,7 @@ _mk_declare_system()
     then
         for __target in ${MK_ALL_SYSTEMS}
         do
-            _mk_define_name "$__target"
+            mk_varname "$__target"
             _mk_declare_inherited "$1_$result"
         done
     fi
@@ -279,7 +279,7 @@ _mk_declare_system()
     then
         for __target in ${MK_ALL_SYSTEMS}
         do
-            _mk_define_name "$__target"
+            mk_varname "$__target"
             _mk_declare_exported "$1_$result"
         done        
     fi
@@ -824,7 +824,7 @@ _mk_platform_restore_system_vars()
     MK_SYSTEM="host"
     MK_CANONICAL_SYSTEM="host/${MK_HOST_PRIMARY_ISA}"
     # Restore all variables
-    _mk_define_name "$MK_CANONICAL_SYSTEM"
+    mk_varname "$MK_CANONICAL_SYSTEM"
     for ___var in ${MK_SYSTEM_VARS}
     do
         eval "${___var}=\"\$${___var}_${result}\""
@@ -835,7 +835,7 @@ _mk_platform_commit_system_vars()
 {
     if [ -n "$MK_CANONICAL_SYSTEM" ]
     then
-        _mk_define_name "$MK_CANONICAL_SYSTEM"
+        mk_varname "$MK_CANONICAL_SYSTEM"
         for ___var in ${MK_SYSTEM_VARS}
         do
             eval "${___var}_${result}=\"\$$___var\""

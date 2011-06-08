@@ -527,24 +527,16 @@ mk_is_set()
     eval [ -n "\"\${$1+yes}\"" ]
 }
 
-##
+#<
+# @brief Convert a string to a variable name 
+# @usage str
 #
-# _mk_define_name
-#
-# Converts a string to a form suitable for use as a variable name or #define.
-# This implements the same rules that autoconf uses:
-#
-# - All letters are uppercased
-# - All non-letter, non-number characters are converted to _, except for *
-# - * is converted to P
-#
-# This is miraculously (perversely?) performed using only shell builtins,
-# avoiding the cost of a fork() and exec() to run sed or tr.
-#
-# This function is private.
-#
-##
-_mk_define_name()
+# Converts a string to a form suitable for use as a variable name.
+# All letters are uppercased, and all non-letter, non-number
+# characters are converted to _.
+# Sets <var>result</var> to the result.
+#>
+mk_varname()
 {
     __rem="$1"
     result=""
@@ -568,8 +560,6 @@ _mk_define_name()
             g) __char="G";; n) __char="N";; u) __char="U";;
             # Leave uppercase letters and numbers alone
             A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|T|S|U|V|W|X|Y|Z|1|2|3|4|5|6|7|8|9) :;;
-            # Convert * to P
-            \*) __char="P";;
             # Convert everything else to _
             *) __char="_";;
         esac

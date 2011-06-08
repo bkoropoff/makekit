@@ -66,7 +66,7 @@ _build_depot()
     {
         for _fileset
         do
-            _mk_define_name "$_fileset"
+            mk_varname "$_fileset"
             _var="DEPOT_FILESET_$result"
             echo "/@$_var@/ {"
             echo "    r ${DEPOT_BUILD}/${_fileset}.subst"

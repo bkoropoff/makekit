@@ -272,7 +272,7 @@ option()
     then
         for _isa in ${MK_HOST_ISAS}
         do
-            _mk_define_name "host/$_isa"
+            mk_varname "host/$_isa"
             _var="LIBDIR_$result"
             
             case "${MK_HOST_OS}-${MK_HOST_DISTRO_ARCHETYPE}-${MK_HOST_ARCH}-${_isa}" in
@@ -418,7 +418,7 @@ configure()
     then
         for _isa in ${MK_HOST_ISAS}
         do
-            _mk_define_name "host/$_isa"
+            mk_varname "host/$_isa"
             _var="LIBDIR_$result"
             _vars="$_vars $_var"
             mk_get "$_var"
