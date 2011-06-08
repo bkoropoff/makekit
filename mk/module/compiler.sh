@@ -1511,9 +1511,21 @@ _mk_c_check_prologue()
     fi
 }
 
+#<
+# @brief Try to compile a code snippet
+# @usage CODE=code
+# @option HEADERDEPS=hdeps An optional list of
+# headers which should be included if they are
+# available.
+#
+# Wraps <param>code</param> in a <lit>main()</lit>
+# function and attempts to compile it.  Returns 0
+# (logical true) if it succeeds and 1 (logical false)
+# otherwise.
+#>
 mk_try_compile()
 {
-    mk_push_vars CODE HEADERDEPS
+    mk_push_vars CODE HEADERDEPS CPPFLAGS CFLAGS
     mk_parse_params
     
     {
@@ -1532,6 +1544,49 @@ EOF
     } > .check.c
 
     _mk_build_test compile ".check.c"
+    _ret="$?"
+    mk_safe_rm .check.c
+
+    mk_pop_vars
+
+    return "$_ret"
+}
+
+#<
+# @brief Try to compile and link a code snippet
+# @usage CODE=code
+# @option HEADERDEPS=hdeps An optional list of
+# headers which should be included if they are
+# available.
+# @option LIBDEPS=ldeps An optional list of
+# libraries which should be linked.
+#
+# Wraps <param>code</param> in a <lit>main()</lit>
+# function and attempts to compile it.  Returns 0
+# (logical true) if it succeeds and 1 (logical false)
+# otherwise.
+#>
+mk_try_link()
+{
+    mk_push_vars CODE HEADERDEPS CPPFLAGS CFLAGS LDFLAGS
+    mk_parse_params
+    
+    {
+        _mk_c_check_prologue
+        for _header in ${HEADERDEPS}
+        do
+            mk_might_have_header "$_header" && echo "#include <${_header}>"
+        done
+        
+        cat <<EOF
+int main(int argc, char** argv)
+{
+${CODE}
+}
+EOF
+    } > .check.c
+
+    _mk_build_test link ".check.c"
     _ret="$?"
     mk_safe_rm .check.c
 
