@@ -111,7 +111,7 @@ DEPENDS="core"
 #>
 mk_package_patterns()
 {
-    mk_push_vars SUBDIRS="@" SELECT PATTERN TARGET
+    mk_push_vars SUBDIRS="@" SELECT PATTERN TARGET FILTER
     mk_parse_params
 
     if [ "$#" = 0 ]
@@ -133,8 +133,26 @@ mk_package_patterns()
         done
     fi
 
+    set -f
+    mk_unquote_list "$FILTER"
+    set +f
+    FILTER=""
+    for PATTERN
+    do
+        case "$PATTERN" in
+            /*)
+                mk_quote "@${MK_STAGE_DIR}${PATTERN}"
+                FILTER="$FILTER $result"
+                ;;
+            *)
+                mk_quote "$PATTERN"
+                FILTER="$FILTER $result"
+                ;;
+        esac
+    done
+
     mk_unquote_list "$SUBDIRS"
-    mk_get_stage_targets SELECT="$SELECT" "$@"
+    mk_get_stage_targets SELECT="$SELECT" FILTER="$FILTER" "$@"
     mk_unquote_list "$result"
     mk_package_targets "$@"
     
