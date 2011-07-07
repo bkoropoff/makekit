@@ -43,6 +43,16 @@ then
     unset GROUPS
 fi
 
+# Detect broken variable expansion (FreeBSD sh)
+_test="t*"
+_star="*"
+if [ "${_test#"$_star"}" != "t" ]
+then
+    MK_BROKEN_VAREXP=yes
+else
+    MK_BROKEN_VAREXP=no
+fi
+
 # Aliases are expanded within functions when they are
 # defined, so we set up aliases first
 
@@ -527,6 +537,8 @@ mk_is_set()
     eval [ -n "\"\${$1+yes}\"" ]
 }
 
+if [ "$MK_BROKEN_VAREXP" = "no" ]
+then
 #<
 # @brief Convert a string to a variable name 
 # @usage str
@@ -567,6 +579,42 @@ mk_varname()
         result="${result}${__char}"
     done
 }
+else
+mk_varname()
+{
+    __rem="$1"
+    result=""
+
+    while [ -n "$__rem" ]
+    do
+        # This little dance sets __char to the first character of
+        # the string and __rem to the rest of it
+        __char="$__rem"
+        while [ "${#__char}" -gt 1 ]
+        do
+            __char="${__char%?}"
+        done
+        __rem="${__rem#?}"
+        
+        case "$__char" in
+            # Convert lowercase letters to uppercase
+            a) __char="A";; h) __char="H";; o) __char="O";; v) __char="V";;
+            b) __char="B";; i) __char="I";; p) __char="P";; w) __char="W";; 
+            c) __char="C";; j) __char="J";; q) __char="Q";; x) __char="X";; 
+            d) __char="D";; k) __char="K";; r) __char="R";; y) __char="Y";; 
+            e) __char="E";; l) __char="L";; s) __char="S";; z) __char="Z";; 
+            f) __char="F";; m) __char="M";; t) __char="T";;
+            g) __char="G";; n) __char="N";; u) __char="U";;
+            # Leave uppercase letters and numbers alone
+            A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|T|S|U|V|W|X|Y|Z|1|2|3|4|5|6|7|8|9) :;;
+            # Convert everything else to _
+            *) __char="_";;
+        esac
+
+        result="${result}${__char}"
+    done 
+}
+fi
 
 ##
 #
