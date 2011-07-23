@@ -102,9 +102,9 @@ make()
             --module compiler
 
         reference \
-            OUTPUT="reference/autotools.xml" -- \
-            --title "Autotools Module" \
-            --module autotools
+            OUTPUT="reference/chain.xml" -- \
+            --title "Chaining Modules" \
+            --module chain-generic chain-compiler chain-autotools
 
         reference \
             OUTPUT="reference/docbook.xml" -- \
