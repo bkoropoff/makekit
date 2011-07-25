@@ -40,12 +40,17 @@ _mk_gnu_debuginfo_post_target()
     _debugname="${result%%.*}.dbg"
     mk_dirname "$1"
     _debugfile="${result}/.debug/${_debugname}"
+    _debugtemp="@${MK_OBJECT_DIR}/.debug${result#@$MK_STAGE_DIR}/${_debugname}"
 
     mk_quote "$1"
 
     mk_target \
-        TARGET="$_debugfile" \
+        TARGET="$_debugtemp" \
         DEPS="$result"
+
+    mk_stage \
+        SOURCE="$_debugtemp" \
+        DEST="$_debugfile"
 
     mk_quote "$result"
     _MK_GNU_DEBUGINFO_TARGETS="$_MK_GNU_DEBUGINFO_TARGETS $result"
@@ -86,6 +91,8 @@ make()
 
         mk_add_phony_target "$result"
     fi
+
+    mk_add_clean_target "@${MK_OBJECT_DIR}/.debug"
 }
 
 ### section build
@@ -100,10 +107,10 @@ _mk_gnu_debuginfo_post()
     mk_basename "$1"
     _debugname="${result%%.*}.dbg"
     mk_dirname "$1"
-    _debugfile="${result}/.debug/${_debugname}"
+    _debugtemp="${MK_OBJECT_DIR}/.debug${result#$MK_STAGE_DIR}/${_debugname}"
 
-    mk_mkdirname "$_debugfile"
-    mk_run_or_fail objcopy --only-keep-debug "$1" "$_debugfile"
-    mk_run_or_fail objcopy --add-gnu-debuglink="$_debugfile" "$1"
+    mk_mkdirname "$_debugtemp"
+    mk_run_or_fail objcopy --only-keep-debug "$1" "$_debugtemp"
+    mk_run_or_fail objcopy --add-gnu-debuglink="$_debugtemp" "$1"
     mk_run_or_fail strip -g "$1"
 }
