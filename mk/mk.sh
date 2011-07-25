@@ -1367,3 +1367,47 @@ mk_readlink()
         result="${result#*-> }"
     fi
 }
+
+#<
+# @brief Clone files and directories
+# @usage source dest
+#
+# Recursively copies source to dest while
+# preserving symlinks.
+#>
+mk_clone()
+{
+    [ -z "$_MK_UNAME" ] && _MK_UNAME=`uname`
+    case "$_MK_UNAME" in
+        HP-UX)
+            cp -R -- "$1" "$2"
+            ;;
+        SunOS)
+            _mk_clone_solaris "$1" "$2"
+            ;;
+        *)
+            cp -RP -- "$1" "$2"
+            ;;
+    esac
+}
+
+_mk_clone_solaris()
+{
+    if [ -d "$1" ]
+    then
+        { cd "$1" && find; } | while mk_read_line
+        do
+            if [ -f "$1/$result" -o -h "$1/$result" ]
+            then
+                mk_mkdirname "$2/$result"
+                _mk_clone_solaris "$1/$result" "$2/$result" || return "$?"
+            fi
+        done
+    elif [ -h "$1" ]
+    then
+        mk_readlink "$1"
+        ln -s "$result" "$2" || return "$?"
+    else
+        cp -- "$1" "$2" || return "$?"
+    fi
+}
