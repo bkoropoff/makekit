@@ -110,7 +110,11 @@ _mk_gnu_debuginfo_post()
     _debugtemp="${MK_OBJECT_DIR}/.debug${result#$MK_STAGE_DIR}/${_debugname}"
 
     mk_mkdirname "$_debugtemp"
-    mk_run_or_fail objcopy --only-keep-debug "$1" "$_debugtemp"
-    mk_run_or_fail objcopy --add-gnu-debuglink="$_debugtemp" "$1"
-    mk_run_or_fail strip -g "$1"
+    mk_run_or_fail objcopy --only-keep-debug -- "$1" "$_debugtemp"
+    mk_get_file_mode "$1"
+    _old_mode="$result"
+    mk_run_or_fail chmod u+w -- "$1"
+    mk_run_or_fail objcopy --add-gnu-debuglink="$_debugtemp" -- "$1"
+    mk_run_or_fail strip -g -- "$1"
+    mk_run_or_fail chmod "$_old_mode" -- "$1"
 }
