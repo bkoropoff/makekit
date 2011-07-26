@@ -1411,3 +1411,23 @@ _mk_clone_solaris()
         cp -- "$1" "$2" || return "$?"
     fi
 }
+
+#<
+# @brief Make path absolute
+# @usage path [rel]
+#
+# Converts a path to an absolute path and sets <var>result</var>
+# to the result.  If <param>path</param> is already absolute, it
+# is returned verbatim.  If it is relative, and <param>rel</param>
+# is specified, it is appended to it.  If <param>rel</param> is
+# not specified, the current working directory is used instead.
+#>
+mk_absolute_path()
+{
+    [ -z "$2" ] && set -- "$1" "$PWD"
+    
+    case "$1" in
+        /*) result="$1";;
+        *) result="$2/$1";;
+    esac
+}
