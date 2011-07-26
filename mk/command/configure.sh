@@ -65,11 +65,27 @@
 #>
 
 #<
+# @var MK_SOURCE_SUBDIR
+# @brief Current source subdirector
+#
+# The source directory containing the current <lit>MakeKitBuild</lit>
+# file.  If relative, it is relative to <varref>MK_ROOT_DIR</varref>
+#>
+
+#<
 # @var MK_OBJECT_DIR
 # @brief Intermediate file directory
 #
 # The subdirectory of <varref>MK_ROOT_DIR</varref> where
 # intermediate build results are collected.  Usually <lit>object</lit>.
+#>
+
+#<
+# @var MK_OBJECT_SUBDIR
+# @brief Current object subdirectory
+#
+# The subdirectory within the object directory which mirrors
+# the current <varref>MK_SOURCE_SUBDIR</varref>.
 #>
 
 #<
@@ -176,6 +192,19 @@ _mk_module_list()
     _mk_modules_rec "$@"
 }
 
+_mk_set_subdir()
+{
+    MK_SUBDIR="$1"
+    if [ "$1" = ":" ]
+    then
+        MK_SOURCE_SUBDIR=":"
+        MK_OBJECT_SUBDIR=":"
+    else
+        MK_SOURCE_SUBDIR="$MK_SOURCE_DIR$1"
+        MK_OBJECT_SUBDIR="$MK_OBJECT_DIR$1"
+    fi
+}
+
 _mk_process_build_module()
 {
     _mk_find_resource "module/$1.sh"
@@ -206,7 +235,7 @@ _mk_process_build_configure()
     
     mk_function_exists option && option
 
-    MK_SUBDIR="$1"
+    _mk_set_subdir "$1"
     mk_msg_verbose "configuring"
     _mk_configure_prehooks
     mk_function_exists configure && configure
@@ -222,7 +251,7 @@ _mk_process_build_make()
     mk_safe_source "$MK_CURRENT_FILE" || mk_fail "Could not read MakeKitBuild in ${MK_SOURCEDIR}${1}"
     SUBDIRS="$_backup_SUBDIRS"
     
-    MK_SUBDIR="$1"
+    _mk_set_subdir "$1"
     _mk_make_prehooks
     mk_function_exists make && make
     _mk_make_posthooks
@@ -274,7 +303,7 @@ _mk_process_build_recursive()
 
 _mk_process_build()
 {
-    MK_SUBDIR=":"
+    _mk_set_subdir ":"
 
     for _module in ${MK_MODULE_LIST}
     do
@@ -288,7 +317,7 @@ _mk_process_build()
     # Run build functions for project
     _mk_process_build_recursive ''
 
-    MK_SUBDIR=":"
+    _mk_set_subdir ":"
 }
 
 #<
