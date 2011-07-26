@@ -1431,3 +1431,54 @@ mk_absolute_path()
         *) result="$2/$1";;
     esac
 }
+
+#<
+# @brief Read quoted list from here document
+# @usage [var]
+#
+# Returns a quoted list by reading each line from stdin
+# and stripping leading and trailing whitespace. 
+# If <param>var</param> is specified, it is taken as the
+# name of the variable to set to the result; otherwise,
+# <var>result</var> is used.
+#
+# This function allows quoted lists to be constructed
+# from so-called here documents with a single item per line.
+#
+# @example
+# FOO=foo
+# mk_text_list HUGE_TARGET_LIST &lt;&lt;EOF
+#     ${FOO}/bar
+#     ${FOO}/baz
+#     ...
+# EOF
+# echo "$HUGE_TARGET_LIST"
+# # Output: 'foo/bar' 'foo/baz' ...
+# @endexample
+#>
+mk_here_list()
+{
+    __list=""
+    while mk_read_line
+    do
+        while true
+        do
+            case "$result" in
+                " "*) result="${result# }";;
+                "	"*) result="${result#	}";;
+                *" ") result="${result% }";;
+                *"	") result="${result%	}";;
+                *) break;;
+            esac
+        done
+        
+        mk_quote "$result"
+        __list="$__list $result"
+    done
+    if [ -n "$1" ]
+    then
+        mk_set "$1" "${__list# }"
+    else
+        result="${__list# }"
+    fi
+}
