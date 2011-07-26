@@ -185,18 +185,14 @@ case "$COMPILER" in
         ;;
 esac
 
-RPATH_FLAGS=""
-
 case "${MK_OS}:${LD_STYLE}" in
     *:gnu)
         DLO_LINK="-shared"
         LIB_LINK="-shared"
-        RPATH_FLAGS="-Wl,-rpath,${RPATH_LIBDIR} -Wl,-rpath-link,${LINK_LIBDIR}"
         ;;
     solaris:native)
         DLO_LINK="-shared"
         LIB_LINK="-shared"
-        RPATH_FLAGS="-R${RPATH_LIBDIR}"
         
         if [ "$MODE" = "library" ]
         then
@@ -217,7 +213,6 @@ case "${MK_OS}:${LD_STYLE}" in
         DLO_LINK="-shared -Wl,-berok -Wl,-bnoentry"
         LIB_LINK="-shared -Wl,-bnoentry"
         COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-brtl"
-        RPATH_FLAGS="-Wl,-blibpath:${RPATH_LIBDIR}:/usr/lib:/lib"
         
         # The linker on AIX does not track inter-library dependencies, so do it ourselves
         combine_libtool_flags
@@ -225,7 +220,6 @@ case "${MK_OS}:${LD_STYLE}" in
     hpux:native)
         DLO_LINK="-shared"
         LIB_LINK="-shared"
-        RPATH_FLAGS="-Wl,+b,${RPATH_LIBDIR}"
 
         if [ "$MODE" = "library" ]
         then
@@ -235,7 +229,7 @@ case "${MK_OS}:${LD_STYLE}" in
         ;;
 esac
 
-[ -z "$CONFTEST" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS $RPATH_FLAGS"
+[ -z "$CONFTEST" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS $MK_RPATHFLAGS"
 
 for lib in ${COMBINED_LIBDEPS}
 do

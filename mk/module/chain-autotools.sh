@@ -471,32 +471,13 @@ _mk_at_configure()
     # Make the linker happy, etc.
     case "$MK_OS" in
         linux|freebsd)
-            _ldflags="-L${_lib_dir} -Wl,-rpath-link -Wl,${_lib_dir}"
+            _ldflags="-L${_lib_dir}"
             ;;
         aix)
             _ldflags="-L${_lib_dir} -Wl,-brtl"
             ;;
         *)
             _ldflags="-L${_lib_dir}"
-            ;;
-    esac
-    
-    # We disable libtool setting the rpath, so do it ourselves
-    case "${MK_OS}:${MK_CC_LD_STYLE}" in
-        *:gnu)
-            _rpath_flags="-Wl,-rpath,${_libdir}"
-            ;;
-        solaris:native)
-            _rpath_flags="-R${_libdir}"
-            ;;
-        aix:native)
-            _rpath_flags="-Wl,-blibpath:${_libdir}:/usr/lib:/lib"
-            ;;
-        hpux:native)
-            _rpath_flags="-Wl,+b,${_libdir}"
-            ;;
-        *)
-            _rpath_flags=""
             ;;
     esac
     
@@ -534,7 +515,7 @@ _mk_at_configure()
         CPPFLAGS="-I${_include_dir} $_cppflags $CPPFLAGS" \
         CFLAGS="$MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS" \
         CXXFLAGS="$MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS" \
-        LDFLAGS="$MK_ISA_LDFLAGS $MK_LDFLAGS $LDFLAGS ${_ldflags} ${_rpath_flags}" \
+        LDFLAGS="$MK_ISA_LDFLAGS $MK_LDFLAGS $LDFLAGS ${_ldflags} $MK_RPATHFLAGS" \
         --build="${_build_string}" \
         --host="${MK_AT_HOST_STRING}" \
         --prefix="${_prefix}" \

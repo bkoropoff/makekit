@@ -358,6 +358,19 @@ DEPENDS="core platform path"
 #>
 
 #<
+# @var MK_RPATHFLAGS
+# @brief Runtime library path flags
+# @export
+# @system
+#
+# The flags in this variable will be passed to any compiler operation
+# involving linking an executable, library, or dynamically-loadable object
+# for the purpose of defining the runtime search path that should be
+# used when resolving dependent libraries.  The values of this variable
+# are usually autodetected based on the system and compiler.
+#>
+
+#<
 # @var MK_HEADERDEPS
 # @brief Common header dependencies
 # @inherit
@@ -2780,7 +2793,7 @@ option()
                     _default_cxxflags=""
                     ;;
             esac
-            
+
             mk_option \
                 VAR="${_def}_CC" \
                 PARAM="program" \
@@ -2816,6 +2829,12 @@ option()
                 PARAM="flags" \
                 DEFAULT="" \
                 HELP="Linker flags ($_sys/$_isa)"
+
+            mk_option \
+                VAR="${_def}_RPATHFLAGS" \
+                PARAM="flags" \
+                DEFAULT="<autodetect>" \
+                HELP="Runtime library path flags ($_sys/$_isa)"
         done
     done
 }
@@ -2922,6 +2941,43 @@ _mk_check_cxx_ld_style()
     mk_msg_result "$MK_CXX_LD_STYLE"
 }
 
+_mk_check_rpath_flags()
+{
+    mk_varname "${MK_SYSTEM%/*}_${MK_SYSTEM#*/}_RPATHFLAGS"
+    _var="$result"
+    mk_get "$_var"
+
+    if [ "$result" = "<autodetect>" ]
+    then
+        if [ "${MK_SYSTEM%/*}" = "build" ]
+        then
+            _libdir="$MK_ROOT_DIR/$MK_RUN_LIBDIR"
+            _linkdir="$_libdir"
+        else
+            _libdir="$MK_LIBDIR"
+            _linkdir="$MK_ROOT_DIR/$MK_STAGE_DIR$MK_LIBDIR"
+        fi
+
+        case "${MK_OS}:${MK_CC_LD_STYLE}" in
+            *:gnu)
+                mk_set "$_var" "-Wl,-rpath,$_libdir -Wl,-rpath-link,$_linkdir"
+                ;;
+            solaris:native)
+                mk_set "$_var" "-Wl,-R$_libdir"
+                ;;
+            aix:native)
+                mk_set "$_var" "-Wl,-blibpath:$_libdir:/usr/lib:/lib"
+                ;;
+            hpux:native)
+                mk_set "$_var" "-Wl,+b,$_libdir"
+                ;;
+            *)
+                mk_set "$_var" ""
+                ;;
+        esac
+    fi
+}
+
 _mk_compiler_check()
 {
     for _sys in build host
@@ -2936,6 +2992,7 @@ _mk_compiler_check()
             _mk_check_cxx_style
             _mk_check_cc_ld_style
             _mk_check_cxx_ld_style
+            _mk_check_rpath_flags
         done
     done
 }
@@ -2951,7 +3008,8 @@ configure()
         MK_CC MK_CXX MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
     mk_declare -i -e MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS
     mk_declare -s -i -e \
-        MK_ISA_CPPFLAGS MK_ISA_CFLAGS MK_ISA_CXXFLAGS MK_ISA_LDFLAGS
+        MK_ISA_CPPFLAGS MK_ISA_CFLAGS MK_ISA_CXXFLAGS MK_ISA_LDFLAGS \
+        MK_RPATHFLAGS
     mk_declare -s MK_INTERNAL_LIBS
 
     mk_msg "default C compiler: $MK_DEFAULT_CC"
@@ -2998,6 +3056,22 @@ configure()
     done
 
     _mk_compiler_check
+
+    for _sys in build host
+    do
+        mk_varname "MK_${_sys}_ISAS"
+        mk_get "$result"
+        
+        for _isa in ${result}
+        do
+            mk_varname "$_sys/$_isa"
+            _def="$result"
+
+            mk_get "${_def}_RPATHFLAGS"
+            mk_msg "rpath flags ($_sys/$_isa): $result"
+            mk_set_system_var SYSTEM="$_sys/$_isa" MK_RPATHFLAGS "$result"
+        done
+    done
 
     # Each invocation of mk_config_header closes and finishes up
     # the previous header.  In order to close the final config
