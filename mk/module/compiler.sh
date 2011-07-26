@@ -534,6 +534,8 @@ _mk_library_form_name()
     # $2 = version
     # $3 = release
     # $4 = ext
+    [ "$2" = "-" ] && set -- "$1" "" "$3" "$4"
+
     case "$MK_OS" in
         darwin)
             result="lib${1}${3:+-$3}${2:+.$2}${4}"
@@ -549,6 +551,31 @@ _mk_library_process_version()
     if [ "$VERSION" != "no" ]
     then
         case "$VERSION" in
+            *,*)
+                _IFS="$IFS"
+                IFS=","
+                set -- ${VERSION}
+                IFS="$_IFS"
+                LINKS=""
+                for ver
+                do
+                    case "$ver" in
+                        '*'*)
+                            ver="${ver#?}"
+                            _mk_library_form_name "$LIB" "$ver" "" "$EXT"
+                            SONAME="$result"
+                            mk_quote "$result"
+                            LINKS="$LINKS $result"
+                            ;;
+                        *)
+                            _mk_library_form_name "$LIB" "$ver" "" "$EXT"
+                            mk_quote "$result"
+                            LINKS="$LINKS $result"
+                            ;;
+                    esac
+                done
+                return
+                ;;
             *-*)
                 RELEASE="${VERSION#*-}"
                 VERSION="${VERSION%-*}"
@@ -616,6 +643,7 @@ _mk_library_process_version()
 
     _mk_library_form_name "$LIB" "" "" "$EXT"
     SONAME="$result"
+    mk_quote "$result"
     LINKS="$result"
 
     if [ -n "$MAJOR" ]
