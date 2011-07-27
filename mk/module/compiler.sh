@@ -2655,7 +2655,7 @@ _mk_check_cc_ld_style()
     case "$MK_CC_STYLE" in
         gcc)
             _ld="`${MK_CC} -print-prog-name=ld`"
-            case "`ld -v 2>&1`" in
+            case "`"$_ld" -v 2>&1`" in
                 *"GNU"*)
                     result="gnu"
                     ;;
@@ -2679,7 +2679,7 @@ _mk_check_cxx_ld_style()
     case "$MK_CXX_STYLE" in
         gcc)
             _ld="`${MK_CXX} -print-prog-name=ld`"
-            case "`ld -v 2>&1`" in
+            case "`"$_ld" -v 2>&1`" in
                 *"GNU"*)
                     result="gnu"
                     ;;
