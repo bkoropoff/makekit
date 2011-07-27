@@ -23,6 +23,11 @@ reference_end()
     do
         MANPAGES="$MANPAGES $i.3mk"
     done
+
+    for i in ${DOC_MODS}
+    do
+        MANPAGES="$MANPAGES $i.7mk"
+    done
 }
 
 reference()
@@ -30,9 +35,11 @@ reference()
     mk_push_vars OUTPUT="mkdoc.xml"
     mk_parse_params
 
-    funcs=`${MK_HOME}/makekit doc --index "$@"` || mk_fail "Could not index $*"
-    
+    funcs=`${MK_HOME}/makekit doc --index 3 "$@"` || mk_fail "Could not index $*"
+    mods=`${MK_HOME}/makekit doc --index 7 "$@"` || mk_fail "Could not index $*"
+
     DOC_FUNCS="$DOC_FUNCS $funcs"
+    DOC_MODS="$DOC_MODS $mods"
     DOC_OUTPUTS="$DOC_OUTPUTS $OUTPUT"
     MODE="none"
 

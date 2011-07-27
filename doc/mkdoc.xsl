@@ -39,6 +39,10 @@
       </refnamediv>
       <refsynopsisdiv>
 	<title>Synopsis</title>
+	<xsl:if test="parent::module">
+	  <programlisting>
+MODULES="... <xsl:value-of select="../@name"/> ..."</programlisting>
+	</xsl:if>
 	<xsl:for-each select="usage">
 	  <cmdsynopsis sepchar=" ">
 	    <function><xsl:value-of select="../@name"/></function>
@@ -65,18 +69,58 @@
 	  </variablelist>
 	</refsection>
       </xsl:if>
-      <xsl:apply-templates mode="function" select="description"/>
-      <xsl:apply-templates mode="function" select="example"/>
+      <xsl:apply-templates mode="body" select="description"/>
+      <xsl:apply-templates mode="body" select="example"/>
     </refentry>
   </xsl:template>
+
+  <xsl:template match="module">
+    <refentry version="5.0">
+      <xsl:attribute name="xml:id">
+	<xsl:value-of select="@name"/>
+      </xsl:attribute>
+      <refmeta>
+	<refentrytitle><xsl:value-of select="@name"/></refentrytitle>
+	<manvolnum>7mk</manvolnum>
+	<refmiscinfo class="manual">MakeKit Reference</refmiscinfo>
+      </refmeta>
+      <refnamediv>
+	<refname><xsl:value-of select="@name"/></refname>
+	<refpurpose><xsl:value-of select="@brief"/></refpurpose>
+      </refnamediv>
+      <refsynopsisdiv>
+	<title>Synopsis</title>
+	<programlisting>
+MODULES="... <xsl:value-of select="@name"/> ..."</programlisting>
+      </refsynopsisdiv>
+      <xsl:apply-templates mode="body" select="description"/>
+      <xsl:if test="variable">
+	<refsection><info><title>Variables</title></info>
+	<xsl:for-each select="variable">
+	  <para><xref><xsl:attribute name="linkend"><xsl:value-of select="@name"/></xsl:attribute></xref></para>
+	  </xsl:for-each>
+	</refsection>
+      </xsl:if>
+      <xsl:if test="function">
+	<refsection><info><title>Functions</title></info>
+	<xsl:for-each select="function">
+	  <para><xref><xsl:attribute name="linkend"><xsl:value-of select="@name"/></xsl:attribute></xref></para>
+	  </xsl:for-each>
+	</refsection>
+      </xsl:if>
+    </refentry>
+    <xsl:apply-templates>
+      <xsl:sort select="@name"/>
+    </xsl:apply-templates>
+  </xsl:template>
   
-  <xsl:template mode="function" match="description">
+  <xsl:template mode="body" match="description">
     <refsection><info><title>Description</title></info>
     <xsl:apply-templates/>
     </refsection>
   </xsl:template>
   
-  <xsl:template mode="function" match="example">
+  <xsl:template mode="body" match="example">
     <refsection><info><title>Examples</title></info>
       <programlisting>
 	<xsl:apply-templates/>
@@ -127,6 +171,10 @@
       <refsynopsisdiv>
 	<title>Synopsis</title>
 	<synopsis>
+	  <xsl:if test="parent::module">
+	  <programlisting>
+MODULES="... <xsl:value-of select="../@name"/> ..."</programlisting>
+	  </xsl:if>
 	  <function><xref linkend="mk_declare">mk_declare</xref></function>
 	  <xsl:if test="@export">
 	    <xsl:text> </xsl:text><literal>-e</literal>
@@ -156,7 +204,7 @@
 	  </variablelist>
 	</refsection>
       </xsl:if>
-      <xsl:apply-templates mode="function" select="description"/>
+      <xsl:apply-templates mode="body" select="description"/>
     </refentry>
   </xsl:template>
 
@@ -208,6 +256,17 @@
   </xsl:template>
 
   <xsl:template match="varref">
+    <varname>
+      <xref>
+	<xsl:attribute name="linkend">
+	  <xsl:value-of select="."/>
+	</xsl:attribute>
+	<xsl:apply-templates/>
+      </xref>
+    </varname>
+  </xsl:template>
+
+  <xsl:template match="modref">
     <varname>
       <xref>
 	<xsl:attribute name="linkend">

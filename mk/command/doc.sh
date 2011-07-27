@@ -36,7 +36,7 @@
 
 MK_SEARCH_DIRS="${MK_HOME}"
 TITLE="MakeKit Reference"
-INDEX="false"
+INDEX=""
 HEADER="false"
 MODE="file"
 
@@ -53,7 +53,10 @@ emit_footer()
 
 process_file()
 {
-    if $INDEX
+    if [ -z "$INDEX" ]
+    then
+        awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" || mk_fail "awk failed"
+    elif [ "$INDEX" -eq 3 ]
     then
         awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" |
         grep "^<function" |
@@ -62,8 +65,11 @@ process_file()
         awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" |
         grep "^<variable" |
         sed -e 's/<variable name="//' -e 's/".*$//' || mk_fail "awk failed"
-    else
-        awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" || mk_fail "awk failed"
+    elif [ "$INDEX" -eq 7 ]
+    then
+        awk -f "$MK_HOME/doc.awk" -v title="$TITLE" "$@" |
+        grep "^<module" |
+        sed -e 's/<module name="//' -e 's/".*$//' || mk_fail "awk failed"
     fi
 }
 
@@ -75,7 +81,7 @@ process_module()
 
 process_docbook()
 {
-    if ! $INDEX
+    if [ -z "$INDEX" ]
     then
         mk_quote_c_string "$1"
         printf '<include format="docbook" name="%s" file=%s/>\n' "${1##*/}" "$result"
@@ -85,13 +91,13 @@ process_docbook()
 while [ $# -gt 0 ]
 do
     case "$1" in
-        --index) INDEX="true"; shift;;
+        --index) INDEX="$2"; shift 2;;
         --title) TITLE="$2"; shift 2;;
         --module) MODE=module; shift;;
         --file) MODE=file; shift;;
         --docbook) MODE=docbook; shift;;
         *)
-            if ! $HEADER && ! $INDEX
+            if ! $HEADER && [ -z "$INDEX" ]
             then
                 emit_header
                 HEADER=true
@@ -107,7 +113,7 @@ do
     esac
 done
 
-if ! $INDEX
+if [ -z "$INDEX" ]
 then
     emit_footer
 fi

@@ -28,10 +28,17 @@
 
 BEGIN {
     in_doc = 0;
+    in_module = 0;
     saved_len = 0;
     explicit = 0;
     explicit_func = 0;
     explicit_var = 0;
+}
+
+END {
+    if (in_module) {
+        printf("</module>\n");
+    }
 }
 
 /^#</ {
@@ -48,7 +55,10 @@ BEGIN {
         } else if (explicit_var) {
             process_var(explicit_var);
             explicit_var = 0;
-        }       
+        } else if (explicit_module) {
+            process_module(explicit_module);
+            explicit_module = 0;
+        }
         explicit = 0;
         saved_len = 0;
     }
@@ -69,6 +79,15 @@ BEGIN {
          sub(/^# ?@var */, "");
          explicit = 1;
          explicit_var = $0;
+    }
+}
+
+/^# ?@module/ {
+    if (in_doc) {
+         sub(/^# ?@module */, "");
+         explicit = 1;
+         explicit_module = $0;
+         in_module = 1;
     }
 }
 
@@ -252,4 +271,36 @@ function process_var(var_name) {
     }
     printf("</para>\n</description>\n");
     printf("</variable>\n");
+}
+
+function process_module(module_name) {
+    brief=""
+    desc_len = 0;
+    for (i = 0; i < saved_len; i++) {
+        line = saved[i];
+        if (line ~ /^@brief/) {
+            sub("^@brief *", "", line);
+            brief = line;
+        } else {
+            desc[desc_len++] = line;
+        }
+    }
+
+    printf("<module name=\"%s\" brief=\"%s\"", module_name, quote(brief));
+    printf(">\n");
+    printf("<description>\n<para>\n");
+    for (i = 0; i < desc_len && desc[i] == ""; i++);
+    new_para = 0;
+    for (; i < desc_len; i++) {
+        if (desc[i] == "") {
+            new_para = 1;
+        } else {
+            if (new_para) {
+                printf("</para>\n<para>\n");
+                new_para = 0;
+            }
+            print desc[i];
+        }
+    }
+    printf("</para>\n</description>\n");
 }
