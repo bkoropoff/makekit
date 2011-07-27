@@ -437,7 +437,7 @@ configure()
     mk_msg "local state dir: $MK_LOCALSTATEDIR"
     mk_msg "data root dir: $MK_DATAROOTDIR"
     mk_msg "data dir: $MK_DATADIR"
-    mk_msg "documenation dir: $MK_DOCDIR"
+    mk_msg "documentation dir: $MK_DOCDIR"
     mk_msg "HTML documentation dir: $MK_HTMLDIR"
     mk_msg "manpage dir: $MK_MANDIR"
 }
