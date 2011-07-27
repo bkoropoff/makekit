@@ -63,7 +63,7 @@ FLAGS="$FLAGS -DHAVE_CONFIG_H -D_MK_$result"
 mk_defname "${MK_CANONICAL_SYSTEM%/*}"
 FLAGS="$FLAGS -D_MK_$result"
 
-MK_MSG_DOMAIN="compile"
+mk_msg_domain compile
 
 if [ -z "$CONFTEST" ]
 then
@@ -84,9 +84,10 @@ case "$MK_OS" in
         ;;
 esac
 
-mk_msg "${_source#${MK_SOURCE_DIR}/} ($MK_CANONICAL_SYSTEM)"
+mk_pretty_path "$_source"
+mk_msg "$result ($MK_CANONICAL_SYSTEM)"
 
-mk_mkdir "`dirname "$_object"`"
+mk_mkdirname "$_object"
 
 mk_unquote_list "$DEP_FLAGS"
 mk_run_or_fail ${CPROG} \
