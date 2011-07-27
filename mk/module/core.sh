@@ -456,6 +456,66 @@ mk_resolve_files()
     __mk_resolve "$1" mk_resolve_file mk_quote
 }
 
+#<
+# @brief Convert fully-qualified target to pretty form
+# @usage target
+# 
+# Converts <param>target</param> to a form suitable for
+# displaying to the user by eliding references to
+# <varref>MK_SOURCE_DIR</varref>, <varref>MK_OBJECT_DIR</varref>,
+# and <varref>MK_STAGE_DIR</varref> where possible.
+# Sets <var>result</var> to the result.
+#
+# @example
+# # Assume MK_SOURCE_DIR='..'
+#
+# mk_pretty_target @stage/usr/bin/foo
+# # result='/usr/bin/foo'
+#
+# mk_pretty_target @object/src/foo.o
+# # result='src/foo.o'
+#
+# mk_pretty_target @../src/foo.c
+# # result='src/foo.c'
+#
+# mk_pretty_target @foo/bar.baz
+# # result='./foo/bar.baz'
+# @endexample
+#>
+mk_pretty_target()
+{
+    mk_pretty_path "${1#@}"
+}
+
+#<
+# @brief Convert path to pretty form
+# @usage path
+#
+# Behaves identically to <funcref>mk_pretty_target</funcref>,
+# except that <param>path</param> is not expected to contain
+# the leading <lit>@</lit> of a fully-qualified target.
+#>
+mk_pretty_path()
+{
+    case "$1" in
+        "$MK_STAGE_DIR"/*)
+            result="${1#$MK_STAGE_DIR}"
+            ;;
+        "$MK_OBJECT_DIR"/*)
+            result="${1#$MK_OBJECT_DIR/}"
+            ;;
+        "$MK_SOURCE_DIR"/*)
+            result="${1#$MK_SOURCE_DIR/}"
+            ;;
+        /*)
+            result="$1"
+            ;;
+        *)
+            result="./$1"
+            ;;
+    esac
+}
+
 ### section configure
 
 mk_skip_subdir()
