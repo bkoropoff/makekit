@@ -66,7 +66,7 @@
 
 #<
 # @var MK_SOURCE_SUBDIR
-# @brief Current source subdirector
+# @brief Current source subdirectory
 #
 # The source directory containing the current <lit>MakeKitBuild</lit>
 # file.  If relative, it is relative to <varref>MK_ROOT_DIR</varref>
