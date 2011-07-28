@@ -3,7 +3,7 @@
 		xmlns="http://docbook.org/ns/docbook"
 		xmlns:xi="http://www.w3.org/2001/XInclude"
 		version="1.0">
-
+  <xsl:strip-space elements="deflist defentry"/>
   <xsl:template match="/reference">
     <reference>
       <info>
