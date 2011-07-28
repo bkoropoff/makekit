@@ -26,11 +26,15 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module chain-autotools
+# @brief Chain into autotools C/C++ projects
 #
-# chain-autotools.sh -- chains into autotools projects
-#
-##
+# The <lit>chain-autotools</lit> module extends the
+# <modref>chain-compiler</modref> module to integrate
+# autotools (autoconf, automake, libtool) components
+# into your project.
+#>
 
 DEPENDS="chain-compiler"
 

@@ -92,13 +92,11 @@ make()
             OUTPUT="reference/core.xml" -- \
             --title "Core Functionality" \
             --file "${MK_HOME}/command/configure.sh" \
-            --module core platform path program \
-            --docbook mk_target.3mk.xml mk_resolve_target.3mk.xml
+            --module core platform path program
 
         reference \
             OUTPUT="reference/compiler.xml" -- \
             --title "Compiler Module" \
-            --docbook compiler.7mk.xml \
             --module compiler
 
         reference \
@@ -129,12 +127,12 @@ make()
             SOURCE="index.xml" \
             STYLESHEET="html.xsl" \
             CSS="docbook.css" \
-            INCLUDES="guide/*.xml reference/*.xml $DOC_OUTPUTS"
+            INCLUDES="guide/*.xml $DOC_OUTPUTS"
         
         mk_docbook_man \
             SOURCE="index.xml" \
             STYLESHEET="man.xsl" \
-            INCLUDES="guide/*.xml reference/*.xml $DOC_OUTPUTS" \
-            MANPAGES="$MANPAGES compiler.7mk mk_target.3mk mk_resolve_target.3mk"
+            INCLUDES="guide/*.xml $DOC_OUTPUTS" \
+            MANPAGES="$MANPAGES"
     fi
 }

@@ -26,11 +26,14 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module path
+# @brief System path information
 #
-# path.sh -- UNIX installation path configuration
-#
-##
+# This module detects and manages configuration of
+# installation paths for programs, libraries, documentation,
+# and other types of files.
+#>
 
 ### section configure
 

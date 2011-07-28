@@ -26,11 +26,17 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module chain-generic
+# @brief Chain into foreign build systems
 #
-# chain-generic.sh -- allows chaining into other build systems
-#
-##
+# The <lit>chain-generic</lit> module allows you to chain
+# into the build system of a foreign component embedded in your
+# project.  This is a generic module designed for any
+# component; see <modref>chain-compiler</modref> for C/C++
+# components and <modref>chain-autotools</modref> for
+# autotools components.
+#>
 
 DEPENDS="core"
 

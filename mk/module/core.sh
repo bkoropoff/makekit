@@ -26,11 +26,13 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module core
+# @brief Core build logic
 #
-# core.sh -- implements core build logic
-#
-##
+# The core module provides basic functionality for defining
+# build rules and running configure tests.
+#>
 
 DEPENDS="platform program"
 
@@ -365,6 +367,69 @@ mk_run_script()
     fi
 }
 
+#<
+# @brief Resolve target to fully-qualified form
+# @usage target
+# @option target the target to resolve
+# 
+# This function resolves a target in MakeKit target notation
+# to a fully-qualified form which always identifies a unique resource on the filesystem.
+# A fully-qualified target is always of the form <lit>@</lit><param>path</param>
+# where <param>path</param> indicates the path of the resource on the filesystem,
+# usually relative to the root build directory.
+#
+# Resolution is performed according to the form of <param>target</param> as follows:
+# <deflist>
+#   <defentry>
+#     <term><lit>@</lit><param>path</param></term>
+#     <item>
+#         <param>target</param> is already fully-qualified and is returned
+#         verbatim by <command>mk_resolve_target</command>.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>/</lit><param>file</param></term>
+#     <item>
+#           When <param>target</param> is an absolute path, it designates a final build
+#           product which is placed in the stage directory while building.  The qualified form is obtained by
+#           prepending <lit>@</lit><var>$MK_STAGE_DIR</var><lit>/</lit> to <param>file</param>.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit/><param>file</param></term>
+#     <item>
+#           When <param>target</param> is a relative path, it designates a file either in
+#           the source directory hierarchy or object directory hierarchy, depending on whether
+#           <param>file</param> designates a source file or an intermediate build product.
+#           The file is taken to be relative to the directory containing the <lit>MakeKitBuild</lit>
+#           which specifies it.  If the file exists in the source directory, the qualified form is obtained
+#           by prepending <lit>@</lit><var>$MK_SOURCE_DIR</var><var>$MK_SUBDIR</var><lit>/</lit> to <param>file</param>.
+#           Otherwise, the qualified form is obtained by prepending <lit>@</lit><var>$MK_OBJECT_DIR</var><var>$MK_SUBDIR</var><lit>/</lit>.
+#     </item>
+#   </defentry>
+# </deflist>
+# 
+# This function returns 0 on success and sets <var>result</var> to the fully-qualified
+# target.
+#
+# @example
+# # For the following examples, let:
+# # MK_SOURCE_DIR=source
+# # MK_OBJECT_DIR=object
+# # MK_BINDIR=/usr/bin
+# #
+# # Assume our MakeKitBuild file is in source/foobar, which also contains foo.c
+#      
+# # Example result: @source/foobar/foo.c
+# mk_resolve_target "foo.c"
+#
+# # Example result: @object/foobar/foo.o
+# mk_resolve_target "foo.o"
+#
+# # Example result: @stage/usr/bin/foobar
+# mk_resolve_target "${MK_BINDIR}/foobar"
+# @endexample
+#>
 mk_resolve_target()
 {
     case "$1" in
@@ -601,6 +666,114 @@ _mk_build_command_expand()
     _mk_build_command "$@"
 }
 
+#<
+# @brief Define a build rule
+# @usage TARGET=target DEPS=deps command...
+# @option TARGET=target The target to build in MakeKit target
+# notation (see <funcref>mk_resolve_target</funcref>).
+# @option DEPS=deps An internally-quoted list of dependency
+# targets in target notation.
+# @option command... A command to run to create the target
+# when the user runs <command>make</command>.  Each parameter
+# is subject to further processing described below.
+#
+# This function defines a generic build rule consisting of a target,
+# a list of other targets it depends on, and a command to run to
+# produce the target from its dependencies.
+#
+# The positional parameters forming <param>command</param> are subject to additional processing
+# if they match any of the following forms:
+# <deflist>
+#   <defentry>
+#     <term><lit>@</lit><param>file</param></term>
+#     <item>
+#         Indicates that the parameter is a fully-qualified target.  The parameter will be replaced with
+#         just <param>file</param>.  Among other uses, this allows the output of a prior
+#         invocation of <command>mk_target</command> to be used verbatim in <param>command</param>.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>&amp;</lit><param>targets</param></term>
+#     <item>
+#         Indicates that the parameter should be interpreted as a space separated list of targets
+#         in MakeKit target notation.  The list will be expanded into multiple parameters according to
+#         the same quoting and expansion rules as the <param>deps</param> parameter above.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>%</lit><param>VAR</param></term>
+#     <item>
+#         Indicates that the parameter should be interpreted as the name of a variable.  If the variable
+#         is set to a non-empty string, the parameter will be converted to the form
+#         <param>VAR</param><lit>=</lit><param>value</param>.  If the variable
+#         is set to the empty string or is unset, the parameter will be omitted entirely.  This provides
+#         a concise syntax for passing through keyword parameters.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>%&lt;</lit></term>
+#     <term><lit>%&gt;</lit></term>
+#     <term><lit>%&lt;&lt;</lit></term>
+#     <term><lit>%&gt;&gt;</lit></term>
+#     <item>
+#         These forms are replaced with the appropriate shell redirection token.  Keep in mind that
+#         <command>mk_target</command> does not execute the build command immediately, but merely
+#         defines a rule for <command>make</command>.  Therefore, using shell redirection directly
+#         will not achieve the desired effect.  Use these forms instead.
+#     </item>
+#     </defentry>
+#   <defentry>
+#     <term><lit>*</lit><param>params</param></term>
+#     <item>
+#         Indicates that the parameter should be interpreted as a space-separated, internally
+#         quoted list.  The list will be expanded into multiple parameters, with each subject to further
+#         processing according to this list of forms.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>#</lit><param>params</param></term>
+#     <item>
+#         Indicates that the parameter should be interpreted as a space-separated,
+#         internally-quoted list.  The list will be expanded into multiple parameters,
+#         but no further processing will occur.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><command>make</command> macro forms</term>
+#     <item>
+#         Macro forms such as <lit>$@</lit> and <lit>$*</lit> anywhere within a parameter 
+#         will be expanded by <command>make</command> as usual.
+#     </item>
+#   </defentry>
+# </deflist>
+#
+# @example
+# # Generate bar.txt from foo.txt by replacing "apple" with "orange"
+# mk_target \
+#     TARGET="bar.txt" \
+#     DEPS="foo.txt" \
+#     sed "s/apple/orange/g" "%&lt;" "&amp;foo.txt" "%&gt;" "&amp;bar.txt"
+#
+# # Generate "a bar.txt" from "a foo.txt" by replacing "apple" with "orange"
+# # This shows one way of dealing with spaces in filenames
+# mk_target \
+#     TARGET="a bar.txt" \
+#     DEPS="'a foo.txt'" \
+#     sed "s/apple/orange/g" "%&lt;" "&amp;'a foo.txt'" "%&gt;" "&amp;'a bar.txt'"
+#
+# # An alternate approach to the above
+# mk_target \
+#     TARGET="a bar.txt" \
+#     DEPS="a\ foo.txt" \
+#     sed "s/apple/orange/g" "%&lt;" "&amp;a\ foo.txt" "%&gt;" "&amp;a\ bar.txt"
+#
+# # Generate all.txt by concatenating all .txt files in the directory containing MakeKitBuild
+# mk_target \
+#     TARGET="all.txt" \
+#     DEPS="*.txt" \
+#     cat "&amp;*.txt" "%&gt;" "&amp;all.txt"
+# @endexample
+#>
 mk_target()
 {
     mk_push_vars TARGET DEPS SYSTEM="$MK_SYSTEM"

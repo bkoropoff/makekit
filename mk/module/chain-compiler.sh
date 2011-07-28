@@ -26,11 +26,16 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module chain-compiler
+# @brief Chain into foreign C/C++ build systems
 #
-# chain-compiler.sh -- combines chain-generic and compiler modules
-#
-##
+# The <lit>chain-compiler</lit> module extends the
+# <modref>chain-generic</modref> module to integrate
+# non-MakeKit C/C++ components into your project.
+# See <modref>chain-autotools</modref> for integrating
+# autotools-based components in particular.
+#>
 
 DEPENDS="compiler chain-generic"
 

@@ -26,13 +26,228 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module platform
+# @brief Platform detection and targeting support
 #
-# platform.sh -- platform detection and cross-building support
-#
-##
+# This module detects properties of the build
+# and host system, including CPU architecture and
+# its supported instruction set architectures, 
+# operating system, and distribution.  It allows switching
+# the target system and ISA for subsequent tests or
+# build rules.
+#>
 
 ### section common
+
+#<
+# @var MK_OS
+# @brief Target OS
+# @export
+# @system
+# @value linux GNU/Linux
+# @value solaris Oracle Solaris, OpenSolaris, OpenIndiana
+#
+# The OS of the current target system
+#>
+
+#<
+# @var MK_DISTRO
+# @brief Target OS distribution
+# @export
+# @system
+#
+# The OS distribution of the current target system
+#>
+
+#<
+# @var MK_DISTRO_VERSION
+# @brief Target OS distribution version
+# @export
+# @system
+#
+# The OS distribution version of the current target system
+#>
+
+#<
+# @var MK_DISTRO_ARCHETYPE
+# @brief Target OS distribution archetype
+# @export
+# @system
+# @value redhat Red Hat-like (RHEL, CentOS, Fedora...)
+# @value debian Debian-like (Debian, Ubuntu...)
+# @value suse SuSE-like (SLED, SLES, OpenSuSE...)
+#
+# The OS distribution archetype of the current target system.
+# This is more abstract than the precise distribution.
+#>
+
+#<
+# @var MK_ARCH
+# @brief Target CPU architecture
+# @export
+# @system
+# @value x86 x86
+# @value x86_64 x86_64 (AMD64)
+#
+# The CPU architecture of the current target system.
+#>
+
+#<
+# @var MK_ISA
+# @brief Target instruction set architecture
+# @export
+# @system
+# @value x86_32 32-bit x86
+# @value x86_64 64-bit x86
+#
+# The currently-targeted instruction set architecture.
+#>
+
+#<
+# @var MK_ISAS
+# @brief ISA list for target system
+# @export
+# @system
+# @value ... see <varref>MK_ISA</varref>
+#
+# A list of all supported ISAs for the current target system.
+#>
+
+#<
+# @var MK_MULTIARCH
+# @brief Multiarch style for target system
+# @export
+# @system
+# @value none not supported
+# @value separate separate binaries for each ISA
+# @value combine "fat" binaries combining versions for all ISAs
+#
+# The style of multiarch support for the target system.
+#>
+
+#<
+# @var MK_LIB_EXT
+# @brief Library file extension for target system
+# @export
+# @system
+# @value .so Most UNIX systems
+# @value .sl HP-UX PA-RISC
+# @value .dylib Darwin (Mac OS X)
+#
+# The extension of shared libraries for the target system.
+#>
+
+#<
+# @var MK_DLO_EXT
+# @brief Dynamically-loadable object file extension for target system
+# @export
+# @system
+# @value .so Most UNIX systems
+# @value .sl HP-UX PA-RISC
+#
+# The extension of dynamically-loadable objects (e.g. plugins)
+# for the target system.
+#>
+
+#<
+# @var MK_BUILD_OS
+# @brief Build OS
+# @export
+#
+# The OS of the build system.  See <varref>MK_OS</varref>
+# for details.
+#>
+
+#<
+# @var MK_HOST_OS
+# @brief Build OS
+# @export
+#
+# The OS of the host system.  See <varref>MK_OS</varref>
+# for details.
+#>
+
+#<
+# @var MK_BUILD_DISTRO
+# @brief Build OS distribution
+# @export
+#
+# The OS distribution of the build system.
+# See <varref>MK_DISTRO</varref> for details.
+#>
+
+#<
+# @var MK_BUILD_DISTRO_VERSION
+# @brief Build OS distribution version
+# @export
+#
+# The OS distribution version of the build system.
+# See <varref>MK_DISTRO_VERSION</varref> for details.
+#>
+
+#<
+# @var MK_HOST_DISTRO_VERSION
+# @brief Host OS distribution version
+# @export
+#
+# The OS distribution version of the host system.
+# See <varref>MK_DISTRO_VERSION</varref> for details.
+#>
+
+#<
+# @var MK_BUILD_DISTRO_ARCHETYPE
+# @brief Build OS distribution archetype
+# @export
+#
+# The OS distribution archetype of the build system.
+# See <varref>MK_DISTRO_ARCHETYPE</varref> for details.
+#>
+
+#<
+# @var MK_HOST_DISTRO_ARCHETYPE
+# @brief Host OS distribution archetype
+# @export
+#
+# The OS distribution archetype of the host system.
+# See <varref>MK_DISTRO_ARCHETYPE</varref> for details.
+#>
+
+#<
+# @var MK_BUILD_ARCH
+# @brief Build CPU architecture
+# @export
+#
+# The CPU architecture of the build system.
+# See <varref>MK_ARCH</varref> for details.
+#>
+
+#<
+# @var MK_HOST_ARCH
+# @brief Host CPU architecture
+# @export
+#
+# The CPU architecture of the host system.
+# See <varref>MK_ARCH</varref> for details.
+#>
+
+#<
+# @var MK_BUILD_ISAS
+# @brief Build system ISAs
+# @export
+#
+# A list of ISAs supported by the build system.
+# See <varref>MK_ISAS</varref> for details.
+#>
+
+#<
+# @var MK_HOST_ISAS
+# @brief Host system ISAs
+# @export
+#
+# A list of ISAs supported by the host system.
+# See <varref>MK_ISAS</varref> for details.
+#>
 
 #<
 # @function mk_multiarch_do

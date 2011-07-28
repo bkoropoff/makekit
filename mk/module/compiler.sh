@@ -27,11 +27,172 @@
 #
 DEPENDS="core platform path"
 
-##
+#<
+# @module compiler
+# @brief Build C/C++ projects
 #
-# compiler.sh -- support for building C source projects
+# <lit>compiler</lit> is the standard MakeKit module which provides an interface
+# to the system C compiler.  It contains functions to check for available headers, libraries,
+# functions, types, and system and compiler characteristics, and to build programs, libraries,
+# and dynamically-loadable objects from C source code.
 #
-##
+# Most <lit>compiler</lit> functions support a set of common parameters which are
+# listed here rather than duplicated in the references for every individual function.
+#
+# <deflist>
+#   <defentry>
+#     <term><lit>DEPS=</lit><param>targets</param></term>
+#     <item>
+#           Specifies additional arbitrary dependencies in MakeKit target notation.  This is useful,
+#           for example, if one of your source files depends on a header file which you generate on
+#           the fly (e.g. from <command>yacc</command> or <command>lex</command>).
+#           Alternatively, you could specify dependencies for individual source files using
+#           <funcref>mk_target</funcref> with an empty command.
+#           Applicable to all functions.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>INCLUDEDIRS=</lit><param>paths</param></term>
+#     <item>
+#           A space-separated list of relative paths where the compiler should search for header files.
+#           Even if you only use header files in the same directory as <lit>MakeKitBuild</lit>,
+#           you must explicitly specify <lit>.</lit>.
+#           Applicable functions: 
+#         <funcref>mk_compile</funcref>,
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_group</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>HEADERDEPS=</lit><param>headers</param></term>
+#     <item>
+#           A space-separated list of public header files (e.g. in <lit>/usr/local/include</lit>)
+#           that one or more source files depend on.  You only need to specify header files installed by other
+#           MakeKit projects.  If you are careful about specifying dependencies in this way, it allows you
+#           to structure your larger project as multiple subprojects which can be configured and built either
+#           individually or together.  When building individually, <lit>HEADERDEPS</lit> ensures sure you
+#           are performing configure checks for the headers.  When building together, <lit>HEADERDEPS</lit>
+#           ensures source files are compiled only once the header files they need have been installed.
+#           Applicable functions: 
+#         <funcref>mk_compile</funcref>,
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_group</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>LIBDEPS=</lit><param>libs</param></term>
+#     <item>
+#           A space-separated list of library names to link into the resulting binary,
+#           without filename extensions or <lit>lib</lit> prefixed to the name.
+#           Applicable functions: 
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_group</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>LIBDIRS=</lit><param>paths</param></term>
+#     <item>
+#           A space-separated list of additional directories to look for libraries
+#           when linking.  The paths should be absolute (e.g. <lit>/usr/foobar/lib</lit>),
+#           but they are taken to reference the staging directory.  This is only useful
+#           if you need to install and link against a library in a location other than
+#           <var>$MK_LIBDIR</var>.  To look for system libaries in non-standard locations,
+#           use <lit>LDFLAGS</lit> or <var>MK_LDFLAGS</var>, or a helper
+#           module like <lit>pkg-config</lit> when possible.
+#           Applicable functions: 
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_group</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>GROUPS=</lit><param>groups</param></term>
+#     <item>
+#       <para>
+#           A space-separated list of object file groups which should be merged
+#           into the resulting binary.
+#       </para>
+#       <para>
+#           Applicable functions: 
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#       </para>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>OBJECTS=</lit><param>objects</param></term>
+#     <item>
+#       <para>
+#           A space-separated list of additional object files to link into the resulting
+#           binary.  This is useful if you use <funcref>mk_compile</funcref> to control
+#           compiler flags on a per-source-file basis and need to combine the resulting
+#           objects into a binary, or if you have object files without source code that
+#           you need to link.  If this parameter is specified, you do not need to
+#           specify <lit>SOURCES</lit>, but you may.
+#       </para>
+#       <para>
+#           Applicable functions: 
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_group</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#       </para>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>INSTALLDIR=</lit><param>path</param></term>
+#     <item>
+#       <para>
+#           If specified, changes the location where the resulting binary will
+#           be installed in the filesystem.  Defaults to what you would expect for the
+#           kind of binary being produced, e.g. program executables go in
+#           <var>$MK_BINDIR</var>, usually <lit>/usr/local/bin</lit>.
+#       </para>
+#       <para>
+#           Applicable functions: 
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#       </para>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>EXT=</lit><param>extension</param></term>
+#     <item>
+#       <para>
+#           Overrides the extension of the resulting file.
+#       </para>
+#       <para>
+#           Applicable functions: 
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#       </para>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>CPPFLAGS=</lit><param>flags</param></term>
+#     <term><lit>CFLAGS=</lit><param>flags</param></term>
+#     <term><lit>LDFLAGS=</lit><param>flags</param></term>
+#     <item>
+#       <para>
+#           Specifies additional flags passed to the compiler when preprocessing,
+#           compiling, and linking, respectively.  These parameters are added to
+#           and do not override those in the <var>MK_CPPFLAGS</var>,
+#           <var>MK_CFLAGS</var>, and <var>MK_LDFLAGS</var>
+#           variables.  All default to being empty.
+#       </para>
+#     </item>
+#   </defentry>
+# </deflist>
+#>
 
 #<
 # @var MK_CC
@@ -445,7 +606,16 @@ _mk_compile_detect()
     _mk_compile
 }
 
-
+#<
+# @brief Build an object file
+# @usage SOURCE=source options...
+# @option SOURCE=source indicates the source file to compile.
+# @option ... Common options are documented in the
+# <modref>compiler</modref> module.
+#
+# Defines a target to build a C/C++ source file.  Sets
+# <var>result</var> to the generated object file target.
+#>
 mk_compile()
 {
     mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC OSUFFIX COMPILER SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM
@@ -822,23 +992,50 @@ _mk_library()
 #<
 # @brief Build a library
 # @usage LIB=name options...
-# @option VERSION=major.minor.micro Sets the version
-# information on the created library.  ABI compatibility
-# should be maintained within a given major version,
-# backwards compatibility should be maintained between
-# minor versions, and micro versions should involve
-# only a change in implementation, not interface.  Defaults
-# to 0.0.0
+# @option LIB=name Sets the name of the library.
+# Do not specify a leading <lit>lib</lit> or file extension.
+# @option VERSION=verspec Sets the version
+# information on the created library.  There are several
+# possible formats for <param>verspec</param>:
+# <deflist>
+#     <defentry><term><param>cur</param><lit>:</lit><param>rev</param><lit>:</lit><param>age</param>[<lit>-</lit><param>release</param>]</term>
+#     <item>
+#        This defines the version using the libtool version information
+#        convention, which is the preferred method.  <param>cur</param>
+#        is the current version of the interface, <param>rev</param> is
+#        the current revision of the implementation, and <param>age</param>
+#        is how many interface versions into the past with which you remain
+#        compatible.  If you specify <param>release</param>, it will be suffixed
+#        to the name of the physical library prior to any extensions.
+#     </item>
+#     </defentry>
+#     <defentry><term><param>major</param><lit>.</lit><param>minor</param><lit>.</lit><param>micro</param></term>
+#     <item>
+#        This defines the version in terms of the literal major, minor, and micro
+#        numbers that appear in the library name.  Note that not all three numbers
+#        are used on every platform; on these, the unused numbers are omitted.
+#     </item>
+#     </defentry>
+#     <defentry><term><param>ver1</param><lit>,</lit><param>ver2</param><lit>,</lit><param>...</param></term>
+#     <item>
+#        This explicitly defines the versions numbers that will appear in the filenames
+#        of the physical library and its symbolic links.  <param>ver1</param> is for the
+#        binary itself, and all subsequent versions will be symlinks.  If you specify
+#        <lit>-</lit> as a version, it will create a file or link with no version suffixes
+#        (e.g. <lit>libfoo.so</lit>).
+#     </item>
+#     </defentry>
+# </deflist>
 # @option SYMFILE=file Specifies a file which contains a list
 # of symbol names, one per line, which should be exported by
 # the library.  If this is option is not used, it defaults
 # to the behavior of the compiler and linker, which typically
 # export all non-static symbols.  This option will be silently
 # ignored on platforms where it is not supported.
+# @option ... Other common options documented in the <modref>compiler</modref>
+# module.
 # 
 # Defines a target to build a C/C++ shared library.
-# See <topicref ref="compiler"/> for a list of common
-# options.
 #
 # A libtool-compatible .la file will also be generated.
 # This is actually the canonical representation of a library
@@ -979,8 +1176,7 @@ _mk_dlo()
 #<
 # @brief Build a dynamically loadable object
 # @usage DLO=name options...
-# @option SYMFILE=file Specifies an exported symbol file
-# in the same manner as <funcref>mk_library</funcref>.
+# @option ... Accepts the same options as <funcref>mk_library</funcref>.
 # 
 # Defines a target to build a C/C++ dynamically loadable object --
 # that is, an object suitable for loading with dlopen() or similar
@@ -1225,7 +1421,9 @@ _mk_program()
 #<
 # @brief Build a program
 # @usage PROGRAM=name options...
-# 
+# @option PROGRAM=name Sets the name of the program.  Do not include
+# any file extension.
+#
 # Defines a target to build a C/C++ executable program.
 # See <topicref ref="compiler"/> for a list of common
 # options.
