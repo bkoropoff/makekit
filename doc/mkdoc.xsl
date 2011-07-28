@@ -235,6 +235,27 @@
       </xref>
     </function>
   </xsl:template>
+
+  <xsl:template match="deflist">
+    <variablelist>
+      <xsl:apply-templates/>
+    </variablelist>
+  </xsl:template>
+  <xsl:template match="defentry">
+    <varlistentry>
+      <xsl:apply-templates/>
+    </varlistentry>
+  </xsl:template>
+  <xsl:template match="term">
+    <term>
+      <xsl:apply-templates/>
+    </term>
+  </xsl:template>
+  <xsl:template match="item">
+    <listitem><para>
+      <xsl:apply-templates/>
+    </para></listitem>
+  </xsl:template>
   <xsl:variable name="lowercase" select="'abcdefghijklmnopqrstuvwxyz'"/>
   <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
 </xsl:stylesheet>
