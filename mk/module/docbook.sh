@@ -159,7 +159,7 @@ mk_docbook_html()
     mk_target \
         TARGET="${INSTALLDIR}" \
         DEPS="$DEPS $SOURCE $STYLESHEET $INCLUDES" \
-        _mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
+        _mk_docbook '$@' "&$INSTALLDIR" "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
 
     # Install CSS file
     [ -n "$CSS" ] && mk_stage SOURCE="$CSS" DESTDIR="${INSTALLDIR}"
@@ -214,11 +214,15 @@ mk_docbook_man()
         DEPS
     mk_parse_params
 
+    man_outdir="${SOURCE}.docbook-man"
+
     mk_target \
-        TARGET="${SOURCE}.docbook-man" \
+        TARGET="$man_outdir/.stamp" \
         DEPS="$DEPS $SOURCE $INCLUDES" \
-        _mk_docbook '$@/' "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
-    man_output="$result"
+        _mk_docbook '$@' "&$man_outdir" "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
+
+    mk_quote "$result"
+    man_stamp="$result"
 
     mk_unquote_list "$MANPAGES"
     for manfile
@@ -228,11 +232,12 @@ mk_docbook_man()
         section="${section%$__tail}"
         
         mk_target \
-            TARGET="$man_output/$manfile" \
-            DEPS="$man_output"
+            TARGET="$man_outdir/$manfile" \
+            DEPS="$man_stamp" \
+            :
 
         mk_stage \
-            SOURCE="$man_output/$manfile" \
+            SOURCE="$man_outdir/$manfile" \
             DESTDIR="$INSTALLDIR/man${section}"
     done
 
@@ -244,9 +249,10 @@ mk_docbook_man()
 _mk_docbook()
 {
     mk_msg_domain "xsltproc"
-    OUTPUT="$1"
-    SOURCE="$2"
-    SHEET="$3"
+    STAMP="$1"
+    OUTPUT="$2/"
+    SOURCE="$3"
+    SHEET="$4"
     TMPDIR=".docbook$$"
 
     case "$SHEET" in
@@ -265,7 +271,7 @@ _mk_docbook()
     mk_mkdir "$TMPDIR"
     mk_run_or_fail cp "$SOURCE" "$TMPDIR/in.xml"
 
-    mk_expand_pathnames "$4"
+    mk_expand_pathnames "$5"
     mk_unquote_list "$result"
 
     for f
@@ -289,5 +295,6 @@ _mk_docbook()
         "$SHEET" \
         "in.xml"
     mk_cd_or_fail "$MK_ROOT_DIR"
-    mk_run_or_fail touch "$OUTPUT"
+    mk_mkdirname "$STAMP"
+    mk_run_or_fail touch "$STAMP"
 }
