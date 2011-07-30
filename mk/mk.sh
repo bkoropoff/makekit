@@ -1395,7 +1395,7 @@ _mk_clone_solaris()
 {
     if [ -d "$1" ]
     then
-        { cd "$1" && find; } | while mk_read_line
+        { cd "$1" && find .; } | while mk_read_line
         do
             if [ -f "$1/$result" -o -h "$1/$result" ]
             then
