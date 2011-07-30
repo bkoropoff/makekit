@@ -138,17 +138,31 @@ alias mk_unquote_list='eval set --'
 
 #<
 # @function mk_parse_params
-# @brief Parse keyword parameters
+# @brief Parse special parameters
 # @usage
 # 
-# Consumes any positional parameters of the form var=value and
-# sets variables appropriately.  The parameters will be shifted
-# such that <var>$1</var> becomes the first non-keyword parameter,
-# or the first parameter after "--".
+# Processes any positional parameters that fit the following forms:
+# <deflist>
+#   <defentry>
+#     <term><var>VAR</var><lit>=</lit><param>value</param></term>
+#     <item>Sets <var>VAR</var> to <param>value</param>.</item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>@</lit><var>VAR</var><lit>={</lit> <param>val1</param> <param>val2</param> <param>...</param> <lit>}</lit></term>
+#     <item>Sets <var>VAR</var> to a quoted, space-separated list of values.</item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>--</lit></term>
+#     <item>Treat subsequent parameters as ordinary.</item>
+#   </defentry>
+# </deflist>
+#
+# Remaining parameters will be shifted such that <var>$1</var> becomes the
+# first ordinary parameter.
 #
 # This should be used in combination with <funcref>mk_push_vars</funcref>
-# and <funcref>mk_pop_vars</funcref> to ensure all variables are set
-# only for the duration of the function.
+# and <funcref>mk_pop_vars</funcref> to ensure variables you expect to
+# be passed are set only for the duration of the function.
 #>
 
 if [ -n "$BASH_VERSION" ]
@@ -160,6 +174,22 @@ then
 while true 
 do
   case "$1" in
+    "@"*"={")
+      __var="${1%%=*}"
+      __var="${__var#@}"
+      __val=""
+      __result="$result"
+      shift
+      while test "$1" != "}"
+      do
+          mk_quote "$1"
+          __val="$__val $result"
+          shift
+      done
+      result="$__result"
+      shift
+      local "$__var=${__val# }"
+      ;;
     *"="*)
       local "$1"
       shift
@@ -183,6 +213,22 @@ else
 while true 
 do
   case "$1" in
+    "@"*"={")
+      __var="${1%%=*}"
+      __var="${__var#@}"
+      __val=""
+      __result="$result"
+      shift
+      while test "$1" != "}"
+      do
+          mk_quote "$1"
+          __val="$__val $result"
+          shift
+      done
+      result="$__result"
+      shift
+      mk_set "$__var" "${__val# }"
+      ;;
     *"="*)
       mk_set "${1%%=*}" "${1#*=}"
       shift
