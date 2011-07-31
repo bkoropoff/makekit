@@ -46,7 +46,7 @@ fi
 # Detect broken variable expansion (FreeBSD sh)
 _test="t*"
 _star="*"
-if [ "${_test#"$_star"}" != "t" ]
+if [ "${_test%"$_star"}" != "t" ]
 then
     MK_BROKEN_VAREXP=yes
 else
