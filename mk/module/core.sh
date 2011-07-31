@@ -325,14 +325,14 @@ mk_safe_rm()
 {
     if [ -z "${MK_ROOT_DIR}" -o "$PWD" != "${MK_ROOT_DIR}" ]
     then
-        mk_fail "CRITICAL: attempt to mk_safe_rm outside of build directory"
+        mk_fail "CRITICAL: attempt to mk_safe_rm outside of build directory: $PWD"
     fi
 
     mk_normalize_path "$1"
     
     case "${result}" in
         '/'*|'..'|'..'/*)
-            mk_fail "CRITICAL: attempt to mk_safe_rm path that escape build directory: $result"
+            mk_fail "CRITICAL: attempt to mk_safe_rm path that escapes build directory: $result"
             ;;
     esac
 
