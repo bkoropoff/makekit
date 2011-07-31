@@ -71,6 +71,37 @@ find_shell()
         return 0
     fi
 
+    if type mkdash >/dev/null 2>&1
+    then
+        MK_SHELL=mkdash
+        return 0
+    fi
+
+    if test -x "${HOME}/.makekit/mkdash"
+    then
+        MK_SHELL="${HOME}/.makekit/mkdash"
+        return 0
+    fi
+
+    if test -f "$MK_HOME/mkdash.c"
+    then
+        if type gcc >/dev/null 2>&1
+        then
+            _CC=gcc
+        else
+            _CC=cc
+        fi
+
+        echo "           [makekit] building ${HOME}/.makekit/mkdash"
+        mkdir -p "${HOME}/.makekit" >/dev/null 2>&1
+        if "$_CC" -O2 -o "${HOME}/.makekit/mkdash" "$MK_HOME/mkdash.c" >/dev/null 2>&1
+        then
+            MK_SHELL="${HOME}/.makekit/mkdash"
+            return 0
+        fi
+        echo "           [makekit] falling back on existing shell"
+    fi
+
     for _shell in ${SHELL_CANDIDATES}
     do
         _IFS="$IFS"
@@ -115,17 +146,12 @@ else
     exit 1
 fi
 
-# Find a shell
-find_shell || fail "could not find a usable shell"
-
 # If the system has /usr/xpg4/bin, add it to the path
 # so we get POSIX-compliant utilities
 if test -d "/usr/xpg4/bin"
 then
     PATH="/usr/xpg4/bin:$PATH"
 fi
-
-export MK_HOME MK_SHELL MK_SOURCE_DIR PATH
 
 if test -n "$MK_TRACE"
 then
@@ -137,6 +163,11 @@ then
     MK_COMMAND="$1"
     shift
 fi
+
+# Find a shell
+find_shell || fail "could not find a usable shell"
+
+export MK_HOME MK_SHELL MK_SOURCE_DIR PATH
 
 if test -f "${MK_HOME}/command/${MK_COMMAND}.sh"
 then
