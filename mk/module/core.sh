@@ -1222,15 +1222,17 @@ _mk_core_write_subdir_rule()
         if [ "$MK_SUBDIR" = "" ]
         then
             _target="@all"
+            _deps="$MK_ALL_TARGETS"
         else
             _target="@${MK_SUBDIR#/}"
+            _deps=""
         fi
 
         mk_quote "$result"
 
         mk_target \
             TARGET="$_target" \
-            DEPS="$result"
+            DEPS="$result $_deps"
 
         mk_add_phony_target "$result"
     fi
