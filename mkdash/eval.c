@@ -123,7 +123,7 @@ RESET {
  * The eval commmand.
  */
 
-static int evalcmd(int argc, char **argv, int flags)
+static int doevalcmd(int argc, char **argv, int flags)
 {
         char *p;
         char *concat;
@@ -905,7 +905,7 @@ evalbltin(const struct builtincmd *cmd, int argc, char **argv, int flags)
 	argptr = argv + 1;
 	optptr = NULL;			/* initialize nextopt */
 	if (cmd == EVALCMD)
-		status = evalcmd(argc, argv, flags);
+		status = doevalcmd(argc, argv, flags);
 	else
 		status = (*cmd->builtin)(argc, argv);
 	flushall();

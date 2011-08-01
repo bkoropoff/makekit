@@ -22,8 +22,8 @@
 /* test(1) accepts the following grammar:
 	oexpr	::= aexpr | aexpr "-o" oexpr ;
 	aexpr	::= nexpr | nexpr "-a" aexpr ;
-	nexpr	::= primary | "!" primary
-	primary	::= unary-operator operand
+	nexpr	::= test_primary | "!" test_primary
+	test_primary	::= unary-operator operand
 		| operand binary-operator operand
 		| operand
 		| "(" oexpr ")"
@@ -140,8 +140,8 @@ static void syntax(const char *, const char *);
 static int oexpr(enum token);
 static int aexpr(enum token);
 static int nexpr(enum token);
-static int primary(enum token);
-static int binop(void);
+static int test_primary(enum token);
+static int test_binop(void);
 static int filstat(char *, enum token);
 static enum token t_lex(char **);
 static int isoperand(char **);
@@ -270,11 +270,11 @@ nexpr(enum token n)
 {
 	if (n == UNOT)
 		return !nexpr(t_lex(++t_wp));
-	return primary(n);
+	return test_primary(n);
 }
 
 static int
-primary(enum token n)
+test_primary(enum token n)
 {
 	enum token nn;
 	int res;
@@ -314,14 +314,14 @@ primary(enum token n)
 	}
 
 	if (t_lex(t_wp + 1), t_wp_op && t_wp_op->op_type == BINOP) {
-		return binop();
+		return test_binop();
 	}
 
 	return strlen(*t_wp) > 0;
 }
 
 static int
-binop(void)
+test_binop(void)
 {
 	const char *opnd1, *opnd2;
 	struct t_op const *op;
