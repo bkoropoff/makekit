@@ -61,7 +61,7 @@ struct synclass synclass[] = {
 	{ "CENDVAR",	"a '}' character" },
 	{ "CLP",	"a left paren in arithmetic" },
 	{ "CRP",	"a right paren in arithmetic" },
-	{ "CEOF",	"end of file" },
+	{ "CEOS",	"end of file" },
 	{ "CCTL",	"like CWORD, except it must be escaped" },
 	{ "CSPCL",	"these terminate a word" },
 	{ "CIGN",	"character should be ignored" },
@@ -120,10 +120,6 @@ main(int argc, char **argv)
 	fputs(writer, cfile);
 
 	fputs("#include <ctype.h>\n", hfile);
-	fputs("\n", hfile);
-	fputs("#ifdef CEOF\n", hfile);
-	fputs("#undef CEOF\n", hfile);
-	fputs("#endif\n", hfile);
 	fputs("\n", hfile);
 
 	/* Generate the #define statements in the header file */
@@ -238,7 +234,7 @@ init(void)
 	int ctl;
 
 	filltable("CWORD");
-	syntax[0] = "CEOF";
+	syntax[0] = "CEOS";
 	syntax[1] = "CIGN";
 	for (ctl = CTL_FIRST; ctl <= CTL_LAST; ctl++ )
 		syntax[130 + ctl] = "CCTL";

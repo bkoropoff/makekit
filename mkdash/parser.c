@@ -998,7 +998,7 @@ quotemark:
 			case CBQUOTE:	/* '`' */
 				PARSEBACKQOLD();
 				break;
-			case CEOF:
+			case CEOS:
 				goto endword;		/* exit outer loop */
 			case CIGN:
 				break;

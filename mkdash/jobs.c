@@ -51,7 +51,6 @@
 #include "shell.h"
 #if JOBS
 #include <termios.h>
-#undef CEOF			/* syntax.h redefines this */
 #endif
 #include "redir.h"
 #include "show.h"
