@@ -207,6 +207,11 @@ done'
     alias mk_push_vars=local
     # Pop becomes a no-op since local variables go out of scope automatically
     alias mk_pop_vars=:
+elif type mk_parse_params >/dev/null 2>&1
+then
+    # Built in to shell, just set up an aliases
+    alias mk_push_vars=_mk_push_vars
+    alias mk_pop_vars=:
 else
     # These versions work on any POSIX-compliant sh implementation
     alias mk_parse_params='
@@ -694,6 +699,9 @@ _mk_slashless_name()
     done
 }
 
+if ! type mk_quote >/dev/null 2>&1
+then
+
 ##
 #
 # Possibly the most important function in MakeKit, this quotes a string
@@ -813,6 +821,8 @@ mk_quote_list_space()
 
     result="${___result# }"
 }
+
+fi
 
 ##
 #

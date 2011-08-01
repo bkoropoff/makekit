@@ -90,3 +90,8 @@ aliascmd	-au alias
 ulimitcmd	ulimit
 testcmd		test [
 killcmd		-u kill
+
+mk_quotecmd         mk_quote mk_quote_list
+mk_quote_spacecmd   mk_quote_space mk_quote_space_list
+mk_push_varscmd     -as _mk_push_vars
+mk_parse_paramscmd  mk_parse_params
