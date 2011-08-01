@@ -93,4 +93,4 @@
 int echocmd(int, char **);
 
 
-extern const char *commandname;
+extern char *commandname;

@@ -81,7 +81,7 @@ volatile sig_atomic_t pendingsigs;
 /* received SIGCHLD */
 int gotsigchld;
 
-extern char *signal_names[];
+extern const char * const signal_names[];
 
 #ifdef mkinit
 INCLUDE "trap.h"

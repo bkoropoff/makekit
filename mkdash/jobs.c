@@ -242,7 +242,7 @@ killcmd(argc, argv)
 	int argc;
 	char **argv;
 {
-	extern char *signal_names[];
+	extern const char * const signal_names[];
 	int signo = -1;
 	int list = 0;
 	int i;
