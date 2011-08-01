@@ -4,9 +4,51 @@ MODULES="core path"
 make()
 {
     mk_stage \
-        DEST="${MK_DATADIR}/mk" \
-	SOURCE="mk"
-
+        DESTDIR="${MK_DATADIR}" \
+        mk/help.awk \
+        mk/mk.sh \
+        mk/doc.awk \
+        mk/build.sh \
+        mk/build.awk \
+        mk/command/configure.sh \
+        mk/command/init.sh \
+        mk/command/doc.sh \
+        mk/script/group.sh \
+        mk/script/scrub.sh \
+        mk/script/build-depot.sh \
+        mk/script/compile.sh \
+        mk/script/clean.sh \
+        mk/script/build-lpp.sh \
+        mk/script/link.sh \
+        mk/script/install.sh \
+        mk/script/moonunit.sh \
+        mk/script/build-macpkg.sh \
+        mk/script/nuke.sh \
+        mk/module/doxygen.sh \
+        mk/module/package.sh \
+        mk/module/fortune.sh \
+        mk/module/autotools.sh \
+        mk/module/package-deb.sh \
+        mk/module/docbook.sh \
+        mk/module/core.sh \
+        mk/module/package-rpm.sh \
+        mk/module/platform.sh \
+        mk/module/package-lpp.sh \
+        mk/module/chain-compiler.sh \
+        mk/module/package-depot.sh \
+        mk/module/chain-autotools.sh \
+        mk/module/package-freebsd.sh \
+        mk/module/path.sh \
+        mk/module/gnu-debuginfo.sh \
+        mk/module/pkg-config.sh \
+        mk/module/chain-generic.sh \
+        mk/module/package-pkg.sh \
+        mk/module/compiler.sh \
+        mk/module/darwin-debuginfo.sh \
+        mk/module/program.sh \
+        mk/module/moonunit.sh \
+        mk/module/package-mac.sh
+        
     mk_target \
 	TARGET="${MK_BINDIR}/makekit" \
 	DEPS="mk/makekit" \
