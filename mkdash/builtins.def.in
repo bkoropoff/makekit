@@ -87,8 +87,6 @@ unaliascmd	-u unalias
 unsetcmd	-s unset
 waitcmd		-u wait
 aliascmd	-au alias
-#ifdef HAVE_GETRLIMIT
 ulimitcmd	ulimit
-#endif
 testcmd		test [
 killcmd		-u kill

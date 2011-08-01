@@ -318,7 +318,7 @@ dodecl(char *line1, FILE *fp)
 	char *p, *q;
 
 	if (strcmp(line1, "MKINIT\n") == 0) { /* start of struct/union decl */
-		addchar('\n', &decls);
+		addstr("#ifndef SMOOSH\n", &decls);
 		do {
 			linno++;
 			if (fgets(line, sizeof line, fp) == NULL)
@@ -326,6 +326,7 @@ dodecl(char *line1, FILE *fp)
 			addstr(line, &decls);
 		} while (line[0] != '}');
 		amiddecls = 0;
+		addstr("#endif\n", &decls);
 	} else {
 		if (! amiddecls)
 			addchar('\n', &decls);
