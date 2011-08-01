@@ -1,0 +1,186 @@
+MODULES="compiler"
+
+make()
+{
+    DASH_HEADERS="\
+        shell.h builtins.h nodes.h syntax.h token.h token_vars.h \
+        alias.h arith_yacc.h cd.h error.h eval.h \
+        exec.h expand.h hetio.h init.h input.h \
+        jobs.h machdep.h mail.h main.h memalloc.h \
+        miscbltin.h mystring.h options.h \
+        output.h parser.h redir.h show.h \
+        system.h trap.h var.h bltin.h"
+
+    DASH_SOURCES="\
+        alias.c arith_yacc.c arith_yylex.c cd.c \
+        error.c eval.c exec.c expand.c histedit.c \
+        input.c jobs.c mail.c main.c memalloc.c \
+        miscbltin.c mystring.c options.c parser.c \
+        redir.c show.c trap.c output.c printf.c \
+        system.c test.c times.c var.c signames.c \
+        mkbltin.c"
+
+    BUILT_SOURCES="builtins.c init.c nodes.c syntax.c"
+    BUILT_HEADERS="builtins.h nodes.h syntax.h token.h token_vars.h"
+    HELPERS="mkinit mksyntax mknodes"
+
+    mk_target \
+        TARGET="token.h" \
+        DEPS="mktokens" \
+        run_script '&mktokens'
+
+    mk_target \
+        TARGET="token_vars.h" \
+        DEPS="token.h"
+
+    mk_target \
+        TARGET="builtins.def" \
+        DEPS="builtins.def.in" \
+        run_cpp '&builtins.def' '&builtins.def.in'
+
+    mk_target \
+        TARGET="builtins.h" \
+        DEPS="mkbuiltins builtins.def" \
+        run_script "&mkbuiltins" "&builtins.def"
+    
+    mk_target \
+        TARGET="builtins.c" \
+        DEPS="builtins.h"
+
+    mk_target \
+        TARGET="init.c" \
+        DEPS="@${MK_RUN_BINDIR}/mkinit $DASH_SOURCES" \
+        run_helper "mkinit" "&$DASH_SOURCES"
+    
+    mk_target \
+        TARGET="nodes.h" \
+        DEPS="@${MK_RUN_BINDIR}/mknodes nodetypes nodes.c.pat" \
+        run_helper "mknodes" "&nodetypes" "&nodes.c.pat"
+
+    mk_target \
+        TARGET="nodes.c" \
+        DEPS="nodes.h"
+
+    mk_target \
+        TARGET="syntax.h" \
+        DEPS="@${MK_RUN_BINDIR}/mksyntax" \
+        run_helper "mksyntax"
+
+    mk_target \
+        TARGET="syntax.c" \
+        DEPS="syntax.h"
+
+    mk_target \
+        TARGET="mkdash-full.c" \
+        DEPS="smoosh.h ${DASH_HEADERS} ${DASH_SOURCES} ${BUILT_SOURCES}" \
+        build_dash_c "&mkdash-full.c" "&smoosh.h" "&${DASH_HEADERS}" "&${BUILD_HEADERS}" "&${DASH_SOURCES}" "&${BUILT_SOURCES}"
+
+    mk_target \
+        TARGET="${MK_DATADIR}/mk/mkdash.c" \
+        DEPS="mkdash-full.c" \
+        shrink_dash_c "&mkdash-full.c" "&copyright.h" '$@'
+
+    mk_add_all_target "$result"
+    mk_add_scrub_target "$result"
+
+    mk_program \
+        PROGRAM=mkdash \
+        SOURCES=mkdash-full.c
+
+    mk_system build
+
+    for helper in ${HELPERS}
+    do
+        mk_program \
+            PROGRAM="$helper" \
+            SOURCES="$helper.c" \
+            INCLUDEDIRS="." \
+            DEPS="token.h"
+    done
+}
+
+run_helper()
+{
+    HELPER="$1"
+    shift
+
+    abs=""
+    for item
+    do
+        mk_quote "${MK_ROOT_DIR}/${item}"
+        abs="$abs $result"
+    done
+    mk_unquote_list "$abs"
+       
+    mk_msg_domain "helper"
+    mk_msg "$HELPER"
+    
+    mk_cd_or_fail "${MK_OBJECT_DIR}${MK_SUBDIR}"
+    mk_run_or_fail "${MK_ROOT_DIR}/${MK_RUN_BINDIR}/$HELPER" "$@"
+}
+
+run_script()
+{
+    abs=""
+    for item
+    do
+        mk_quote "${MK_ROOT_DIR}/${item}"
+        abs="$abs $result"
+    done
+    mk_unquote_list "$abs"
+
+    SCRIPT="$1"
+    shift
+
+    mk_msg_domain "script"
+    mk_basename "$SCRIPT"
+    mk_msg "$result"
+
+    mk_cd_or_fail "${MK_OBJECT_DIR}${MK_SUBDIR}"
+    mk_run_or_fail sh "$SCRIPT" "$@"
+}
+
+run_cpp()
+{
+    mk_msg_domain "cpp"
+    mk_pretty_path "$1"
+    mk_msg "$result"
+
+    mk_run_or_fail ${MK_CC} -DSMALL -E -x c -o "$1" "$2"
+}
+
+build_dash_c()
+{
+    out="$1"
+    shift
+
+    mk_msg_domain "smoosh"
+    mk_pretty_path "$out"
+    mk_msg "$result"
+    
+    {
+        for input
+        do
+            echo "#line 1 \"$input\""
+            cat "$input" | sed 's:#include *".*:/* REMOVED INCLUDE */:g'
+        done
+    } > "$out" || mk_fail "could not output $out"
+}
+
+shrink_dash_c()
+{
+    mk_msg_domain shrink
+    mk_pretty_path "$3"
+    mk_msg "$result"
+    
+    mk_mkdirname "$3"
+
+    { 
+        cat "$2"
+        mk_resolve_file smoosh.awk
+        awk -f "$result" < "$1" |
+        sed -e 's:^[ \t]*::g' -e 's:[ \t][ \t]*: :g' |
+        grep -v "^#line" |
+        grep -v '^$'
+    } > "$3" || mk_fail "could not generate $3"
+}

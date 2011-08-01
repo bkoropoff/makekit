@@ -1,4 +1,4 @@
-SUBDIRS=". doc"
+SUBDIRS="mkdash doc"
 MODULES="core path"
 
 make()
@@ -53,6 +53,13 @@ make()
 	TARGET="${MK_BINDIR}/makekit" \
 	DEPS="mk/makekit" \
 	install_bin_makekit "&${MK_BINDIR}/makekit" "&mk/makekit"
+
+    mk_target \
+        TARGET="@bootstrap" \
+        DEPS="$MK_DATADIR/mk/mkdash.c" \
+        bootstrap_mkdash "&$MK_DATADIR/mk/mkdash.c" "@$MK_SOURCE_DIR/mk/mkdash.c"
+
+    mk_add_phony_target "$result"
 }
 
 install_bin_makekit()
@@ -65,4 +72,13 @@ install_bin_makekit()
 	> "$1" \
 	|| mk_fail "sed failed"
     mk_run_or_fail chmod +x "$1"
+}
+
+bootstrap_mkdash()
+{
+    mk_msg_domain "bootstrap"
+    mk_pretty_path "$2"
+    mk_msg "$result"
+
+    mk_clone "$1" "$2" || mk_fail "could not create $2"
 }
