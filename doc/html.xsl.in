@@ -4,6 +4,7 @@
 		xmlns:db="http://docbook.org/ns/docbook"
 		version="1.0">
   <xsl:import href="@MK_DOCBOOK_XSL_DIR@/xhtml/profile-chunk.xsl"/>
+  <xsl:param name="chunk.quietly">1</xsl:param>
   <xsl:param name="citerefentry.link">1</xsl:param>
   <xsl:param name="use.id.as.filename">1</xsl:param>
   <xsl:param name="html.stylesheet" select="'docbook.css'"/>
