@@ -63,7 +63,7 @@
 #include "system.h"
 
 
-#define VTABSIZE 39
+#define VTABSIZE 521
 
 
 struct localvar_list {
