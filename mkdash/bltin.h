@@ -48,22 +48,29 @@
 #include "../output.h"
 #include "../error.h"
 #ifndef USE_GLIBC_STDIO
-#undef stdout
-#undef stderr
-#undef putc
-#undef putchar
-#undef fileno
-#define stdout out1
-#define stderr out2
-#define printf out1fmt
-#define putc(c, file)	outc(c, file)
-#define putchar(c)	out1c(c)
-#define FILE struct output
-#define fprintf outfmt
-#define fputs outstr
-#define fflush flushout
-#define fileno(f) ((f)->fd)
-#define ferror outerr
+#define blt_stdout out1
+#define blt_stderr out2
+#define blt_printf out1fmt
+#define blt_putc(c, file)	outc(c, file)
+#define blt_putchar(c)	out1c(c)
+#define BLT_FILE struct output
+#define blt_fprintf outfmt
+#define blt_fputs outstr
+#define blt_fflush flushout
+#define blt_fileno(f) ((f)->fd)
+#define blt_ferror outerr
+#else
+#define blt_stdout stdout
+#define blt_stderr stderr
+#define blt_printf printf
+#define blt_putc(c, file) putc(c, file)
+#define blt_putchar(c) putchar(c)
+#define BLT_FILE FILE
+#define blt_fprintf fprintf
+#define blt_fputs fputs
+#define blt_fflush fflush
+#define blt_fileno(f) fileno(f)
+#define blt_ferror ferror
 #endif
 #define INITARGS(argv)
 #define	error sh_error
@@ -74,7 +81,7 @@
 #define getprogname() commandname
 #define setlocate(l,s) 0
 
-#define getenv(p) bltinlookup((p),0)
+#define blt_getenv(p) bltinlookup((p),0)
 
 #else
 #undef NULL

@@ -62,13 +62,13 @@ static char  **gargv;
 #define PF(f, func) { \
 	switch ((char *)param - (char *)array) { \
 	default: \
-		(void)printf(f, array[0], array[1], func); \
+		(void)blt_printf(f, array[0], array[1], func); \
 		break; \
 	case sizeof(*param): \
-		(void)printf(f, array[0], func); \
+		(void)blt_printf(f, array[0], func); \
 		break; \
 	case 0: \
-		(void)printf(f, func); \
+		(void)blt_printf(f, func); \
 		break; \
 	} \
 }
@@ -120,12 +120,12 @@ int printfcmd(int argc, char *argv[])
 			}
 			if (ch != '%' || (*fmt == '%' && (++fmt || 1))) {
 pc:
-				putchar(ch);
+				blt_putchar(ch);
 				continue;
 			}
 
 			/* Ok - we've found a format specification,
-			   Save its address for a later printf(). */
+			   Save its address for a later blt_printf(). */
 			start = fmt - 1;
 			param = array;
 
