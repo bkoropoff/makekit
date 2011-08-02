@@ -55,6 +55,51 @@
 #else
 #define HAVE_DECL_ISBLANK 0
 #endif
+#elif defined(__APPLE__)
+#define HAVE_ALLOCA_H 1
+#define HAVE_PATHS_H 1
+#define HAVE_DECL_ISBLANK 1
+#define HAVE_DECL_STRTOIMAX 1
+#define HAVE_DECL_STRTOUMAX 1
+#define HAVE_BSEARCH 1
+#define HAVE_GETPWNAM 1
+#define HAVE_GETRLIMIT 1
+#define HAVE_ISALPHA 1
+#define HAVE_KILLPG 1
+#define HAVE_STPCPY 1
+#define HAVE_STRSIGNAL 1
+#define HAVE_STRTOD 1
+#define HAVE_SYSCONF 1
+#define HAVE_DECL_STAT64 0
+#elif defined(_AIX)
+#define HAVE_ALLOCA_H 1
+#define HAVE_PATHS_H 1
+#define HAVE_DECL_ISBLANK 1
+#define HAVE_DECL_STRTOIMAX 1
+#define HAVE_DECL_STRTOUMAX 1
+#define HAVE_BSEARCH 1
+#define HAVE_GETPWNAM 1
+#define HAVE_GETRLIMIT 1
+#define HAVE_ISALPHA 1
+#define HAVE_KILLPG 1
+#define HAVE_STPCPY 1
+#define HAVE_STRSIGNAL 1
+#define HAVE_STRTOD 1
+#define HAVE_SYSCONF 1
+#define HAVE_DECL_STAT64 0
+#elif defined(__hpux)
+#define HAVE_ALLOCA_H 1
+#define HAVE_DECL_ISBLANK 1
+#define HAVE_DECL_STRTOIMAX 1
+#define HAVE_DECL_STRTOUMAX 1
+#define HAVE_BSEARCH 1
+#define HAVE_GETPWNAM 1
+#define HAVE_GETRLIMIT 1
+#define HAVE_ISALPHA 1
+#define HAVE_KILLPG 1
+#define HAVE_STRTOD 1
+#define HAVE_SYSCONF 1
+#define HAVE_DECL_STAT64 0
 #else
 #error Unsupported platform
 #endif
