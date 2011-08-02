@@ -141,7 +141,7 @@ mk_chain_generic()
         SOURCEDIR NAME TARGETS DEPS BUILDDEPS \
         CONFIGURE BUILD STAGE="mk_chain_generic_stage" PASSVARS \
         SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM \
-        MULTIARCH="$MK_HOST_MULTIARCH" \
+        MULTIARCH="$MK_MULTIARCH" \
         builddir outdir deps \
         outdirs stamps temp varfile
     mk_parse_params

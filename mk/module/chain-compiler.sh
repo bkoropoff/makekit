@@ -92,7 +92,7 @@ mk_chain_compiler()
         CPPFLAGS CFLAGS CXXFLAGS LDFLAGS PASSVARS \
         LINK_TARGETS \
         STAGE="mk_chain_compiler_stage" \
-        MULTIARCH="$MK_HOST_MULTIARCH" \
+        MULTIARCH="$MK_MULTIARCH" \
         HEADER EXT LIB DLO PROGRAM \
         VERSION MAJOR MINOR MICRO LINKS SONAME \
         link_target stamp targets deps
