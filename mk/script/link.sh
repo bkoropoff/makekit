@@ -116,10 +116,6 @@ create_libtool_archive()
 object="$1"
 shift 1
 
-IS_CXX=false
-
-[ "$COMPILER" = "c++" ] && IS_CXX=true
-
 if [ "${MK_SYSTEM%/*}" = "build" ]
 then
     LINK_LIBDIR="$MK_RUN_LIBDIR"
@@ -157,20 +153,6 @@ fi
 
 # Group suffix
 _gsuffix=".${MK_CANONICAL_SYSTEM%/*}.${MK_CANONICAL_SYSTEM#*/}.og"
-
-for _group in ${GROUPS}
-do
-    unset OBJECTS LIBDEPS LIBDIRS LDFLAGS
-    mk_safe_source "${MK_OBJECT_DIR}${MK_SUBDIR}/$_group${_gsuffix}" || mk_fail "Could not read group $_group"
-
-    GROUP_OBJECTS="$GROUP_OBJECTS ${OBJECTS}"
-    COMBINED_LIBDEPS="$COMBINED_LIBDEPS $LIBDEPS"
-    COMBINED_LIBDIRS="$COMBINED_LIBDIRS $LIBDIRS"
-    COMBINED_LDFLAGS="$COMBINED_LDFLAGS $LDFLAGS"
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
-done
-
-${IS_CXX} && COMPILER="c++"
 
 case "$COMPILER" in
     c)
@@ -243,21 +225,21 @@ case "$MODE" in
         mk_msg_domain "link"
         mk_pretty_path "$object"
         mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        mk_run_or_fail ${CPROG} ${LIB_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_or_fail ${CPROG} ${LIB_LINK} -o "$object" "$@" ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
         mk_run_link_posthooks "$object"
         ;;
     dlo)
         mk_msg_domain "link"
         mk_pretty_path "$object"
         mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        mk_run_or_fail ${CPROG} ${DLO_LINK} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
+        mk_run_or_fail ${CPROG} ${DLO_LINK} -o "$object" "$@" ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
         mk_run_link_posthooks "$object"
         ;;
     program)
         mk_msg_domain "link"
         mk_pretty_path "$object"
         mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        mk_run_or_fail ${CPROG} -o "$object" "$@" ${GROUP_OBJECTS} ${COMBINED_LDFLAGS} ${_LIBS}
+        mk_run_or_fail ${CPROG} -o "$object" "$@" ${COMBINED_LDFLAGS} ${_LIBS}
         mk_run_link_posthooks "$object"
         ;;
     la)

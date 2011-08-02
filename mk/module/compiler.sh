@@ -588,7 +588,8 @@ _mk_process_headerdeps()
 
 _mk_compile()
 {
-    _object="${SOURCE%.*}${OSUFFIX}.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.o"
+    mk_basename "$SOURCE"
+    _object="${result%.*}${OSUFFIX}.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.o"
     
     mk_resolve_target "${SOURCE}"
     _res="$result"
@@ -974,12 +975,9 @@ _mk_library()
         [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
-    mk_unquote_list "${GROUPS}"
-    for _group in "$@"
-    do
-        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
-        _deps="$_deps $result"
-    done
+    _mk_add_groups
+    _objects="$_objects $result"
+    _deps="$_deps $result"
     
     for result in ${LIBDEPS} ${MK_LIBDEPS}
     do
@@ -998,7 +996,7 @@ _mk_library()
         DEPS="${_deps}" \
         mk_run_script link \
         MODE=library \
-        %GROUPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %LDFLAGS %SONAME %EXT %COMPILER \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %LDFLAGS %SONAME %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
 }
 
@@ -1127,7 +1125,7 @@ mk_library()
         TARGET="${INSTALLDIR}/lib${LIB}.la" \
         DEPS="$_links $result" \
         mk_run_script link MODE=la \
-        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %LINKS %SONAME %EXT \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %COMPILER %LINKS %SONAME %EXT \
         '$@'
 
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -1158,12 +1156,9 @@ _mk_dlo()
         [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
-    mk_unquote_list "${GROUPS}"
-    for _group in "$@"
-    do
-        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
-        _deps="$_deps $result"
-    done
+    _mk_add_groups
+    _objects="$_objects $result"
+    _deps="$_deps $result"
     
     for _lib in ${LIBDEPS} ${MK_LIBDEPS}
     do
@@ -1182,7 +1177,7 @@ _mk_dlo()
         DEPS="$_deps" \
         mk_run_script link \
         MODE=dlo \
-        %GROUPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %LDFLAGS %EXT %COMPILER \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %LDFLAGS %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
 }
 
@@ -1276,59 +1271,95 @@ mk_dlo()
         TARGET="${INSTALLDIR}/${DLO}.la" \
         DEPS="$_links $result" \
         mk_run_script link MODE=la \
-        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %GROUPS %COMPILER %EXT \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %COMPILER %EXT \
         '$@'
 
     mk_pop_vars
 }
 
-_mk_group()
+_mk_add_group()
 {
-    unset _deps _objects
+    mk_push_vars \
+        COMPILER CPPFLAGS CFLAGS CXXFLAGS DEPS SOURCE INCLUDEDIRS \
+        MK_SUBDIR="$MK_SUBDIR" OSUFFIX="$OSUFFIX.${1##*/}" \
+        sources cppflags cflags cxxflags ldflags subdir libdirs libdeps deps groupdeps
     
-    mk_comment "group ${GROUP} ($SYSTEM) from ${MK_SUBDIR#/}"
+    mk_resolve_file "$1.${MK_CANONICAL_SYSTEM%/*}.${MK_CANONICAL_SYSTEM#*/}.og"
+    mk_source_or_fail "$result"
 
-    # Create object prefix based on group name
-    _mk_slashless_name "$GROUP"
-    OSUFFIX=".$result"
+    MK_SUBDIR="$subdir"
+    CPPFLAGS="$cppflags"
+    CFLAGS="$cflags"
+    CXXFLAGS="$cxxflags"
+    DEPS="$deps"
+    LDFLAGS="$LDFLAGS $ldflags"
+    LIBDIRS="$LIBDIRS $libdirs"
+    LIBDEPS="$LIBDEPS $libdeps"
+    INCLUDEDIRS="$includedirs"
+    groups="$groups $groupdeps"
+    groups="${groups# }"
 
-    # Perform pathname expansion on SOURCES
-    mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
-    
-    mk_unquote_list "$result"
-    for SOURCE in "$@"
+    mk_unquote_list "$sources"
+    for SOURCE
     do
-        _mk_compile_detect     
+        _mk_compile_detect
         mk_quote "$result"
-        _deps="$_deps $result"
-        _objects="$_objects $result"
+        objects="$objects $result"
         [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
-    
-    mk_unquote_list "${GROUPDEPS}"
-    for _group in "$@"
-    do
-        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
-        _deps="$_deps $result"
-    done
-    
-    for _lib in ${LIBDEPS} ${MK_LIBDEPS}
-    do
-        if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
-        then
-            mk_quote "${MK_LIBDIR}/lib${_lib}.la"
-            _deps="$_deps $result"
-        fi
-    done
-    
-    ${IS_CXX} && COMPILER="c++"
 
-    mk_target \
-        SYSTEM="$SYSTEM" \
-        TARGET="$TARGET" \
-        DEPS="$_deps" \
-        mk_run_script group %GROUPDEPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" \
-        %LIBDIRS %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"    
+    mk_pop_vars
+}
+
+_mk_add_groups()
+{
+    mk_push_vars groups="$GROUPS" objects=""
+
+    while [ -n "$groups" ]
+    do
+        mk_unquote_list "$groups"
+        groups=""
+        for __group
+        do
+            _mk_add_group "$__group"
+        done
+    done
+
+    result="$objects"
+    mk_pop_vars
+}
+
+_mk_group()
+{
+    mk_resolve_file "$TARGET"
+    mk_mkdirname "$result"
+    {
+        echo "# MakeKit group"
+        mk_quote "$MK_SUBDIR"
+        echo subdir="$result"
+        mk_quote "$SOURCES"
+        echo sources="$result"
+        mk_quote "$CPPFLAGS"
+        echo cppflags="$result"
+        mk_quote "$CFLAGS"
+        echo cflags="$result"
+        mk_quote "$CXXFLAGS"
+        echo cxxflags="$result"
+        mk_quote "$LDFLAGS"
+        echo ldflags="$result"
+        mk_quote "$CFLAGS"
+        echo cflags="$result"
+        mk_quote "$LIBDEPS $MK_LIBDEPS"
+        echo libdeps="$result"
+        mk_quote "$LIBDIRS"
+        echo libdirs="$result"
+        mk_quote "$INCLUDEDIRS"
+        echo includedirs="$result"
+        mk_quote "$DEPS"
+        echo deps="$result"
+        mk_quote "$GROUPDEPS"
+        echo groupdeps="$result"
+    } > "$result" || mk_fail "could not write $TARGET"
 }
 
 #<
@@ -1348,27 +1379,34 @@ mk_group()
     mk_push_vars \
         GROUP SOURCES SOURCE CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
         HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS \
-        COMPILER=c IS_CXX=false PIC=yes SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM
+        SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM includedir
     mk_parse_params
 
     _mk_verify_libdeps "$GROUP" "$LIBDEPS $MK_LIBDEPS"
     _mk_process_headerdeps "$GROUP"
 
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
+    # Perform pathname expansion on SOURCES
+    mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
+
+    # Resolve them
+    mk_resolve_targets "$SOURCES"
+    SOURCES="$result"
+
+    # Resolve group deps
+    mk_resolve_targets "$GROUPDEPS"
+    GROUPDEPS="$result"
+
+    # Resolve deps
+    mk_resolve_targets "$DEPS"
+    DEPS="$result"
 
     if _mk_is_fat
     then
         _mk_do_fat "$GROUP" ".og" _mk_group "$@"
-
-        mk_target \
-            TARGET="$GROUP.host.og" \
-            DEPS="$result" \
-            mk_run_or_fail touch '$@'
     else
         mk_canonical_system "$SYSTEM"
         CANONICAL_SYSTEM="$result"
         TARGET="$GROUP.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
-
         _mk_group "$@"
     fi
 
@@ -1405,12 +1443,9 @@ _mk_program()
         [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
-    mk_unquote_list "${GROUPS}"
-    for _group in "$@"
-    do
-        mk_quote "$_group.${CANONICAL_SYSTEM%/*}.${CANONICAL_SYSTEM#*/}.og"
-        _deps="$_deps $result"
-    done
+    _mk_add_groups
+    _objects="$_objects $result"
+    _deps="$_deps $result"
     
     for _lib in ${LIBDEPS} ${MK_LIBDEPS}
     do
@@ -1427,7 +1462,7 @@ _mk_program()
         SYSTEM="$SYSTEM" \
         TARGET="$TARGET" \
         DEPS="$_deps" \
-        mk_run_script link MODE=program %GROUPS LIBDEPS="$LIBDEPS $MK_LIBDEPS" \
+        mk_run_script link MODE=program LIBDEPS="$LIBDEPS $MK_LIBDEPS" \
         %LDFLAGS %COMPILER '$@' "*${OBJECTS} ${_objects}"
 }
 
