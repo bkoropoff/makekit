@@ -296,6 +296,7 @@ _mk_chain_combine()
     # ... = sources
     if [ "$MK_HOST_OS" = darwin ]
     then
+        mk_mkdirname "$1"
         mk_run_or_fail lipo -create -output "$@"
     else
         mk_fail "don't know how to combine binaries for $MK_HOST_OS"
