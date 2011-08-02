@@ -38,15 +38,13 @@
 #define HAVE_SYSCONF 1
 #define HAVE_DECL_STAT64 0
 #elif defined(__sun)
-#define HAVE_DECL_STRTOIMAX 1
-#define HAVE_DECL_STRTOUMAX 1
+#define HAVE_DECL_STRTOIMAX 0
+#define HAVE_DECL_STRTOUMAX 0
 #define HAVE_BSEARCH 1
-#define HAVE_FACCESSAT 1
 #define HAVE_GETPWNAM 1
 #define HAVE_GETRLIMIT 1
 #define HAVE_ISALPHA 1
 #define HAVE_KILLPG 1
-#define HAVE_STPCPY 1
 #define HAVE_STRSIGNAL 1
 #define HAVE_STRTOD 1
 #define HAVE_SYSCONF 1
