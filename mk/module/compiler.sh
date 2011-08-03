@@ -1366,13 +1366,14 @@ _mk_group()
 # @brief Build an object group
 # @usage GROUP=name options...
 #
-# Defines a target to build a C/C++ "object group", which combines sources
-# files and other object groups into a logical unit which can be referenced
-# from <funcref>mk_program</funcref> and friends.  This feature is
+# Defines a target to build a C/C++ "group", which combines sources
+# files and associated build flags into a logical unit which added
+# to <funcref>mk_program</funcref> and friends.  This feature is
 # similar to "convenience libraries" with GNU libtool.
 #
-# See <topicref ref="compiler"/> for common options or <topicref
-# ref="c-projects-object-groups"/> in the MakeKit guide for usage examples.
+# See the <modref>compiler</modref> module for common options or
+# <topicref ref="c-projects-groups"/> in the MakeKit guide for usage
+# examples.
 #>
 mk_group()
 {

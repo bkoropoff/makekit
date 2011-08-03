@@ -286,17 +286,20 @@ make()
       appropriate dependencies to the generated <filename>Makefile</filename>.
     </para>
   </section>
-  <section id="c-projects-object-groups" xreflabel="Object Groups">
-    <title>Object Groups</title>
+  <section id="c-projects-groups" xreflabel="Groups">
+    <title>Groups</title>
     <para>
-      When a library or program grows large enough, it is often prudent to break its
-      source code up across multiple subdirectories to enhance organizational clarity
-      and separation of concerns.  Rather than maintaining a long list of source files
-      from disparate subdirectories in your invocation of <function>mk_library</function>
-      or <function>mk_program</function>, you can use the <function>mk_group</function>
-      function to compile related source files together into a single "object group"
-      file, and then reference just this file when building your program or library.
-      This feature is an analogue of "convenience libraries" available in
+      When a library or program grows large enough, it is often
+      prudent to break its source code up across multiple
+      subdirectories to enhance organizational clarity and separation
+      of concerns.  Rather than maintaining a long list of source
+      files from disparate subdirectories in your invocation of
+      <function>mk_library</function> or
+      <function>mk_program</function>, you can use the
+      <function>mk_group</function> function to group together a set
+      of source files and compiler flags into a logical unit which can
+      then be added in to your program or library.  This feature is an
+      analogue of "convenience libraries" available in
       <orgname>GNU</orgname> <command>libtool</command>.
     </para>
     <para>
@@ -306,9 +309,9 @@ make()
       and <filename>string</filename>.  We will build each subdirectory as an object
       group and then combine the two into <filename>libexample</filename> using the
       <parameter>GROUPS</parameter> parameter to <function>mk_library</function>.
-      This yields <xref linkend="c-object-group"/>.
+      This yields <xref linkend="c-group"/>.
     </para>
-    <example xml:id="c-object-group">
+    <example xml:id="c-group">
       <title>Using <function>mk_group</function></title>
       <variablelist>
 	<varlistentry>
