@@ -88,6 +88,12 @@ create_libtool_archive()
             echo "dlname=$result"
         fi
 
+        if [ -n "$STATIC_NAME" ]
+        then
+            mk_quote "$STATIC_NAME"
+            echo "old_library=$result"
+        fi
+
         if [ -n "$LINKS" ]
         then
             mk_unquote_list "$LINKS"
@@ -241,6 +247,14 @@ case "$MODE" in
         mk_msg "$result ($MK_CANONICAL_SYSTEM)"
         mk_run_or_fail ${CPROG} -o "$object" "$@" ${COMBINED_LDFLAGS} ${_LIBS}
         mk_run_link_posthooks "$object"
+        ;;
+    ar)
+        mk_msg_domain "ar"
+        mk_pretty_path "$object"
+        mk_msg "$result ($MK_CANONICAL_SYSTEM)"
+        mk_safe_rm "$object"
+        mk_run_or_fail ${MK_AR} -cru "$object" "$@"
+        mk_run_or_fail ${MK_RANLIB} "$object"
         ;;
     la)
         mk_msg_domain "la"

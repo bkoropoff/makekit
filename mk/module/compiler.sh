@@ -954,6 +954,7 @@ _mk_dlo_process_version()
 
 _mk_library()
 {
+    mk_push_vars PIC=yes
     unset _deps _objects
 
     mk_comment "library ${LIB} ($SYSTEM) from ${MK_SUBDIR#/}"
@@ -998,6 +999,64 @@ _mk_library()
         MODE=library \
         LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %LDFLAGS %SONAME %EXT %COMPILER \
         '$@' "*${OBJECTS} ${_objects}"
+
+    mk_pop_vars
+}
+
+_mk_library_static()
+{
+    mk_push_vars PIC=no
+    unset _deps _objects
+
+    mk_comment "static library ${LIB} ($SYSTEM) from ${MK_SUBDIR#/}"
+
+    # Create object prefix based on library name
+    _mk_slashless_name "$LIB"
+    OSUFFIX=".$result.static"
+
+    # Perform pathname expansion on SOURCES
+    mk_expand_pathnames "${SOURCES}" "${MK_SOURCE_DIR}${MK_SUBDIR}"
+    
+    mk_unquote_list "$result"
+    for SOURCE
+    do
+        _mk_compile_detect
+        mk_quote "$result"
+        _deps="$_deps $result"
+        _objects="$_objects $result"
+    done
+    
+    _mk_add_groups
+    _objects="$_objects $result"
+    _deps="$_deps $result"
+    
+    for result in ${LIBDEPS} ${MK_LIBDEPS}
+    do
+        if _mk_contains "$result" ${MK_INTERNAL_LIBS}
+        then
+            mk_quote "$MK_LIBDIR/lib${result}.la"
+            _deps="$_deps $result"
+        fi
+    done
+    
+    mk_target \
+        SYSTEM="$SYSTEM" \
+        TARGET="$TARGET" \
+        DEPS="${_deps}" \
+        mk_run_script link \
+        MODE=ar \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS \
+        '$@' "*${OBJECTS} ${_objects}"
+
+    mk_pop_vars
+}
+
+_mk_library_need_static()
+{
+    __name="$1"
+    [ "$MK_STATIC_LIBS" = "yes" ] && return 0
+    mk_unquote_list "$MK_STATIC_LIBS"
+    _mk_contains "$__name" "$@"
 }
 
 #<
@@ -1057,8 +1116,8 @@ mk_library()
     mk_push_vars \
         INSTALLDIR="$MK_LIBDIR" LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
         HEADERDEPS LIBDIRS INCLUDEDIRS VERSION=0:0:0 DEPS OBJECTS \
-        SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" PIC=yes \
-        SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM TARGET
+        SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" \
+        SYSTEM="$MK_SYSTEM" CANONICAL_SYSTEM TARGET STATIC_NAME static_deps
     mk_parse_params
 
     mk_canonical_system "$SYSTEM"
@@ -1092,6 +1151,23 @@ mk_library()
             TARGET="$result" \
             DEPS="$_PARTS" \
             _mk_compiler_multiarch_combine "$result" "*$_PARTS"
+
+        if _mk_library_need_static "$LIB"
+        then
+            _mk_do_fat "lib$LIB" ".a" _mk_library_static "$@"
+            _PARTS="$result"
+            TARGET="${INSTALLDIR:+$INSTALLDIR/}lib$LIB.a"
+            mk_resolve_target "$TARGET"
+
+            mk_target \
+                TARGET="$result" \
+                DEPS="$_PARTS" \
+                _mk_compiler_multiarch_combine "$result" "*$_PARTS"
+
+            mk_quote "$result"
+            static_deps="$result"
+            STATIC_NAME="lib$LIB.a"
+        fi
     else
         mk_unquote_list "$LINKS"
         TARGET="${INSTALLDIR:+$INSTALLDIR/}$1"
@@ -1100,6 +1176,15 @@ mk_library()
         CANONICAL_SYSTEM="$result"
 
         _mk_library "$@"
+
+        if _mk_library_need_static "$LIB"
+        then
+            TARGET="${INSTALLDIR:+$INSTALLDIR/}lib$LIB.a"
+            _mk_library_static "$@"
+            mk_quote "$result"
+            static_deps="$result"
+            STATIC_NAME="lib$LIB.a"
+        fi
     fi
 
     mk_unquote_list "$LINKS"
@@ -1123,9 +1208,9 @@ mk_library()
 
     mk_target \
         TARGET="${INSTALLDIR}/lib${LIB}.la" \
-        DEPS="$_links $result" \
+        DEPS="$_links $result $static_deps" \
         mk_run_script link MODE=la \
-        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %COMPILER %LINKS %SONAME %EXT \
+        LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LIBDIRS %COMPILER %LINKS %SONAME %STATIC_NAME %EXT \
         '$@'
 
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
@@ -2710,6 +2795,13 @@ option()
     fi
 
     mk_option \
+        OPTION="static-libs" \
+        VAR="MK_STATIC_LIBS" \
+        PARAM="yes|no|list" \
+        DEFAULT="no" \
+        HELP="Build static libraries"
+
+    mk_option \
         VAR="CC" \
         PARAM="program" \
         DEFAULT="gcc" \
@@ -2724,6 +2816,25 @@ option()
         HELP="Default C++ compiler"
 
     MK_DEFAULT_CXX="$CXX"
+
+    if [ "$MK_STATIC_LIBS" != "no" ]
+    then
+        mk_option \
+            VAR="AR" \
+            PARAM="program" \
+            DEFAULT="ar" \
+            HELP="Default ar program"
+        
+        MK_DEFAULT_AR="$AR"
+        
+        mk_option \
+            VAR="RANLIB" \
+            PARAM="program" \
+            DEFAULT="ranlib" \
+            HELP="Default ranlib program"
+        
+        MK_DEFAULT_RANLIB="$RANLIB"
+    fi
 
     mk_option \
         VAR="CPPFLAGS" \
@@ -2757,7 +2868,7 @@ option()
 
     MK_LDFLAGS="$LDFLAGS"
 
-    unset CC CXX CPPFLAGS CFLAGS CXXFLAGS LDFLAGS
+    unset CC CXX CPPFLAGS CFLAGS CXXFLAGS LDFLAGS AR RANLIB
 
     for _sys in build host
     do
@@ -2774,6 +2885,8 @@ option()
             
             _default_cc="$MK_DEFAULT_CC"
             _default_cxx="$MK_DEFAULT_CXX"
+            _default_ar="$MK_DEFAULT_AR"
+            _default_ranlib="$MK_DEFAULT_RANLIB"
 
             case "${MK_DEFAULT_CC}-${result}-${_isa}" in
                 *-darwin-x86_32)
@@ -2841,6 +2954,21 @@ option()
                 PARAM="program" \
                 DEFAULT="$_default_cxx" \
                 HELP="C++ compiler ($_sys/$_isa)"
+            
+            if [ "$MK_STATIC_LIBS" != "no" ]
+            then
+                mk_option \
+                    VAR="${_def}_AR" \
+                    PARAM="program" \
+                    DEFAULT="$_default_ar" \
+                    HELP="ar program ($_sys/$_isa)"
+                
+                mk_option \
+                    VAR="${_def}_RANLIB" \
+                    PARAM="program" \
+                    DEFAULT="$_default_ranlib" \
+                    HELP="ar program ($_sys/$_isa)"
+            fi
             
             mk_option \
                 VAR="${_def}_CPPFLAGS" \
@@ -3042,6 +3170,12 @@ configure()
     mk_declare -i MK_CONFIG_HEADER="" MK_HEADERDEPS="" MK_LIBDEPS=""
     mk_declare -s -e \
         MK_CC MK_CXX MK_CC_STYLE MK_CC_LD_STYLE MK_CXX_STYLE MK_CXX_LD_STYLE
+
+    if [ "$MK_STATIC_LIBS" != "no" ]
+    then
+        mk_declare -s -e MK_AR MK_RANLIB
+    fi
+
     mk_declare -i -e MK_CPPFLAGS MK_CFLAGS MK_CXXFLAGS MK_LDFLAGS
     mk_declare -s -i -e \
         MK_ISA_CPPFLAGS MK_ISA_CFLAGS MK_ISA_CXXFLAGS MK_ISA_LDFLAGS \
@@ -3050,6 +3184,11 @@ configure()
 
     mk_msg "default C compiler: $MK_DEFAULT_CC"
     mk_msg "default C++ compiler: $MK_DEFAULT_CXX"
+    if [ "$MK_STATIC_LIBS" != "no" ]
+    then
+        mk_msg "default ar program: $MK_DEFAULT_AR"
+        mk_msg "default ranlib program: $MK_DEFAULT_RANLIB"
+    fi
     mk_msg "global C preprocessor flags: $MK_CPPFLAGS"
     mk_msg "global C compiler flags: $MK_CFLAGS"
     mk_msg "global C++ compiler flags: $MK_CXXFLAGS"
@@ -3072,6 +3211,17 @@ configure()
             mk_get "${_def}_CXX"
             mk_msg "C++ compiler ($_sys/$_isa): $result"
             mk_set_system_var SYSTEM="$_sys/$_isa" MK_CXX "$result"
+
+            if [ "$MK_STATIC_LIBS" != "no" ]
+            then
+                mk_get "${_def}_AR"
+                mk_msg "ar program ($_sys/$_isa): $result"
+                mk_set_system_var SYSTEM="$_sys/$_isa" MK_AR "$result"
+                
+                mk_get "${_def}_RANLIB"
+                mk_msg "ranlib program ($_sys/$_isa): $result"
+                mk_set_system_var SYSTEM="$_sys/$_isa" MK_RANLIB "$result"
+            fi
 
             mk_get "${_def}_CPPFLAGS"
             mk_msg "C preprocessor flags ($_sys/$_isa): $result"
