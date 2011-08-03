@@ -92,14 +92,14 @@ find_shell()
             _CC=cc
         fi
 
-        echo "           [makekit] building ${HOME}/.makekit/mkdash"
+        echo "           [makekit] building ${HOME}/.makekit/mkdash" >/dev/tty
         mkdir -p "${HOME}/.makekit" >/dev/null 2>&1
         if "$_CC" -O2 -o "${HOME}/.makekit/mkdash" "$MK_HOME/mkdash.c" >/dev/null 2>&1
         then
             MK_SHELL="${HOME}/.makekit/mkdash"
             return 0
         fi
-        echo "           [makekit] falling back on existing shell"
+        echo "           [makekit] falling back on existing shell" >/dev/tty
     fi
 
     for _shell in ${SHELL_CANDIDATES}
