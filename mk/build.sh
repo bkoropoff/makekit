@@ -39,6 +39,8 @@ _mk_restore_context()
 {
     # Set subdir
     MK_SUBDIR="$1"
+    MK_SOURCE_SUBDIR="$MK_SOURCE_DIR$1"
+    MK_OBJECT_SUBDIR="$MK_OBJECT_DIR$1"
 
     case "$MK_SUBDIR" in
         ":")
