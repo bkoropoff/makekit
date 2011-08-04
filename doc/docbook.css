@@ -285,7 +285,8 @@ div.warning h3 {
 
 .productname
 {
-    font-variant: small-caps
+    font-weight: bold;
+    color: #9090c0;
 }
 
 .command
