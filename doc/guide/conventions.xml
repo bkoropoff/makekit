@@ -1,0 +1,353 @@
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="conventions">
+  <info>
+    <title>Conventions and Patterns</title>
+  </info>
+  <para>
+    This chapter will familiarize you with common conventions and patterns
+    you will encounter with MakeKit.  Although the build files you will
+    write are just POSIX shell scripts, MakeKit adds a few twists to keep
+    you on your toes:
+  </para>
+  <itemizedlist>
+    <listitem>
+      Build rules that may look like special syntax are actually just
+      helper functions that take parameters with explicit names.
+    </listitem>
+    <listitem>
+      MakeKitBuild files are arranged recursively, but your project
+      is configured and built without leaving the directory where
+      <command>configure</command> is first run.  A special target
+      notation for specifying build sources and products helps flatten
+      your nested project hierarchy down to a single Makefile.
+    </listitem>
+  </itemizedlist>
+  <section xml:id="life-in-shell">
+    <title>Life in Shell</title>
+    <para>
+      MakeKit uses POSIX shell as its implementation and build file
+      language because it strikes a good balance between flexibility
+      and simplicity.  Some loftier build systems try to abstract the
+      task of building source code into a platform-neutral,
+      declarative syntax (I hear XML is popular) and eschew the
+      quick-and-dirty direct execution of Makefiles and shell script.
+      MakeKit also provides a bevy of modules and functions to keep
+      the grittier details of turning source code into binaries out of
+      sight and out of mind, but any project of non-trivial complexity
+      must inevitably dabble in the arcane and ad-hoc.  When it comes
+      time to descend the ivory tower of abstraction you'll find
+      <command>awk</command>, <command>sed</command>, and other UNIX
+      workhorses close at hand.
+    </para>
+    <para>
+      For open source projects in particular, the choice of POSIX
+      shell means fewer build dependencies for consumers of your
+      source distribution.  MakeKit comes with a copy of the
+      excellent, fast-as-its-name-implies <command>dash</command>
+      shell packed into a single .c file.  The
+      <filename>configure</filename> script will build it on the fly
+      when first run, providing insurance against older platforms
+      that lack POSIX-compliant <filename>/bin/sh</filename>.
+    </para>
+    <para>
+      Being able to unpack a source tarball onto any sane UNIX system
+      (perhaps augmented with <command>gcc</command>) and build it
+      without first installing the author's favorite build system or
+      scripting language isn't an inconsequential feature.  It is one
+      of the reasons &#x2014; outside of cultural inertia &#x2014; for
+      the continued ubiquity of GNU autotools.  MakeKit achieves this
+      without inscrutable preprocessing steps by perl and m4.  According
+      to my rough calculations that makes it 66% saner by volume.
+    </para>
+    <section>
+      <title>Keyword Parameters</title>
+      <para>
+	MakeKit provides a few amenities to make your stay in the world
+	of shell script more enjoyable.  As you may have noted in the
+	previous chapter, many functions in MakeKit take parameters
+	with explicit names of the form <literal>VAR=</literal><replaceable>value</replaceable>.  For example:
+      </para>
+      <programlisting><![CDATA[
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"]]></programlisting>
+      <para>
+	These keyword parameters make it clear at a glance what each
+	one means even if you aren't familiar with the function in question.
+	Note that because this is simply a call to a shell function, each
+	line except the last needs a backslash to continue the parameter
+	list on the next line.  This is the recommended way to format
+	calls to functions with many parameters.
+      </para>
+      <para>
+	The keyword parameters in a function call may appear in any order.
+	Many functions have optional parameters that may be omitted entirely.
+      </para>
+      <important>
+	Keyword parameters are intentionally evocative of the GNU
+	<command>automake</command> syntax that many have grown
+	accustomed to.  However, don't forget that you are writing
+	a shell script and not a Makefile!
+      </important>
+      <para>
+	You can write your own functions that take keyword parameters
+	using <xref linkend="mk_parse_params"/>.  This will set each
+	keyword parameter passed to your function to the shell variable
+	of the same name.  You should consider using
+	<xref linkend="mk_push_vars"/> and <xref linkend="mk_pop_vars"/>
+	to avoid clobbering their existing values.
+      </para>
+    </section>
+    <section>
+      <title>Quoting and Lists</title>
+      <para>
+	Often a function will take a list of items as one of its keyword
+	parameters, such as the <literal>SOURCES</literal> parameter
+	in the above example.  Lists in MakeKit are whitespace-separated.
+	You could add <filename>goodbye.c</filename> to
+	the above example as follows:
+      </para>
+      <programlisting><![CDATA[
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c goodbye.c" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"]]></programlisting>
+      <para>
+	If you want to use spaces in an item, you will need to add
+	an additional level of quoting around that item.  Since
+	the <literal>SOURCES</literal> parameter is enclosed in
+	double quotes, the easiest option is to use single quotes
+	within it:
+      </para>
+      <programlisting><![CDATA[
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c goodbye.c 'this name has spaces.c'" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"]]></programlisting>
+    <para>
+      If a list is getting a bit long and you want to line wrap
+      it, be sure to use a backslash at the end of each line to
+      indicate that it continues to the next:
+    </para>
+    <programlisting><![CDATA[
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c \
+             goodbye.c \
+             'this name has spaces.c'" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"]]></programlisting>
+    <para>
+      Any list passed in this manner must be internally shell-quoted
+      to preserve characters that have special meaning to the shell,
+      such as spaces and dollar signs.  If the extra quoting is tripping
+      you up, there is an alternative syntax that lets you specify
+      a list as ordinary function parameters, removing one of the
+      layers of quoting:
+    </para>
+    <programlisting><![CDATA[
+mk_program \
+    PROGRAM="hello" \
+    @SOURCES={ hello.c goodbye.c "this name has spaces.c" } \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"]]></programlisting>
+    <para>
+      If you wish to programmatically quote a string or lists of strings
+      so that they are suitable to pass as one of these parameters, use
+      <xref linkend="mk_quote"/> or <xref linkend="mk_quote_list"/>.
+      You can expand a quoted list into the position parameters
+      (<literal>$1</literal>, <literal>$2</literal>, ...) using
+      <xref linkend="mk_unquote_list"/>.
+    </para>
+    </section>
+    <section>
+      <title>Special Variables</title>
+      <para>
+	MakeKit allows you to declare variables with special behavior
+	using the <xref linkend="mk_declare"/> function.  There are 4
+	types of attributes which may be used in any combination:
+      </para>
+      <variablelist>
+	<varlistentry>
+	  <term>Exported (<literal>mk_declare -e</literal>)</term>
+	  <listitem>
+	    <para>
+	      An exported variable will have its value at the time
+	      <command>configure</command> was run saved so that it
+	      is available when the user runs <command>make</command>.
+	      This is primarily useful when writing custom build rules.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Inherited (<literal>mk_declare -i</literal>)</term>
+	  <listitem>
+	    <para>
+	      An inherited variable has its value passed down from
+	      each <filename>MakeKitBuild</filename> to those specified
+	      in its <literal>SUBDIRS</literal> list.  The value may
+	      be overridden by a subdirectory (and the new value will
+	      be passed to its subdirectories in turn), but it will
+	      not affect the value seen by sibling or parent directories.
+	    </para>
+	    <para>
+	      You may prefer to think of inherited variables as being
+	      scoped according to the hierarchy of your
+	      <filename>MakeKitBuild</filename> files.  Ordinary variables
+	      have completely dynamic scope, and any changes to them
+	      made by one build file will be seen by all others that
+	      are processed subsequently.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Output (<literal>mk_declare -o</literal>)</term>
+	  <listitem>
+	    <para>
+	      An output variable is one that can be substituted
+	      into a file processed by <xref linkend="mk_output_file"/>.
+	      This is equivalent to the variable substitution
+	      feature in GNU autoconf.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>System (<literal>mk_declare -s</literal>)</term>
+	  <listitem>
+	    <para>
+	      A system variable can take on multiple values according
+	      to what system is currently being targeted by configure
+	      tests or build rules.  For example, the <xref linkend="MK_CC"/>
+	      variable, which specifies the C compiler to use, might
+	      be different depending on whether we wish to build a program
+	      that will be run by the build system (the computer running
+	      MakeKit) or the host system (the computer that will run
+	      the final product).  This distinction is important when
+	      cross-compiling.
+	    </para>
+	    <para>
+	      When the current target system is changed with a function
+	      such as <xref linkend="mk_system"/>, values of system
+	      variables are swapped in and out appropriately.
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    </section>
+  </section>
+  <section>
+    <title>File Layout</title>
+    <para>
+      MakeKit allows you to organize your project in a hierarchy,
+      dividing work among <filename>MakeKitBuild</filename> files in
+      each subdirectory.  This is leads to good separation of
+      concerns, modularity, and composability.  However, MakeKit
+      always generates a single <filename>Makefile</filename> rooted
+      firmly in the directory where <command>configure</command> was
+      run, and all build rules are constructed relative to it.  This
+      avoids the many well-documented flaws of recursive
+      <command>make</command>, but it means you must bear in mind
+      following:
+    </para>
+    <important>
+      <title>The Iron-clad Law of MakeKit</title>
+      The current working directory when configuring or building is
+      always <xref linkend="MK_ROOT_DIR"/>, the directory where
+      <command>configure</command> was run.
+    </important>
+    <section>
+      <title>Finding Your Files</title>
+      <para>
+	Many MakeKit functions conveniently accept file paths relative
+	to the current <filename>MakeKitBuild</filename> file in the
+	hierarchy (in fact, as you will soon find out, it is a bit more
+	sophisticated than that).  However, if you are calling out to a
+	trusty UNIX program such as <command>sed</command> or
+	<command>cp</command> you will need to be a bit more specific
+	about where to look.  There are several variables that indicate
+	areas where files of interest can be found:
+      </para>
+      <variablelist>
+	<varlistentry>
+	  <term>Source directory (<xref linkend="MK_SOURCE_DIR"/>)</term>
+	  <listitem><para>This is the top of your source tree where your top-level
+	  <filename>MakeKitBuild</filename> file can be found.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Source subdirectory (<xref linkend="MK_SOURCE_SUBDIR"/>)</term>
+	  <listitem><para>This is the directory within your source tree where the
+	  <filename>MakeKitBuild</filename> file currently being processed
+	  can be found.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Object directory (<xref linkend="MK_OBJECT_DIR"/>)</term>
+	  <listitem><para>This is the top of the object directory where intermediate
+	  build products are stored (in particular, <filename>.o</filename>
+	  files from the compiler).  Its layout exactly mirrors that of
+	  your source tree.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Object subdirectory (<xref linkend="MK_OBJECT_SUBDIR"/>)</term>
+	  <listitem><para>This is the subdirectory within the object tree that
+	  mirrors the current source subdirectory.</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Stage directory (<xref linkend="MK_STAGE_DIR"/>)</term>
+	  <listitem><para>This is the directory where final build products are
+	  "staged" before they are installed with <command>make
+	  install</command> or packaged up in your package format of
+	  choice.  It has a layout mirroring that of the UNIX root
+	  filesystem: <literal>$MK_STAGE_DIR/usr/bin</literal>,
+	  <literal>$MK_STAGE_DIR/usr/lib</literal>, etc.</para></listitem>
+	</varlistentry>
+      </variablelist>
+    </section>
+    <section>
+      <title>Target Notation</title>
+      <para>
+	Rather than forcing you to use the aforementioned variables
+	whenever you want to specify the location of a file, most
+	MakeKit functions accept paths in a standard target notation.
+      </para>
+      <para>
+	A relative path (one not beginning with a <literal>/</literal>)
+	indicates a file relative to <varname>MK_SOURCE_SUBDIR</varname>
+	or <varname>MK_OBJECT_SUBDIR</varname>.  If the file exists
+	in the source directory at the time the target is resolved, then
+	it is taken to be that file.  Otherwise, it is assumed to be
+	an intermediate build product in the object directory.
+      </para>
+      <para>
+	An absolute path (one beginning with <literal>/</literal>)
+	indicates a file relative to <varname>MK_STAGE_DIR</varname>.
+	For example, using <xref linkend="mk_stage"/> allows you to
+	create a rule that simply copies a file.  If you indicate that
+	you want to copy a file to <filename>/etc/foo.conf</filename>,
+	this will result in a <filename>Makefile</filename> rule that
+	actually creates <literal>$MK_STAGE_DIR/etc/foo.conf</literal>.
+      </para>
+      <para>
+	Finally, there is a fully-qualified form that all targets
+	are resolved to.  If a target begins with <literal>@</literal>,
+	it indicates that the following path should be interpreted
+	verbatim.  If the path is relative, it is relative to
+	<varname>MK_ROOT_DIR</varname>.  If it is absolute, then
+	it indicates that precise absolute path on the filesystem.
+	You can use <xref linkend="mk_resolve_target"/> to resolve
+	any target to this canonical form.
+      </para>
+      <para>
+	In general, functions that perform configuration tests,
+	process build files, or create build rules use target notation
+	for any paths they accept.  On the other hand, there are
+	many pure utility functions (such as <xref linkend="mk_mkdir"/>)
+	that perform useful filesystem operations or paper over
+	incompatibilities between various flavors of UNIX; these
+	accept ordinary paths.
+      </para>
+    </section>
+  </section>
+</chapter>

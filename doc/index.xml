@@ -12,6 +12,7 @@
   
   <part><title>Guide</title>
     <xi:include href="guide/project-setup.xml"/>
+    <xi:include href="guide/conventions.xml"/>
     <xi:include href="guide/c-projects.xml"/>
   </part>
   <part><title>Reference</title>
