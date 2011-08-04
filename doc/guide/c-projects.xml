@@ -438,9 +438,11 @@ make()
       </variablelist>
     </example>
     <para>
-      The <function>mk_group</function> function accepts nearly the same set of optional parameters as
-      <function>mk_library</function>; in fact, you can even use <parameter>GROUPS</parameter>
-      to combine several object groups together into one.
+      The <function>mk_group</function> function accepts nearly the
+      same set of optional parameters as
+      <function>mk_library</function>; in fact, you can even use
+      <parameter>GROUPDEPS</parameter> to combine object groups
+      together hierachically.
     </para>
     <para>
       This particular example also demonstrates a useful shortcut enabled by keeping source
