@@ -157,6 +157,20 @@ make() <co xml:id="co.mkb.make" linkends="mkb.make"/>
       act only as organizational elements to contain a <filename>MakeKitBuild</filename>
       with only a <varname>SUBDIRS</varname> line.
     </para>
+    <para>
+      Your build files will be processed as follows, starting from the top-level
+      <filename>MakeKitBuild</filename>:
+    </para>
+    <itemizedlist>
+      <listitem>The <function>option</function> function will be run if present.</listitem>
+      <listitem>The <function>configure</function> function will be run if present.</listitem>
+      <listitem>For each directory in <varname>SUBDIRS</varname>, the <filename>
+      MakeKitBuild</filename> file in that directory will be recursively processed according to this list.</listitem>
+      <listitem>The <function>make</function> function will be run if present</listitem>
+    </itemizedlist>
+    <para>
+      If you wish for the <function>make</function> function of a directory to be run before (or in the middle) of processing subdirectories, you may put <literal>.</literal> in <varname>SUBDIRS</varname>.
+    </para>
   </section>
   <section>
     <title>Installing <productname>MakeKit</productname></title>
