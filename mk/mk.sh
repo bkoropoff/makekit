@@ -1538,3 +1538,36 @@ mk_here_list()
         result="${__list# }"
     fi
 }
+
+_MK_TMPCOUNT=0
+_MK_TMPLIST=""
+
+mk_tempfile()
+{
+    _result=".$$.$_MK_TMPCOUNT.$1"
+    _MK_TMPCOUNT=$(($_MK_TMPCOUNT+1))
+    mk_quote "$_result"
+    _MK_TMPLIST="$_MK_TMPLIST $result"
+    result="$_result"
+}
+
+mk_tempfile_clear()
+{
+    mk_unquote_list "$_MK_TMPLIST"
+    _MK_TMPLIST=""
+    for _tmp
+    do
+        rm -f "$_tmp"
+    done
+}
+
+_mk_cleanup_handler()
+{
+    cd "$MK_ROOT_DIR"
+    mk_tempfile_clear
+    exit "$1"
+}
+
+trap '_mk_cleanup_handler $?' EXIT
+trap '_mk_cleanup_handler 130' INT
+trap '_mk_cleanup_handler 143' TERM
