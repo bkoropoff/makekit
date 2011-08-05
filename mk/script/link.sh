@@ -82,7 +82,7 @@ create_libtool_archive()
             mk_quote "$SONAME"
             echo "dlname=$result"
         else
-            result="${object##*/}"
+            result="${_object##*/}"
             result="${result%.la}${EXT}"
             mk_quote "$result"
             echo "dlname=$result"
@@ -99,7 +99,7 @@ create_libtool_archive()
             mk_unquote_list "$LINKS"
             mk_quote "$*"
         else
-            result="${object##*/}"
+            result="${_object##*/}"
             result="${result%.la}${EXT}"
             mk_quote "$result"
         fi
@@ -110,156 +110,177 @@ create_libtool_archive()
 
         echo "installed='yes'"
 
-        result="${object%/*}"
+        result="${_object%/*}"
         result="${result#$MK_STAGE_DIR}"
         mk_quote "$result"
         echo "libdir=$result"
-    } > "$object" || mk_fail "could not write $object"
+    } > "$_object" || mk_fail "could not write $_object"
 
-    mk_run_or_fail touch "$object"
+    mk_run_or_fail touch "$_object"
+}
+
+do_link()
+{
+    _object="$1"
+    shift 1
+    
+    if [ "${MK_SYSTEM%/*}" = "build" ]
+    then
+        LINK_LIBDIR="$MK_RUN_LIBDIR"
+        RPATH_LIBDIR="$MK_ROOT_DIR/$MK_RUN_LIBDIR"
+    else
+        RPATH_LIBDIR="$MK_LIBDIR"
+        mk_resolve_file "$MK_LIBDIR"
+        LINK_LIBDIR="$result"
+    fi
+
+    COMBINED_LIBDEPS="$LIBDEPS"
+    COMBINED_LDFLAGS="$MK_ISA_LDFLAGS $MK_LDFLAGS $LDFLAGS"
+    COMBINED_LIBDIRS="$LIBDIRS"
+    
+    [ -d "$LINK_LIBDIR" -a -z "$CONFTEST" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS -L${LINK_LIBDIR}"
+    
+    # SONAME
+    if [ -n "$SONAME" ]
+    then
+        case "$MK_OS" in
+            darwin)
+                COMBINED_LDFLAGS="$COMBINED_LDFLAGS -install_name ${MK_LIBDIR}/${SONAME}"
+                ;;
+            hpux)
+                COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,+h,${SONAME}"
+                ;;
+            aix)
+                : # SONAMEs aren't encoded in libraries
+                ;;
+            *)
+                COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-h,$SONAME"
+                ;;
+        esac
+    fi
+
+    # Group suffix
+    _gsuffix=".${MK_CANONICAL_SYSTEM%/*}.${MK_CANONICAL_SYSTEM#*/}.og"
+
+    case "$COMPILER" in
+        c)
+            CPROG="$MK_CC"
+            LD_STYLE="$MK_CC_LD_STYLE"
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS $MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS"
+            ;;
+        c++)
+            CPROG="$MK_CXX"
+            LD_STYLE="$MK_CXX_LD_STYLE"
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS $MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS"
+            ;;
+    esac
+
+    case "${MK_OS}:${LD_STYLE}" in
+        *:gnu)
+            DLO_LINK="-shared"
+            LIB_LINK="-shared"
+            ;;
+        solaris:native)
+            DLO_LINK="-shared"
+            LIB_LINK="-shared"
+            
+            if [ "$MODE" = "library" ]
+            then
+                COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-z,defs -Wl,-z,text"
+                COMBINED_LIBDEPS="$COMBINED_LIBDEPS c"
+            fi
+
+            # The solaris linker is anal retentive about implicit shared library dependencies,
+            # so use available libtool .la files to add implicit dependencies to the link command
+            combine_libtool_flags
+            ;;
+        darwin:native)
+            DLO_LINK="-bundle"
+            LIB_LINK="-dynamiclib"
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module -Wl,-arch_errors_fatal"
+            ;;
+        aix:native)
+            DLO_LINK="-shared -Wl,-berok -Wl,-bnoentry"
+            LIB_LINK="-shared -Wl,-bnoentry"
+            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-brtl"
+            
+            # The linker on AIX does not track inter-library dependencies, so do it ourselves
+            combine_libtool_flags
+            ;;
+        hpux:native)
+            DLO_LINK="-shared"
+            LIB_LINK="-shared"
+
+            if [ "$MODE" = "library" ]
+            then
+                COMBINED_LIBDEPS="$COMBINED_LIBDEPS c"
+            fi
+            combine_libtool_flags
+            ;;
+    esac
+
+    [ -z "$CONFTEST" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS $MK_RPATHFLAGS"
+
+    for lib in ${COMBINED_LIBDEPS}
+    do
+        _LIBS="$_LIBS -l${lib}"
+    done
+
+    [ "${_object%/*}" != "${_object}" ] && mk_mkdir "${_object%/*}"
+
+    case "$MODE" in
+        library)
+            mk_msg_domain "link"
+            mk_msg "$pretty ($MK_CANONICAL_SYSTEM)"
+            mk_run_or_fail ${CPROG} ${LIB_LINK} -o "$_object" "$@" ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
+            mk_run_link_posthooks "$_object"
+            ;;
+        dlo)
+            mk_msg_domain "link"
+            mk_msg "$pretty ($MK_CANONICAL_SYSTEM)"
+            mk_run_or_fail ${CPROG} ${DLO_LINK} -o "$_object" "$@" ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
+            mk_run_link_posthooks "$_object"
+            ;;
+        program)
+            mk_msg_domain "link"
+            mk_msg "$pretty ($MK_CANONICAL_SYSTEM)"
+            mk_run_or_fail ${CPROG} -o "$_object" "$@" ${COMBINED_LDFLAGS} ${_LIBS}
+            mk_run_link_posthooks "$_object"
+            ;;
+        ar)
+            mk_msg_domain "ar"
+            mk_msg "$pretty ($MK_CANONICAL_SYSTEM)"
+            mk_safe_rm "$_object"
+            mk_run_or_fail ${MK_AR} -cru "$_object" "$@"
+            mk_run_or_fail ${MK_RANLIB} "$_object"
+            ;;
+        la)
+            mk_msg_domain "la"
+            mk_msg "$pretty ($MK_CANONICAL_SYSTEM)"
+            create_libtool_archive
+            ;;
+    esac
 }
 
 object="$1"
-shift 1
+shift
+mk_pretty_path "$object"
+pretty="$result"
 
-if [ "${MK_SYSTEM%/*}" = "build" ]
+if [ -z "$CONFTEST" -a "$MK_SYSTEM" = "host" -a "$MK_MULTIARCH" = "combine" -a "$MODE" != "ar" -a "$MODE" != "la" ]
 then
-    LINK_LIBDIR="$MK_RUN_LIBDIR"
-    RPATH_LIBDIR="$MK_ROOT_DIR/$MK_RUN_LIBDIR"
+    for _isa in ${MK_HOST_ISAS}
+    do
+        mk_system "host/$_isa"
+        mk_basename "$object"
+        mk_tempfile "$_isa.$result"
+        part="$result"
+        do_link "$part" "$@"
+        parts="$parts $part"
+    done
+    mk_system host
+    _mk_compiler_multiarch_combine "$object" ${parts}
+    mk_tempfile_clear
 else
-    RPATH_LIBDIR="$MK_LIBDIR"
-    mk_resolve_file "$MK_LIBDIR"
-    LINK_LIBDIR="$result"
+    do_link "$object" "$@"
 fi
-
-COMBINED_LIBDEPS="$LIBDEPS"
-COMBINED_LDFLAGS="$MK_ISA_LDFLAGS $MK_LDFLAGS $LDFLAGS"
-COMBINED_LIBDIRS="$LIBDIRS"
-
-[ -d "$LINK_LIBDIR" -a -z "$CONFTEST" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS -L${LINK_LIBDIR}"
-
-# SONAME
-if [ -n "$SONAME" ]
-then
-    case "$MK_OS" in
-        darwin)
-            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -install_name ${MK_LIBDIR}/${SONAME}"
-            ;;
-        hpux)
-            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,+h,${SONAME}"
-            ;;
-        aix)
-            : # SONAMEs aren't encoded in libraries
-            ;;
-        *)
-            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-h,$SONAME"
-            ;;
-    esac
-fi
-
-# Group suffix
-_gsuffix=".${MK_CANONICAL_SYSTEM%/*}.${MK_CANONICAL_SYSTEM#*/}.og"
-
-case "$COMPILER" in
-    c)
-        CPROG="$MK_CC"
-        LD_STYLE="$MK_CC_LD_STYLE"
-        COMBINED_LDFLAGS="$COMBINED_LDFLAGS $MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS"
-        ;;
-    c++)
-        CPROG="$MK_CXX"
-        LD_STYLE="$MK_CXX_LD_STYLE"
-        COMBINED_LDFLAGS="$COMBINED_LDFLAGS $MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS"
-        ;;
-esac
-
-case "${MK_OS}:${LD_STYLE}" in
-    *:gnu)
-        DLO_LINK="-shared"
-        LIB_LINK="-shared"
-        ;;
-    solaris:native)
-        DLO_LINK="-shared"
-        LIB_LINK="-shared"
-        
-        if [ "$MODE" = "library" ]
-        then
-            COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-z,defs -Wl,-z,text"
-            COMBINED_LIBDEPS="$COMBINED_LIBDEPS c"
-        fi
-
-        # The solaris linker is anal retentive about implicit shared library dependencies,
-        # so use available libtool .la files to add implicit dependencies to the link command
-        combine_libtool_flags
-        ;;
-    darwin:native)
-        DLO_LINK="-bundle"
-        LIB_LINK="-dynamiclib"
-        COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-undefined -Wl,dynamic_lookup -Wl,-single_module -Wl,-arch_errors_fatal"
-        ;;
-    aix:native)
-        DLO_LINK="-shared -Wl,-berok -Wl,-bnoentry"
-        LIB_LINK="-shared -Wl,-bnoentry"
-        COMBINED_LDFLAGS="$COMBINED_LDFLAGS -Wl,-brtl"
-        
-        # The linker on AIX does not track inter-library dependencies, so do it ourselves
-        combine_libtool_flags
-        ;;
-    hpux:native)
-        DLO_LINK="-shared"
-        LIB_LINK="-shared"
-
-        if [ "$MODE" = "library" ]
-        then
-            COMBINED_LIBDEPS="$COMBINED_LIBDEPS c"
-        fi
-        combine_libtool_flags
-        ;;
-esac
-
-[ -z "$CONFTEST" ] && COMBINED_LDFLAGS="$COMBINED_LDFLAGS $MK_RPATHFLAGS"
-
-for lib in ${COMBINED_LIBDEPS}
-do
-    _LIBS="$_LIBS -l${lib}"
-done
-
-[ "${object%/*}" != "${object}" ] && mk_mkdir "${object%/*}"
-
-case "$MODE" in
-    library)
-        mk_msg_domain "link"
-        mk_pretty_path "$object"
-        mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        mk_run_or_fail ${CPROG} ${LIB_LINK} -o "$object" "$@" ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
-        mk_run_link_posthooks "$object"
-        ;;
-    dlo)
-        mk_msg_domain "link"
-        mk_pretty_path "$object"
-        mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        mk_run_or_fail ${CPROG} ${DLO_LINK} -o "$object" "$@" ${COMBINED_LDFLAGS} -fPIC ${_LIBS}
-        mk_run_link_posthooks "$object"
-        ;;
-    program)
-        mk_msg_domain "link"
-        mk_pretty_path "$object"
-        mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        mk_run_or_fail ${CPROG} -o "$object" "$@" ${COMBINED_LDFLAGS} ${_LIBS}
-        mk_run_link_posthooks "$object"
-        ;;
-    ar)
-        mk_msg_domain "ar"
-        mk_pretty_path "$object"
-        mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        mk_safe_rm "$object"
-        mk_run_or_fail ${MK_AR} -cru "$object" "$@"
-        mk_run_or_fail ${MK_RANLIB} "$object"
-        ;;
-    la)
-        mk_msg_domain "la"
-        mk_pretty_path "$object"
-        mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-        create_libtool_archive
-        ;;
-esac

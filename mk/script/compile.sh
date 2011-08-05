@@ -26,72 +26,97 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-_object="$1"
-_source="$2"
+do_compile()
+{
+    _object="$1"
+    _source="$2"
 
-IFLAGS=""
-
-for _dir in ${INCLUDEDIRS}
-do
-    case "$_dir" in
-        /*)
-            IFLAGS="$IFLAGS -I${MK_STAGE_DIR}$_dir"
+    IFLAGS=""
+    
+    for _dir in ${INCLUDEDIRS}
+    do
+        case "$_dir" in
+            /*)
+                IFLAGS="$IFLAGS -I${MK_STAGE_DIR}$_dir"
+                ;;
+            *)
+                IFLAGS="$IFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/$_dir -I${MK_OBJECT_DIR}${MK_SUBDIR}/$_dir"
+                ;;
+        esac
+    done
+    
+    case "$COMPILER" in
+        c)
+            CPROG="$MK_CC"
+            FLAGS="$MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS $IFLAGS $MK_ISA_CPPFLAGS $MK_CPPFLAGS $CPPFLAGS"
             ;;
-        *)
-            IFLAGS="$IFLAGS -I${MK_SOURCE_DIR}${MK_SUBDIR}/$_dir -I${MK_OBJECT_DIR}${MK_SUBDIR}/$_dir"
+        c++)
+            CPROG="$MK_CXX"
+            FLAGS="$MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS $IFLAGS $MK_ISA_CPPFLAGS $MK_CPPFLAGS $CPPFLAGS"
             ;;
     esac
-done
+    
+    if [ -z "$CONFTEST" ]
+    then
+        FLAGS="$FLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}"
+    fi
+    mk_defname "$MK_CANONICAL_SYSTEM"
+    FLAGS="$FLAGS -DHAVE_CONFIG_H -D_MK_$result"
+    mk_defname "${MK_CANONICAL_SYSTEM%/*}"
+    FLAGS="$FLAGS -D_MK_$result"
+    
+    mk_msg_domain compile
+    
+    if [ -z "$CONFTEST" ]
+    then
+        mk_mkdir ".MakeKitDeps"
+        _mk_slashless_name "${_object%.o}"
+        mk_quote ".MakeKitDeps/$result.dep"
+        DEP_FLAGS="-MMD -MP -MF $result"
+    fi
 
-case "$COMPILER" in
-    c)
-        CPROG="$MK_CC"
-        FLAGS="$MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS $IFLAGS $MK_ISA_CPPFLAGS $MK_CPPFLAGS $CPPFLAGS"
-        ;;
-    c++)
-        CPROG="$MK_CXX"
-        FLAGS="$MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS $IFLAGS $MK_ISA_CPPFLAGS $MK_CPPFLAGS $CPPFLAGS"
-        ;;
-esac
+    if [ "$PIC" = "yes" ]
+    then
+        FLAGS="$FLAGS -fPIC"
+    fi
+    
+    case "$MK_OS" in
+        darwin)
+            FLAGS="$FLAGS -fno-common"
+            ;;
+    esac
+    
+    mk_msg "$pretty ($MK_CANONICAL_SYSTEM)"
+    
+    mk_mkdirname "$_object"
+    
+    mk_unquote_list "$DEP_FLAGS"
+    mk_run_or_fail ${CPROG} \
+        ${FLAGS} \
+        "$@" \
+        -o "$_object" \
+        -c "$_source"
+}
 
-if [ -z "$CONFTEST" ]
+object="$1"
+shift
+mk_pretty_path "$1"
+pretty="$result"
+
+if [ -z "$CONFTEST" -a "$MK_SYSTEM" = "host" -a "$MK_MULTIARCH" = "combine" ]
 then
-    FLAGS="$FLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}"
+    parts=""
+    for _isa in ${MK_HOST_ISAS}
+    do
+        mk_system "host/$_isa"
+        mk_basename "$object"
+        mk_tempfile "$_isa.$result"
+        part="$result"
+        do_compile "$part" "$@"
+        parts="$parts $part"
+    done
+    _mk_compiler_multiarch_combine "$object" ${parts}
+    mk_tempfile_clear
+else
+    do_compile "$object" "$@"
 fi
-mk_defname "$MK_CANONICAL_SYSTEM"
-FLAGS="$FLAGS -DHAVE_CONFIG_H -D_MK_$result"
-mk_defname "${MK_CANONICAL_SYSTEM%/*}"
-FLAGS="$FLAGS -D_MK_$result"
-
-mk_msg_domain compile
-
-if [ -z "$CONFTEST" ]
-then
-    mk_mkdir ".MakeKitDeps"
-    _mk_slashless_name "${_object%.o}"
-    mk_quote ".MakeKitDeps/$result.dep"
-    DEP_FLAGS="-MMD -MP -MF $result"
-fi
-
-if [ "$PIC" = "yes" ]
-then
-    FLAGS="$FLAGS -fPIC"
-fi
-
-case "$MK_OS" in
-    darwin)
-        FLAGS="$FLAGS -fno-common"
-        ;;
-esac
-
-mk_pretty_path "$_source"
-mk_msg "$result ($MK_CANONICAL_SYSTEM)"
-
-mk_mkdirname "$_object"
-
-mk_unquote_list "$DEP_FLAGS"
-mk_run_or_fail ${CPROG} \
-    ${FLAGS} \
-    "$@" \
-    -o "$_object" \
-    -c "$_source"
