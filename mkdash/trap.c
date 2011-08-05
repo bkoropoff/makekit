@@ -409,7 +409,7 @@ int decode_signal(const char *string, int minsig)
 	}
 
 	for (signo = minsig; signo < NSIG; signo++) {
-		if (!strcasecmp(string, signal_names[signo])) {
+		if (signal_names[signo] && !strcasecmp(string, signal_names[signo])) {
 			return signo;
 		}
 	}

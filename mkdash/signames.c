@@ -92,5 +92,5 @@ const char *const signal_names[] = {
 #ifdef SIGSYS
     [SIGSYS] = "SYS",
 #endif
-    (char *)0x0
+    [NSIG] = (char *)0x0
 };
