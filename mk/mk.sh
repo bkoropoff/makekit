@@ -1132,6 +1132,16 @@ mk_fnmatch_filter()
 #>
 mk_normalize_path()
 {
+    case "$1" in
+        /*)
+            __leading="/"
+            set -- "${1##/}"
+            ;;
+        *)
+            __leading=""
+            ;;
+    esac
+
     __path_IFS="$IFS"
     IFS="/"
     set -f
@@ -1140,29 +1150,32 @@ mk_normalize_path()
     IFS="$__path_IFS"
 
     result=""
+    __comps=0
     
     for __path_item in "$@"
     do
         case "$__path_item" in
-            '.')
+            '.'|'')
                 continue;
                 ;;
             '..')
-                if [ -z "$result" ]
+                if [ $__comps -eq 0 ]
                 then
-                    result="/.."
+                    result="${result}/.."
                 else
                     result="${result%/*}"
+                    __comps=$(($__comps-1))
                 fi
                 ;;
             *)
                 result="${result}/${__path_item}"
+                __comps=$(($__comps+1))
                 ;;
         esac
     done
 
-    result="${result#/}"
-    unset __path_IFS __path_item
+    result="${__leading}${result#/}"
+    unset __path_IFS __path_item __comps __leading
 }
 
 _mk_find_resource()
