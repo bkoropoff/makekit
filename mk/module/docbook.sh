@@ -43,7 +43,8 @@ option()
     _default_docbook_dir="<none>"
 
     for candidate in \
-        /usr/share/xml/docbook/stylesheet/docbook-xsl
+        /usr/share/xml/docbook/stylesheet/docbook-xsl \
+        /usr/share/sgml/docbook/xsl-stylesheets
     do
         if [ -d "$candidate" ]
         then
