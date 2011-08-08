@@ -525,58 +525,78 @@ mk_resolve_files()
 # @brief Convert fully-qualified target to pretty form
 # @usage target
 # 
-# Converts <param>target</param> to a form suitable for
-# displaying to the user by eliding references to
-# <varref>MK_SOURCE_DIR</varref>, <varref>MK_OBJECT_DIR</varref>,
-# and <varref>MK_STAGE_DIR</varref> where possible.
+# Converts <param>target</param> to a more compact form
+# if possible, acting essentially as the inverse of
+# <funcref>mk_resolve_target</funcref>.  It will also
+# normalize the path to remove intermediate <lit>.</lit>
+# and <lit>..</lit> components.
 # Sets <var>result</var> to the result.
-#
-# @example
-# # Assume MK_SOURCE_DIR='..'
-#
-# mk_pretty_target @stage/usr/bin/foo
-# # result='/usr/bin/foo'
-#
-# mk_pretty_target @object/src/foo.o
-# # result='src/foo.o'
-#
-# mk_pretty_target @../src/foo.c
-# # result='src/foo.c'
-#
-# mk_pretty_target @foo/bar.baz
-# # result='./foo/bar.baz'
-# @endexample
 #>
 mk_pretty_target()
 {
-    mk_pretty_path "${1#@}"
+    mk_resolve_target "$1"
+    mk_normalize_path "$result"
+    case "$result" in
+        "@$MK_STAGE_DIR"/*)
+            result="${result#@$MK_STAGE_DIR}"
+            ;;
+        "@$MK_OBJECT_SUBDIR"/*)
+            result="${result#@$MK_OBJECT_SUBDIR/}"
+            ;;
+        "@$MK_SOURCE_SUBDIR"/*)
+            result="${result#@$MK_SOURCE_SUBDIR/}"
+            ;;
+        *)
+            result="@$result"
+            ;;
+    esac
 }
 
 #<
 # @brief Convert path to pretty form
 # @usage path
+# 
+# Converts <param>path</param> to a more compact form.  This is
+# similar to <funcref>mk_pretty_target</funcref> with two differences.
+# First, <param>path</param> is a plain file path and not in target
+# notation.  Second, paths that do not reference the object, source,
+# or stage directories yield a slightly different result.  Sets
+# <var>result</var> to the result.
 #
-# Behaves identically to <funcref>mk_pretty_target</funcref>,
-# except that <param>path</param> is not expected to contain
-# the leading <lit>@</lit> of a fully-qualified target.
+# @example
+# # Assume MK_SOURCE_DIR='..'
+#
+# mk_pretty_file stage/usr/bin/foo
+# # result='/usr/bin/foo'
+#
+# mk_pretty_file object/src/foo.o
+# # result='src/foo.o'
+#
+# mk_pretty_file ../src/foo.c
+# # result='src/foo.c'
+#
+# mk_pretty_file foo/bar.baz
+# # result='./foo/bar.baz'
+# @endexample
 #>
 mk_pretty_path()
 {
-    case "$1" in
+    mk_normalize_path "$1"
+    case "$result" in
         "$MK_STAGE_DIR"/*)
-            result="${1#$MK_STAGE_DIR}"
+            result="${result#$MK_STAGE_DIR}"
             ;;
         "$MK_OBJECT_DIR"/*)
-            result="${1#$MK_OBJECT_DIR/}"
+            result="${result#$MK_OBJECT_DIR/}"
             ;;
         "$MK_SOURCE_DIR"/*)
-            result="${1#$MK_SOURCE_DIR/}"
+            result="${result#$MK_SOURCE_DIR/}"
             ;;
         /*)
-            result="$1"
+            result="//$result"
             ;;
         *)
-            result="./$1"
+            result="./$result"
             ;;
     esac
 }
