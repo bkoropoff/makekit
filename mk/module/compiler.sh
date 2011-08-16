@@ -536,7 +536,7 @@ _mk_objname()
     result="${1%.*}${OSUFFIX}.${MK_SYSTEM%/*}"
     if [ "${MK_SYSTEM#*/}" != "${MK_SYSTEM}" ]
     then
-        result="$result${MK_SYSTEM#*/}"
+        result="$result.${MK_SYSTEM#*/}"
     fi
     result="$result.o"
 }
