@@ -1312,8 +1312,8 @@ configure()
 
 make()
 {
-    MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR"
-    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitDeps"
+    MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR .MakeKitDeps .MakeKitDeps.dep"
+    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports"
 
     mk_target \
         TARGET="@clean" \
@@ -1377,8 +1377,18 @@ make()
         mk_target TARGET="$_target" DEPS="@Makefile"
     done
 
+    mk_target \
+        TARGET="@.MakeKitDeps.dep" \
+        DEPS="@.MakeKitDeps/.regen" \
+        _mk_core_update_deps
+
+    mk_target \
+        TARGET="@.MakeKitDeps/.regen" \
+        mk_incremental_deps_changed
+    
+
     _mk_emit ""
-    _mk_emit "sinclude .MakeKitDeps/*.dep"
+    _mk_emit "sinclude .MakeKitDeps.dep"
     _mk_emit ""
 
     # Save configure check cache
@@ -1592,4 +1602,28 @@ _mk_core_uninstall()
             rm -f "$_file"
         fi
     done
+}
+
+_mk_core_update_deps()
+{
+    set -- .MakeKitDeps/*.dep
+    [ -f "$1" ] || return 0
+
+    mk_msg "processing incremental dependencies"
+    
+    cat "$@" > .MakeKitDeps/.combined.dep ||
+       mk_fail "could not write .MakeKitDeps/.combined.dep"
+
+    {
+        grep -v '.*:$' < .MakeKitDeps/.combined.dep | grep -v '^$'
+        grep '.*:$' < .MakeKitDeps/.combined.dep | sort | uniq
+    } > .MakeKitDeps.dep
+
+    mk_run_or_fail touch .MakeKitDeps.dep
+}
+
+mk_incremental_deps_changed()
+{
+    mk_mkdir .MakeKitDeps
+    mk_run_or_fail touch .MakeKitDeps/.regen
 }

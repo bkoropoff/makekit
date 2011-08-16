@@ -71,7 +71,8 @@ do_compile()
     then
         mk_mkdir ".MakeKitDeps"
         _mk_slashless_name "${_object%.o}"
-        mk_quote ".MakeKitDeps/$result.dep"
+        DEP_FILE=".MakeKitDeps/$result.dep"
+        mk_quote "$DEP_FILE.new"
         DEP_FLAGS="-MMD -MP -MF $result"
     fi
 
@@ -96,6 +97,17 @@ do_compile()
         "$@" \
         -o "$_object" \
         -c "$_source"
+
+    if [ -n "$DEP_FILE" ]
+    then
+        if diff -q -- "$DEP_FILE" "$DEP_FILE.new" >/dev/null 2>&1
+        then
+            mk_safe_rm "$DEP_FILE.new"
+        else
+            mk_run_or_fail mv -f "$DEP_FILE.new" "$DEP_FILE"
+            mk_incremental_deps_changed
+        fi
+    fi
 }
 
 object="$1"
