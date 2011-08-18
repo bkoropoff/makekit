@@ -512,7 +512,7 @@ _mk_at_configure()
     _mk_at_log_command "$NAME" "configure" "${_src_dir}/configure" \
         CC="$MK_CC" \
         CXX="$MK_CXX" \
-        CPPFLAGS="-I${_include_dir} $_cppflags $CPPFLAGS" \
+        CPPFLAGS="-I${_include_dir} $MK_ISA_CPPFLAGS $MK_CPPFLAGS $CPPFLAGS" \
         CFLAGS="$MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS" \
         CXXFLAGS="$MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS" \
         LDFLAGS="$MK_ISA_LDFLAGS $MK_LDFLAGS $LDFLAGS ${_ldflags} $MK_RPATHFLAGS" \
