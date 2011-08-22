@@ -254,8 +254,11 @@ mk_chain_autotools()
     PASSVARS="$PASSVARS PARAMS INSTALL_PRE INSTALL_POST SET_LIBRARY_PATH"
     PASSVARS="$PASSVARS MAKE_BUILD_TARGET MAKE_INSTALL_TARGET"
 
-    _mk_at_expand_srcdir_patterns "$BUILDDEP_PATTERNS" "$BUILDDEP_EXCLUDE_PATTERNS"
-    BUILDDEPS="$BUILDDEPS $result"
+    if [ -d "${MK_SOURCE_DIR}${MK_SUBDIR}/$SOURCEDIR" ]
+    then
+        _mk_at_expand_srcdir_patterns "$BUILDDEP_PATTERNS" "$BUILDDEP_EXCLUDE_PATTERNS"
+        BUILDDEPS="$BUILDDEPS $result"
+    fi
 
     if ! [ -d "${MK_SOURCE_DIR}${MK_SUBDIR}/$SOURCEDIR" ]
     then
