@@ -11,7 +11,6 @@
 #define HAVE_DECL_STRTOIMAX 1
 #define HAVE_DECL_STRTOUMAX 1
 #define HAVE_BSEARCH 1
-#define HAVE_FACCESSAT 1
 #define HAVE_GETPWNAM 1
 #define HAVE_GETRLIMIT 1
 #define HAVE_ISALPHA 1
@@ -27,7 +26,6 @@
 #define HAVE_DECL_STRTOIMAX 1
 #define HAVE_DECL_STRTOUMAX 1
 #define HAVE_BSEARCH 1
-#define HAVE_FACCESSAT 1
 #define HAVE_GETPWNAM 1
 #define HAVE_GETRLIMIT 1
 #define HAVE_ISALPHA 1
@@ -106,6 +104,11 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
+
+#ifdef AT_EACCESS
+#define HAVE_FACCESSAT 1
+#endif
 
 #if !HAVE_DECL_STAT64
 #define fstat64 fstat
