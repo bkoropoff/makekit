@@ -5,6 +5,7 @@
 #define IFS_BROKEN 1
 #define _LARGEFILE64_SOURCE 1
 #if defined(__linux__)
+#define _GNU_SOURCE 1
 #define HAVE_ALLOCA_H 1
 #define HAVE_PATHS_H 1
 #define HAVE_DECL_ISBLANK 1
@@ -20,6 +21,7 @@
 #define HAVE_STRTOD 1
 #define HAVE_SYSCONF 1
 #define HAVE_DECL_STAT64 0
+#define HAVE_MEMPCPY 1
 #elif defined(__FreeBSD__)
 #define HAVE_PATHS_H 1
 #define HAVE_DECL_ISBLANK 1
