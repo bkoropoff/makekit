@@ -1357,12 +1357,12 @@ _mk_group()
 }
 
 #<
-# @brief Build an object group
+# @brief Build a source group
 # @usage GROUP=name options...
 #
-# Defines a target to build a C/C++ "group", which combines sources
-# files and associated build flags into a logical unit which added
-# to <funcref>mk_program</funcref> and friends.  This feature is
+# Defines a target to build a C/C++ "group", which combines source
+# files and associated build flags into a logical unit which can be
+# added to <funcref>mk_program</funcref> and friends.  This feature is
 # similar to "convenience libraries" with GNU libtool.
 #
 # See the <modref>compiler</modref> module for common options or
