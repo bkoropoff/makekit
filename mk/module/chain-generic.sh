@@ -295,9 +295,8 @@ _mk_chain_stage()
     # ... = output dirs
 
     mk_msg_domain "stage"
-    prefix=""
-    [ "${MK_SYSTEM%/*}" = "host" ] && prefix="$MK_STAGE_DIR"
-    mk_msg "${1#$prefix}"
+    mk_pretty_path "$1"
+    mk_msg "$result"
 
     "$STAGE" "$@"
 }
