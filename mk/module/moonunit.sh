@@ -117,6 +117,36 @@ mk_moonunit()
     mk_pop_vars
 }
 
+mk_moonunit_test()
+{
+    mk_push_vars LIBRARIES NAME
+    mk_parse_params
+
+    mk_quote "$@"
+    LIBRARIES="$LIBRARIES $result"
+
+    [ -z "$name" ] && mk_fail "mk_moonunit_test: NAME not specified"
+
+    if [ -n "$MOONUNIT" -a "$MK_CROSS_COMPILING" = no ]
+    then
+        mk_target \
+            TARGET="@$NAME" \
+            DEPS="$LIBRARIES" -- \
+            _mk_moonunit_test \
+            DEBUG='$(DEBUG)' \
+            DEBUGGER='$(DEBUGGER)' \
+            TEST='$(TEST)' \
+            XML='$(XML)' \
+            HTML='$(HTML)' \
+            TITLE='$(TITLE)' \
+            RUN='$(RUN)' \
+            PARAMS='$(PARAMS)' \
+            "*$LIBRARIES"
+        
+        mk_add_phony_target "$result"
+    fi
+}
+
 option()
 {
     mk_option \
@@ -157,20 +187,88 @@ configure()
         mk_msg "cross compiling -- tests cannot be run"
     else
         mk_check_program moonunit
+        mk_check_program moonunit-xml
     fi
 }
 
 make()
 {
-    if [ -n "$MOONUNIT" -a -n "$MK_MOONUNIT_TESTS" -a "$MK_CROSS_COMPILING" = no ]
+    if [ -n "$MK_MOONUNIT_TESTS" ]
     then
-        mk_target \
-            TARGET="@test" \
-            DEPS="${MK_MOONUNIT_TESTS}" \
-            mk_run_script moonunit "*${MK_MOONUNIT_TESTS}"
-
-        mk_add_phony_target "$result"
-
+        mk_moonunit_test NAME="test" LIBRARIES="$MK_MOONUNIT_TESTS"
         mk_add_clean_target "@${MK_MOONUNIT_DIR}"
     fi
+}
+
+### section build
+
+_mk_moonunit_test()
+{
+    mk_push_vars DEBUG DEBUGGER TEST XML HTML TITLE RUN PARAMS params msg la ret
+    mk_parse_params
+    
+    mk_msg_domain moonunit
+
+    for la
+    do
+        mk_quote "${la%.la}${MK_DLO_EXT}"
+        params="$params $result"
+        mk_basename "$la"
+        msg="$msg ${result%.la}"
+    done
+
+    if [ -n "$DEBUG" ]
+    then
+        [ -z "$DEBUGGER" ] && DEBUGGER="gdb --args"
+        mk_quote -t "$DEBUG" -d
+        params="$params $result"
+    else
+        DEBUGGER=""
+    fi
+
+    if [ -n "$TEST" ]
+    then
+        mk_quote -t "$TEST"
+        params="$params $result"
+    fi
+
+    if [ -n "$HTML" ]
+    then
+        mk_tempfile output.xml
+        XML="$result"
+    fi
+
+    if [ -n "$XML" ]
+    then
+        [ -n "$RUN" ] && RUN=",name=$RUN"
+        [ -n "$TITLE" ] && TITLE=",title=$TITLE"
+        mk_quote -l console -l xml:file="$XML$RUN$TITLE"
+        params="$params $result"
+    fi
+
+    if [ -n "$PARAMS" ]
+    then
+        params="$params $PARAMS"
+    fi
+
+    mk_msg "${msg# }"
+
+    mk_unquote_list "$params"
+    
+    (
+        mk_run_or_fail \
+            env "$MK_LIBPATH_VAR"="${MK_STAGE_DIR}${MK_LIBDIR}" \
+            ${DEBUGGER} ${MOONUNIT} "$@"
+    )
+
+    ret=$?
+
+    if [ -n "$HTML" -a -f "$XML" ]
+    then
+        mk_run_or_fail ${MOONUNIT_XML} -m html -o "$HTML" "$XML"
+    fi
+
+    [ "$ret" -ne 0 ] && exit "$ret"
+
+    mk_pop_vars
 }
