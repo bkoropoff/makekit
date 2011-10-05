@@ -282,7 +282,7 @@ mk_chain_autotools()
 
         mk_msg "$_msg"
         mk_cd_or_fail "${MK_SOURCE_DIR}${MK_SUBDIR}/${SOURCEDIR}"
-        mk_run_or_fail ${_command}
+        mk_run_quiet_or_fail ${_command}
         mk_cd_or_fail "${MK_ROOT_DIR}"
     fi
 
