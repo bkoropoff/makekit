@@ -21,7 +21,6 @@ make()
         mk/script/build-lpp.sh \
         mk/script/link.sh \
         mk/script/install.sh \
-        mk/script/moonunit.sh \
         mk/script/build-macpkg.sh \
         mk/script/nuke.sh \
         mk/module/doxygen.sh \
