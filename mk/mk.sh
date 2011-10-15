@@ -301,6 +301,33 @@ done'
     }
 fi
 
+#<
+# @brief Check for missing keyword parameters
+# @usage funcname params..
+#
+# Checks that each variable in <param>params</param> is
+# not the empty string or fails with an error message.
+# The provided <param>funcname</param> will be used in the
+# message to identify to the user which function expected
+# the missing parameter.
+#
+# This function is intended for use after
+# <funcref>mk_parse_params</funcref> in order to verify
+# that all non-optional parameters were passed.
+#>
+mk_require_params()
+{
+    __func="$1"
+    shift
+    for __param
+    do
+        eval [ -n "\"\$${__param}\"" ] || 
+            mk_fail "$__func parameter unspecified: $__param"
+    done
+
+    unset __param __func
+}
+
 ##
 #
 # mk_msg_domain
