@@ -325,7 +325,7 @@ mk_get_clean_targets()
 
 mk_safe_rm()
 {
-    if [ -z "${MK_ROOT_DIR}" -o "$PWD" != "${MK_ROOT_DIR}" ]
+    if ! mk_are_same_path "$PWD" "${MK_ROOT_DIR}"
     then
         mk_fail "CRITICAL: attempt to mk_safe_rm outside of build directory: $PWD"
     fi
