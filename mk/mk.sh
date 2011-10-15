@@ -1501,6 +1501,93 @@ mk_absolute_path()
     esac
 }
 
+_mk_canonical_path()
+{
+    if [ -d "$1" ]
+    then
+        __canon=`cd "$1" && pwd` || return 1
+    else
+        mk_dirname "$1"
+        __canon=`cd "$result" && pwd` || return 1
+        mk_basename "$1"
+        __canon="$__canon/$result"
+    fi
+    _IFS="$IFS"
+    IFS="/"
+    set -- $__canon
+    IFS="$_IFS"
+    __canon=""
+
+    for __part
+    do
+        if [ -h "$__canon/$__part" ]
+        then
+            mk_readlink "$__canon/$__part"
+            __part="$result"
+        fi
+        
+        case "$__part" in
+            /*)
+                __canon="/$__part"
+                ;;
+            .)
+                :
+                ;;
+            ..)
+                __canon="${__canon%/*}"
+                ;;
+            *)
+                __canon="${__canon}/$__part"
+                ;;
+        esac
+    done
+    
+    result="${__canon#/}"
+    unset __canon __part
+}
+
+#<
+# @brief Canonicalize file system path
+# @usage path
+#
+# Sets <var>result</var> to the canonical version of
+# <param>path</param>.  A canonical path is absolute
+# and contains no symlinks.
+#
+# Returns <lit>1</lit> (logical false) if the path
+# is invalid, or <lit>0</lit> (logical true) otherwise.
+#>
+mk_canonical_path()
+{
+    result=""
+    while [ "$result" != "$1" ]
+    do
+        set -- "$result"
+        _mk_canonical_path "$1" || return 1
+    done
+}
+
+#<
+# @brief Test if two paths are identical
+# @usage path1 path2
+#
+# Returns <lit>0</lit> (logical true) if <param>path1</param>
+# and <param>path2</param> represent the same physical file
+# system path.  Returns <lit>1</lit> (logical false) if they
+# do not, or if either path is invalid.
+#>
+mk_are_same_path()
+{
+    [ "$1" = "$2" ] && return 0
+    mk_push_vars result
+    mk_canonical_path "$1" || result="NOPE1"
+    set -- "$result" "$2"
+    mk_canonical_path "$2" || result="NOPE2"
+    set -- "$1" "$result"
+    mk_pop_vars
+    [ "$1" = "$2" ]
+}
+
 #<
 # @brief Read quoted list from here document
 # @usage [var]
