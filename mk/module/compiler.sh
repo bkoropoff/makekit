@@ -92,6 +92,7 @@ DEPENDS="core platform path"
 #         <funcref>mk_program</funcref>,
 #         <funcref>mk_group</funcref>,
 #         <funcref>mk_library</funcref>,
+#         <funcref>mk_prebuilt_library</funcref>,
 #         <funcref>mk_dlo</funcref>
 #     </item>
 #   </defentry>
@@ -160,6 +161,7 @@ DEPENDS="core platform path"
 #           Applicable functions: 
 #         <funcref>mk_program</funcref>,
 #         <funcref>mk_library</funcref>,
+#         <funcref>mk_prebuilt_library</funcref>,
 #         <funcref>mk_dlo</funcref>
 #       </para>
 #     </item>
@@ -173,6 +175,7 @@ DEPENDS="core platform path"
 #       <para>
 #           Applicable functions: 
 #         <funcref>mk_library</funcref>,
+#         <funcref>mk_prebuilt_library</funcref>,
 #         <funcref>mk_dlo</funcref>
 #       </para>
 #     </item>
@@ -1149,6 +1152,117 @@ mk_library()
 
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $LIB"
     
+    mk_pop_vars
+}
+
+#<
+# @brief Stage a pre-built library
+# @usage LIB=name options...
+# @option LIB=name Sets the name of the library.
+# Do not specify a leading <lit>lib</lit> or file extension.
+# @option SHARED=shared Specifies the shared library binary.
+# @option STATIC=static Specifies the static library file.
+# @option LA=la Specifies the libtool archive file.  If not
+# specified, one will be generated.
+# @option VERSION=verspec Sets the version as in
+# <funcref>mk_library</funcref>.
+# @option ... Other common options documented in the <modref>compiler</modref>
+# module.
+# 
+# Defines a target to install a pre-built a C/C++ library.
+# This may be useful if you do not have the source for
+# a library you wish to use and bundle with your project.
+#
+# At least one of <param>shared</param> and <param>static</param>
+# must be specified.
+#
+# Sets <var>result</var> to the staged <lit>.la</lit> file in
+# canonical target notation.
+#>
+mk_prebuilt_library()
+{
+    mk_push_vars \
+        INSTALLDIR="$MK_LIBDIR" VERSION=0:0:0 LIB SHARED STATIC LA DEPS \
+        LIBDEPS SONAME LINKS EXT="${MK_LIB_EXT}" TARGET STATIC_NAME
+        
+    mk_parse_params
+    mk_require_params mk_prebuilt_library LIB
+    [ -z "$SHARED" -a -z "$STATIC" ] && 
+        mk_fail "mk_prebuilt_library: at least one of SHARED and STATIC must be specified"
+
+    _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS $MK_LIBDEPS"
+    _mk_library_process_version
+
+    if [ -n "$SHARED" ]
+    then
+        _mk_library_process_version
+        mk_unquote_list "$LINKS"
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}$1"
+
+        mk_stage \
+            SOURCE="$SHARED" \
+            DEST="$TARGET" \
+            MODE=0644
+        
+        TARGET="$result"
+        mk_run_link_target_posthooks "$TARGET"
+        mk_quote "$TARGET"
+        DEPS="$DEPS $result"
+        TARGET="$1"
+        shift
+
+        for _link
+        do
+            mk_symlink \
+                TARGET="$TARGET" \
+                LINK="${INSTALLDIR:+$INSTALLDIR}/$_link"
+            mk_quote "$result"
+            DEPS="$DEPS $result"
+        done
+    fi
+
+    if [ -n "$STATIC" ]
+    then
+        TARGET="${INSTALLDIR:+$INSTALLDIR/}lib$LIB.a"
+        STATIC_NAME="lib$LIB.a"
+
+        mk_stage \
+            SOURCE="$STATIC" \
+            DEST="$TARGET" \
+            MODE=0644
+
+        mk_quote "$result"
+        DEPS="$DEPS $result"
+    fi
+
+    for result in ${LIBDEPS} ${MK_LIBDEPS}
+    do
+        if _mk_contains "$result" ${MK_INTERNAL_LIBS}
+        then
+            mk_quote "$MK_LIBDIR/lib${result}.la"
+            DEPS="$DEPS $result"
+        fi
+    done
+
+    TARGET="${INSTALLDIR:+$INSTALLDIR/}lib$LIB.la"
+
+    if [ -n "$LA" ]
+    then
+        mk_stage \
+            SOURCE="$LA" \
+            DEST="$TARGET" \
+            DEPS="$DEPS" \
+            MODE=0644
+    else
+        mk_target \
+            TARGET="$TARGET" \
+            DEPS="$DEPS" \
+            mk_run_script link MODE=la \
+            LIBDEPS="$LIBDEPS $MK_LIBDEPS" %LINKS %SONAME %STATIC_NAME %EXT '$@'
+    fi
+
+    mk_declare_internal_library "$LIB"
+
     mk_pop_vars
 }
 
