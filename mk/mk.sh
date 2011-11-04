@@ -1678,6 +1678,22 @@ mk_tempfile()
     result="$_result"
 }
 
+mk_tempfile_delete()
+{
+    mk_unquote_list "$_MK_TMPLIST"
+    _MK_TMPLIST=""
+    for _tmp
+    do
+        if [ "$_tmp" = "$1" ]
+        then
+            rm -f "$_tmp"
+        else
+            mk_quote "$_tmp"
+            _MK_TMPLIST="$_MK_TMPLIST $result"
+        fi
+    done
+}
+
 mk_tempfile_clear()
 {
     mk_unquote_list "$_MK_TMPLIST"
