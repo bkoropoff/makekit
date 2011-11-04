@@ -1093,6 +1093,7 @@ mk_library()
         SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" \
         TARGET STATIC_NAME static_deps
     mk_parse_params
+    mk_require_params mk_library LIB
 
     [ "$COMPILER" = "c++" ] && IS_CXX=true
     
@@ -1220,6 +1221,7 @@ mk_dlo()
         OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE SONAME COMPILER=c \
         IS_CXX=false OSUFFIX PIC=yes
     mk_parse_params
+    mk_require_params mk_dlo DLO
 
     [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
 
@@ -1376,6 +1378,7 @@ mk_group()
         HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS \
         includedir
     mk_parse_params
+    mk_require_params mk_group GROUP
 
     _mk_verify_libdeps "$GROUP" "$LIBDEPS $MK_LIBDEPS"
     _mk_process_headerdeps "$GROUP"
@@ -1471,6 +1474,7 @@ mk_program()
         COMPILER=c IS_CXX=false PIC=no OSUFFIX
         EXT=""
     mk_parse_params
+    mk_require_params mk_program PROGRAM
 
     if [ -z "$INSTALLDIR" ]
     then
