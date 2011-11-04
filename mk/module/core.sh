@@ -1005,6 +1005,7 @@ mk_stage()
 #
 # @usage INPUT=source_path OUTPUT=dest_path
 # @usage dest_path
+# @option MODE=mode Sets the octal mode of the output file.
 #
 # Processes the given <param>source_path</param>, substituting
 # anything of the form <lit>@<var>VAR</var>@</lit> with the value
@@ -1021,11 +1022,14 @@ mk_stage()
 #>
 mk_output_file()
 {
-    mk_push_vars INPUT OUTPUT
+    mk_push_vars INPUT OUTPUT MODE _input _output _awkfile
     mk_parse_params
 
     [ -z "$OUTPUT" ] && OUTPUT="$1"
     [ -z "$INPUT" ] && INPUT="${OUTPUT}.in"
+
+    mk_tempfile "awk"
+    _awkfile="$result"
 
     # Emit an awk script that will perform replacements
     {
@@ -1041,22 +1045,23 @@ mk_output_file()
 
         echo "    print \$0;"
         echo "}"
-    } > ".awk.$$"
+    } > "$_awkfile"
 
     mk_resolve_file "${INPUT}"
     _input="$result"
     mk_resolve_file "${OUTPUT}"
     _output="$result"
 
-    mk_mkdir "${_output%/*}"
-    # First copy the file to preserve mode bits.
-    # There ought to be a better way to do this...
-    mk_run_or_fail cp "$_input" "${_output}.new"
-    # Now overwrites its contents
-    # We don't use mk_run_or_fail because it can log
-    # output if MK_VERBOSE is set
-    ${AWK} -f ".awk.$$" < "$_input" > "${_output}.new" || mk_fail "could not run awk"
-    mk_run_or_fail rm -f ".awk.$$"
+    if [ -z "$MODE" ]
+    then
+        mk_get_file_mode "$_input"
+        MODE="$result"
+    fi
+
+    mk_mkdirname "$_output"
+    ${AWK} -f "$_awkfile" < "$_input" > "${_output}.new" || mk_fail "could not run awk"
+    mk_tempfile_delete "$_awkfile"
+    mk_run_or_fail chmod "$MODE" "${_output}.new"
 
     if [ -f "${_output}" ] && diff "${_output}" "${_output}.new" >/dev/null 2>&1
     then
