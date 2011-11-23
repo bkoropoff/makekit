@@ -84,7 +84,8 @@ mk_doxygen_html()
         HEADERDIRS \
         EXAMPLES \
         HEADERS \
-        INPUT
+        INPUT \
+        DEPS
     mk_parse_params
     
     mk_have_doxygen || mk_fail "mk_doxygen_html: doxygen is unavailable"
@@ -101,7 +102,7 @@ mk_doxygen_html()
 
     mk_target \
         TARGET="${INSTALLDIR}" \
-        DEPS="$HEADERS $INPUT $DOXYFILE" \
+        DEPS="$HEADERS $INPUT $DOXYFILE $DEPS" \
         _mk_doxygen_html %EXAMPLES '$@' "&$DOXYFILE" "*$HEADERS" "*$INPUT"
     
     mk_pop_vars
@@ -160,7 +161,7 @@ _mk_doxygen_html()
         do
             echo "EXAMPLE_PATH += $example"
         done
-    } | doxygen - || mk_fail "failed to run doxygen"
+    } | ${DOXYGEN} - || mk_fail "failed to run doxygen"
 
     mk_pop_vars
 }
