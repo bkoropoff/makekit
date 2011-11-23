@@ -162,11 +162,30 @@ mk_docbook_html()
         DEPS="$DEPS $SOURCE $STYLESHEET $INCLUDES" \
         _mk_docbook '$@' "&$INSTALLDIR" "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
 
+    DEPS=""
+
     # Install CSS file
-    [ -n "$CSS" ] && mk_stage SOURCE="$CSS" DESTDIR="${INSTALLDIR}"
+    if [ -n "$CSS" ]
+    then
+        mk_stage SOURCE="$CSS" DESTDIR="${INSTALLDIR}" @DEPS={ "$INSTALLDIR" }
+        mk_quote "$result"
+        DEPS="$DEPS $result"
+    fi
 
     # Install image files
-    [ -n "$IMAGES" ] && mk_stage SOURCE="$IMAGES" DEST="${INSTALLDIR}/images"
+    if [ -n "$IMAGES" ]
+    then
+        mk_stage SOURCE="$IMAGES" DEST="${INSTALLDIR}/images" @DEPS={ "$INSTALLDIR" }
+        mk_quote "$result"
+        DEPS="$DEPS $result"
+    fi
+
+    mk_basename "$SOURCE"
+
+    mk_target \
+        TARGET=".docbook-html.$result.stamp" \
+        DEPS="$DEPS" \
+        mk_run_or_fail touch '$@'
 
     mk_pop_vars
 }
@@ -219,11 +238,13 @@ mk_docbook_man()
 
     mk_target \
         TARGET="$man_outdir/.stamp" \
-        DEPS="$DEPS $SOURCE $INCLUDES" \
+        DEPS="$DEPS $STYLESHEET $SOURCE $INCLUDES" \
         _mk_docbook '$@' "&$man_outdir" "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
 
     mk_quote "$result"
     man_stamp="$result"
+
+    DEPS=""
 
     mk_unquote_list "$MANPAGES"
     for manfile
@@ -240,7 +261,17 @@ mk_docbook_man()
         mk_stage \
             SOURCE="$man_outdir/$manfile" \
             DESTDIR="$INSTALLDIR/man${section}"
+
+        mk_quote "$result"
+        DEPS="$DEPS $result"
     done
+
+    mk_basename "$SOURCE"
+
+    mk_target \
+        TARGET=".docbook-man.$result.stamp" \
+        DEPS="$DEPS" \
+        mk_run_or_fail touch '$@'
 
     mk_pop_vars
 }
