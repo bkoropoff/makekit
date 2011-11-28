@@ -122,7 +122,7 @@ mk_moonunit_test()
     mk_push_vars LIBRARIES NAME
     mk_parse_params
 
-    mk_quote "$@"
+    mk_quote_list "$@"
     LIBRARIES="$LIBRARIES $result"
 
     [ -z "$name" ] && mk_fail "mk_moonunit_test: NAME not specified"
