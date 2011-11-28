@@ -145,6 +145,8 @@ mk_moonunit_test()
         
         mk_add_phony_target "$result"
     fi
+
+    mk_pop_vars
 }
 
 option()
