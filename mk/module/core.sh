@@ -1049,6 +1049,12 @@ mk_symlink()
 # copied; the name of the source will be preserved.  In the third form,
 # multiple sources are copied into <param>dest_dir</param>.
 #
+# If a source is a directory, the entire directory will be copied
+# recursively.  If the source is within the source tree, any files or
+# directories beginning with <filename>.</filename> will be exluded
+# from the recursive copy.  This is intended to avoid copying hidden
+# source control directories such as <filename>.svn</filename>.
+#
 # @example
 # # Copy a single file or directory
 # mk_stage SOURCE=foobar.conf.example DEST=/etc/foobar.conf
@@ -1676,7 +1682,20 @@ _mk_core_stage()
     mk_msg "${1#$MK_STAGE_DIR}"
     mk_mkdir "${1%/*}"
     [ -d "$1" ] && mk_safe_rm "$1"
-    mk_run_or_fail cp -r "$2" "$1"
+
+    if [ -d "$2" ]
+    then
+        case "$2" in
+            "$MK_SOURCE_DIR/"*)
+                mk_run_or_fail mk_clone_filter "$2" "$1" '.*'
+                ;;
+            *)
+                mk_run_or_fail mk_clone "$2" "$1"
+        esac
+    else
+        mk_run_or_fail mk_clone "$2" "$1"
+    fi
+
     mk_run_or_fail touch "$1"
 
     if [ -n "$3" ]
