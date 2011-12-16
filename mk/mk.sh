@@ -1508,6 +1508,29 @@ _mk_clone_solaris()
     fi
 }
 
+mk_clone_filter()
+{
+    mk_fnmatch "$1" "$3" && return 0
+
+    if [ -d "$1" ]
+    then
+        { cd "$1" && find .; } | while mk_read_line
+        do
+            if [ -f "$1/$result" -o -h "$1/$result" ]
+            then
+                mk_mkdirname "$2/$result"
+                mk_clone_filter "$1/$result" "$2/$result" || return "$?"
+            fi
+        done
+    elif [ -h "$1" ]
+    then
+        mk_readlink "$1"
+        ln -s "$result" "$2" || return "$?"
+    else
+        cp -- "$1" "$2" || return "$?"
+    fi
+}
+
 #<
 # @brief Make path absolute
 # @usage path [rel]
