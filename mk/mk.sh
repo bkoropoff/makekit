@@ -1709,7 +1709,7 @@ mk_tempfile_delete()
     do
         if [ "$_tmp" = "$1" ]
         then
-            rm -f "$_tmp"
+            rm -rf -- "$_tmp"
         else
             mk_quote "$_tmp"
             _MK_TMPLIST="$_MK_TMPLIST $result"
@@ -1723,13 +1723,13 @@ mk_tempfile_clear()
     _MK_TMPLIST=""
     for _tmp
     do
-        rm -f "$_tmp"
+        rm -rf -- "$_tmp"
     done
 }
 
 _mk_cleanup_handler()
 {
-    cd "$MK_ROOT_DIR"
+    cd "$MK_ROOT_DIR" || exit 1
     mk_tempfile_clear
     exit "$1"
 }
