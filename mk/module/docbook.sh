@@ -256,7 +256,7 @@ mk_docbook_man()
         mk_target \
             TARGET="$man_outdir/$manfile" \
             DEPS="$man_stamp" \
-            :
+            mk_run_or_fail touch '$@'
 
         mk_stage \
             SOURCE="$man_outdir/$manfile" \
