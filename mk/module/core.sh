@@ -1402,7 +1402,7 @@ configure()
 
 make()
 {
-    MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR .MakeKitDeps .MakeKitDeps.dep"
+    MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR .MakeKitDeps .MakeKitDeps.dep .MakeKitDeps.regen"
     MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports"
 
     mk_target \
@@ -1469,11 +1469,11 @@ make()
 
     mk_target \
         TARGET="@.MakeKitDeps.dep" \
-        DEPS="@.MakeKitDeps/.regen" \
+        DEPS="@.MakeKitDeps.regen" \
         _mk_core_update_deps
 
     mk_target \
-        TARGET="@.MakeKitDeps/.regen" \
+        TARGET="@.MakeKitDeps.regen" \
         mk_incremental_deps_changed
     
 
@@ -1715,6 +1715,5 @@ _mk_core_update_deps()
 
 mk_incremental_deps_changed()
 {
-    mk_mkdir .MakeKitDeps
-    mk_run_or_fail touch .MakeKitDeps/.regen
+    mk_run_or_fail touch .MakeKitDeps.regen
 }
