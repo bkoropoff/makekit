@@ -913,6 +913,27 @@ mk_multi_target()
     mk_pop_vars
 }
 
+mk_phony_target()
+{
+    mk_push_vars NAME DEPS HELP
+    mk_parse_params
+    mk_require_params mk_phony_target NAME
+
+    mk_target \
+        TARGET="@$NAME" \
+        DEPS="$DEPS" \
+        "$@"
+
+    mk_add_phony_target "$result"
+   
+    if [ -n "$HELP" ]
+    then
+        printf "%20s %s\n" "$NAME:" "$HELP" >> .MakeKitHelp
+    fi
+
+    mk_pop_vars
+}
+
 mk_install_file()
 {
     mk_deprecated "mk_install_file is deprecated; use mk_stage"
@@ -1398,44 +1419,52 @@ configure()
 
     # Load configure check cache if there is one
     _mk_load_cache
+
+    # Begin help file
+    cat <<EOF >.MakeKitHelp
+Special targets
+===============
+
+           <subdir>: Build all staging targets in <subdir>
+EOF
 }
 
 make()
 {
     MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR .MakeKitDeps .MakeKitDeps.dep .MakeKitDeps.regen"
-    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports"
+    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitHelp"
 
-    mk_target \
-        TARGET="@clean" \
+    mk_phony_target \
+        NAME="clean" \
+        HELP="Remove intermediate build files" \
         mk_run_script clean '$(SUBDIR)' "*$MK_CLEAN_TARGETS"
 
-    mk_add_phony_target "$result"
-
-    mk_target \
-        TARGET="@scrub" \
+    mk_phony_target \
+        NAME="scrub" \
         DEPS="@clean" \
+        HELP="Remove intermediate and staged build files" \
         mk_run_script scrub '$(SUBDIR)' "*$MK_SCRUB_TARGETS"
 
-    mk_add_phony_target "$result"
-
-    mk_target \
-        TARGET="@nuke" \
+    mk_phony_target \
+        NAME="nuke" \
+        HELP="Remove all generated files from build directory" \
         mk_run_script nuke "*$MK_CLEAN_TARGETS" "*$MK_SCRUB_TARGETS" "*$MK_NUKE_TARGETS"
 
-    mk_add_phony_target "$result"
-
-    mk_target \
-        TARGET="@install" \
+    mk_phony_target \
+        NAME="install" \
         DEPS="@all" \
+        HELP="Install staged files to DESTDIR (default: /)" \
         _mk_core_install '$(DESTDIR)'
     
-    mk_add_phony_target "$result"
-
-    mk_target \
-        TARGET="@uninstall" \
+    mk_phony_target \
+        NAME="uninstall" \
+        HELP="Remove installed files from DESTDIR (default: /)" \
         _mk_core_uninstall
     
-    mk_add_phony_target "$result"
+    mk_phony_target \
+        NAME="help" \
+        HELP="Show this help" \
+        cat .MakeKitHelp
 
     mk_target \
         TARGET="@.PHONY" \
