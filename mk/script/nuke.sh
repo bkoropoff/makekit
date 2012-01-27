@@ -32,7 +32,15 @@ for _target in "$@"
 do
     if [ -e "$_target" ]
     then
-        mk_msg "${_target}"
+        mk_basename "$_target"
+        case "$result" in
+            .*) :;;
+            *) 
+                mk_pretty_target "$_target"
+                mk_msg "$result"
+                ;;
+        esac
+
         mk_safe_rm "$_target"
     fi
 done

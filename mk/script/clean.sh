@@ -44,7 +44,15 @@ do
     _file="${_target#@}"
     if [ -e "$_file" ]
     then
-        mk_msg "${_file#$MK_OBJECT_DIR/}"
+        mk_basename "$_file"
+        case "$result" in
+            .*) :;;
+            *) 
+                mk_pretty_path "$_file"
+                mk_msg "$result"
+                ;;
+        esac
+            
         mk_safe_rm "$_file"
     fi
 done

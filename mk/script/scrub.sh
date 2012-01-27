@@ -44,7 +44,14 @@ for _target
 do
     if [ -e "${_target#@}" -o -h "${_target#@}" ]
     then
-        mk_msg "${_target#@$MK_STAGE_DIR}"
+        mk_basename "$_target"
+        case "$result" in
+            .*) :;;
+            *) 
+                mk_pretty_target "$_target"
+                mk_msg "$result"
+                ;;
+        esac
         mk_safe_rm "${_target#@}"
     fi
 done
@@ -56,12 +63,8 @@ then
     do
         if rmdir -- "$_dir" >/dev/null 2>&1
         then
-            if [ "$_dir" = "$MK_STAGE_DIR" ]
-            then
-                mk_msg "${_dir}"
-            else
-                mk_msg "${_dir#$MK_STAGE_DIR}"
-            fi
+            mk_pretty_path "$_dir"
+            mk_msg "$result"
         fi
     done
 fi
