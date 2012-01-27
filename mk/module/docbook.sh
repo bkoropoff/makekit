@@ -102,6 +102,34 @@ mk_check_docbook()
 }
 
 #<
+# @brief Check for PDF-specific DocBook prerequisites on the build system
+# @usage
+#
+# Checks for the availability of Apache FOP, necessary to generate PDF
+# documents from DocBook sources.  This Check must be issued after
+# <funcref>mk_check_docbook</funcref> succeeds.  The result can be
+# tested with <funcref>mk_have_docbook_pdf</funcref>.  If successful,
+# you may then use functions such as <funcref>mk_docbook_pdf</funcref>
+# to generate documentation from DocBook sources as part of your
+# project.
+#>
+mk_check_docbook_pdf()
+{
+    MK_HAVE_DOCBOOK_PDF=no
+
+    if mk_have_docbook
+    then
+        mk_check_program "fop"
+        
+        [ -n "$FOP" ] && MK_HAVE_DOCBOOK_PDF=yes
+    fi
+
+    mk_msg "docbook pdf enabled: $MK_HAVE_DOCBOOK_PDF"
+
+    mk_declare -i MK_HAVE_DOCBOOK_PDF
+}
+
+#<
 # @brief Test if DocBook processing is available
 # @usage
 #
@@ -112,6 +140,19 @@ mk_check_docbook()
 mk_have_docbook()
 {
     [ "$MK_HAVE_DOCBOOK" = "yes" ]
+}
+
+#<
+# @brief Test if DocBook pdf processing is available
+# @usage
+#
+# Returns <lit>0</lit> (logical true) if DocBook pdf prerequistes
+# were successfully found by <funcref>mk_check_docbook_pdf</funcref>,
+# or <lit>1</lit> (logical false) otherwise.
+#>
+mk_have_docbook_pdf()
+{
+    [ "$MK_HAVE_DOCBOOK_PDF" = "yes" ]
 }
 
 #<
@@ -276,7 +317,89 @@ mk_docbook_man()
     mk_pop_vars
 }
 
+mk_docbook_pdf()
+{
+    mk_have_docbook_pdf || mk_fail "mk_docbook_pdf: docbook pdf unavailable"
+
+    mk_push_vars \
+        STYLESHEET="@$MK_DOCBOOK_XSL_DIR/fo/profile-docbook.xsl" \
+        IMAGES="@$MK_DOCBOOK_XSL_DIR/images" \
+        INSTALLDIR="$MK_DOCDIR/pdf" \
+        PDF="docbook.pdf" \
+        SOURCE \
+        INCLUDES \
+        DEPS \
+        FOP_PARAMS
+
+    mk_parse_params
+    mk_require_params mk_docbook_pdf SOURCE
+
+    mk_target \
+        TARGET="$INSTALLDIR/$PDF" \
+        DEPS="$DEPS $SOURCE $STYLESHEET $INCLUDES" \
+        _mk_docbook_pdf %FOP_PARAMS \
+        '$@' "&$SOURCE" "&$STYLESHEET" "$INCLUDES"
+
+    mk_pop_vars
+}
+
 ### section build
+
+_mk_docbook_pdf()
+{
+    mk_push_vars FOP_PARAMS
+    mk_parse_params
+
+    mk_msg_domain "docbook-pdf"
+
+    mk_pretty_path "$1"
+    mk_msg "$result"
+
+    mk_absolute_path "$1"
+    OUTPUT="$result"
+    SOURCE="$2"
+    mk_absolute_path "$3"
+    SHEET="$result"
+
+    mk_tempfile "docbook-pdf"
+    TMPDIR="$result"
+
+    mk_mkdir "$TMPDIR"
+    mk_run_or_fail cp "$SOURCE" "$TMPDIR/in.xml"
+
+    mk_expand_pathnames "$4"
+    mk_unquote_list "$result"
+
+    for f
+    do
+        mk_resolve_file "$f"
+        mk_mkdirname "$TMPDIR/$f"
+        mk_run_or_fail mk_clone "$result" "$TMPDIR/$f"
+    done
+
+    mk_cd_or_fail "$TMPDIR"
+
+    mk_run_or_fail \
+        "${XSLTPROC}" \
+        --xinclude \
+        --output "fo.xml" \
+        "$SHEET" \
+        "in.xml"
+
+    mk_mkdirname "$OUTPUT"
+
+    mk_unquote_list "$FOP_PARAMS"
+
+    mk_run_or_fail \
+        "${FOP}" \
+        -fo "fo.xml" \
+        -pdf "$OUTPUT" \
+        "$@"
+
+    mk_cd_or_fail "$MK_ROOT_DIR"
+
+    mk_pop_vars
+}
 
 _mk_docbook()
 {
