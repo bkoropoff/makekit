@@ -1462,6 +1462,11 @@ make()
         _mk_core_uninstall
     
     mk_phony_target \
+        NAME="list" \
+        HELP="List stage targets matching PATTERN (default: *)" \
+        _mk_core_list PATTERN='$(PATTERN)'
+
+    mk_phony_target \
         NAME="help" \
         HELP="Show this help" \
         cat .MakeKitHelp
@@ -1745,4 +1750,26 @@ _mk_core_update_deps()
 mk_incremental_deps_changed()
 {
     mk_run_or_fail touch .MakeKitDeps.regen
+}
+
+_mk_core_list()
+{
+    mk_push_vars PATTERN
+    mk_parse_params
+    
+    case "$PATTERN" in
+        "")
+            PATTERN="*";
+            ;;
+        /*)
+            PATTERN="@$MK_STAGE_DIR$PATTERN"
+            ;;
+    esac
+    mk_get_stage_targets SELECT="$PATTERN" @
+    mk_unquote_list "$result"
+    for result
+    do
+        mk_pretty_target "$result"
+        echo "$result"
+    done
 }
