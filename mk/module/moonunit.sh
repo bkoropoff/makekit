@@ -119,18 +119,30 @@ mk_moonunit()
 
 mk_moonunit_test()
 {
-    mk_push_vars LIBRARIES NAME
+    mk_push_vars LIBRARIES NAME HELP
     mk_parse_params
+    mk_require_params mk_moonunit_test NAME
 
     mk_quote_list "$@"
     LIBRARIES="$LIBRARIES $result"
 
-    [ -z "$name" ] && mk_fail "mk_moonunit_test: NAME not specified"
+    if [ -z "$HELP" ]
+    then
+        HELP="Run unit tests in"
+        mk_unquote_list "$LIBRARIES"
+        for result
+        do
+            mk_basename "$result"
+            result="${result%.la}"
+            HELP="$HELP $result"
+        done
+    fi
 
     if [ -n "$MOONUNIT" -a "$MK_CROSS_COMPILING" = no ]
     then
-        mk_target \
-            TARGET="@$NAME" \
+        mk_phony_target \
+            NAME="$NAME" \
+            HELP="$HELP" \
             DEPS="$LIBRARIES" -- \
             _mk_moonunit_test \
             DEBUG='$(DEBUG)' \
@@ -197,7 +209,10 @@ make()
 {
     if [ -n "$MK_MOONUNIT_TESTS" ]
     then
-        mk_moonunit_test NAME="test" LIBRARIES="$MK_MOONUNIT_TESTS"
+        mk_moonunit_test \
+            NAME="test" \
+            HELP="Run all unit tests" \
+            LIBRARIES="$MK_MOONUNIT_TESTS"
         mk_add_clean_target "@${MK_MOONUNIT_DIR}"
     fi
 }
