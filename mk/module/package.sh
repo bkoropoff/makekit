@@ -180,11 +180,10 @@ option()
 
 make()
 {
-    mk_target \
-        TARGET="@package" \
+    mk_phony_target \
+        NAME="package" \
+        HELP="Build packages" \
         DEPS="$_MK_PACKAGE_TARGETS"
 
-    mk_add_phony_target "$result"
-    
     mk_add_scrub_target "@package"
 }
