@@ -317,13 +317,43 @@ mk_docbook_man()
     mk_pop_vars
 }
 
+#<
+# @brief Generate PDF documentation
+# @usage SOURCE=source_file PDF=pdf_name
+# @option SOURCE=source_file Specifies the DocBook XML
+# source file to process.
+# @option STYLESHEET=xsl_file Specifies the XSL stylesheet
+# for generating Formatting Objects.  Defaults to
+# <lit>$MK_DOCBOOK_XSL_DIR/fo/profile-docbook.xsl</lit>.
+# @option INSTALLDIR=install_dir Specifies the directory
+# where the generated PDF will be placed.  Defaults
+# to <lit>$MK_DOCDIR/pdf</lit>.
+# @option INCLUDES=source_list Specifies a list of additional
+# files that might be included or referenced by
+# <param>source_file</param>, such as included xml files
+# or images.
+# @option DEPS=deps Specifies any additional dependencies
+# needed to generate the documentation
+#
+# Processes the specified source file with XSLT and Apache FOP
+# to produce a PDF file called <param>pdf_name</param>.
+#
+# To use this function, you must use <funcref>mk_check_docbook</funcref>
+# as well as <funcref>mk_check_docbook_pdf</funcref> to check for all
+# prerequisits in a <lit>configure</lit> section of your project,
+# and both must succeed.
+#
+# You can test if DocBook processing is available with
+# <funcref>mk_have_docbook</funcref> and if PDF generation is available
+# with <funcref>mk_have_docbook_pdf</funcref>.
+# This function will fail it is not available.
+#>
 mk_docbook_pdf()
 {
     mk_have_docbook_pdf || mk_fail "mk_docbook_pdf: docbook pdf unavailable"
 
     mk_push_vars \
         STYLESHEET="@$MK_DOCBOOK_XSL_DIR/fo/profile-docbook.xsl" \
-        IMAGES="@$MK_DOCBOOK_XSL_DIR/images" \
         INSTALLDIR="$MK_DOCDIR/pdf" \
         PDF="docbook.pdf" \
         SOURCE \
