@@ -22,7 +22,7 @@ make()
         mk/script/link.sh \
         mk/script/install.sh \
         mk/script/build-macpkg.sh \
-        mk/script/nuke.sh \
+        mk/script/scour.sh \
         mk/module/doxygen.sh \
         mk/module/package.sh \
         mk/module/fortune.sh \

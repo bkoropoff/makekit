@@ -1205,11 +1205,11 @@ mk_add_scrub_target()
     mk_pop_vars
 }
 
-mk_add_nuke_target()
+mk_add_scour_target()
 {
     mk_push_vars result
     mk_quote "${1#@}"
-    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $result"
+    MK_SCOUR_TARGETS="$MK_SCOUR_TARGETS $result"
     mk_pop_vars
 }
 
@@ -1396,7 +1396,7 @@ configure()
 
     MK_CLEAN_TARGETS=""
     MK_SCRUB_TARGETS=""
-    MK_NUKE_TARGETS=""    
+    MK_SCOUR_TARGETS=""    
     MK_BUILD_FILES=""
 
     for _module in ${MK_MODULE_LIST}
@@ -1438,7 +1438,7 @@ EOF
 make()
 {
     MK_CLEAN_TARGETS="$MK_CLEAN_TARGETS @$MK_LOG_DIR @$MK_RUN_DIR .MakeKitDeps .MakeKitDeps.dep .MakeKitDeps.regen"
-    MK_NUKE_TARGETS="$MK_NUKE_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitHelp"
+    MK_SCOUR_TARGETS="$MK_SCOUR_TARGETS $MK_OBJECT_DIR $MK_STAGE_DIR Makefile config.log .MakeKitCache .MakeKitBuild .MakeKitExports .MakeKitHelp"
 
     mk_phony_target \
         NAME="clean" \
@@ -1452,9 +1452,13 @@ make()
         mk_run_script scrub '$(SUBDIR)' "*$MK_SCRUB_TARGETS"
 
     mk_phony_target \
-        NAME="nuke" \
+        NAME="scour" \
         HELP="Remove all generated files from build directory" \
-        mk_run_script nuke "*$MK_CLEAN_TARGETS" "*$MK_SCRUB_TARGETS" "*$MK_NUKE_TARGETS"
+        mk_run_script scour "*$MK_CLEAN_TARGETS" "*$MK_SCRUB_TARGETS" "*$MK_SCOUR_TARGETS"
+
+    mk_target \
+        TARGET="@nuke" \
+        DEPS="@scour"     
 
     mk_phony_target \
         NAME="install" \

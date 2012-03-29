@@ -26,7 +26,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-MK_MSG_DOMAIN="nuke"
+MK_MSG_DOMAIN="scour"
 
 for _target in "$@"
 do

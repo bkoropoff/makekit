@@ -401,7 +401,7 @@ Options (project-name):
 	</listitem>
       </varlistentry>
       <varlistentry>
-	<term><command>make nuke</command></term>
+	<term><command>make scour</command></term>
 	<listitem>
 	  <para>
 	    Completely removes all generated files from the build area, including
