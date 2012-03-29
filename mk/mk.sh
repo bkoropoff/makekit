@@ -1712,6 +1712,30 @@ mk_here_list()
     fi
 }
 
+#<
+# @brief Capture output of command as list
+# @usage command...
+#
+# Executes <param>command</param> and sets
+# <var>result</var> to a quoted list of its
+# lines of output.
+#
+# @example
+# mk_capture_lines find . -name "*.txt"
+# @endexample
+#>
+mk_capture_lines()
+{
+    _IFS="$IFS"
+    IFS=""
+    result=`"$@"`
+    IFS='
+'
+    set -- $result
+    IFS="$_IFS"
+    mk_quote_list "$@"
+}
+
 _MK_TMPCOUNT=0
 _MK_TMPLIST=""
 
