@@ -510,6 +510,19 @@ mk_resolve_header()
 # Extension functions
 #
 
+_mk_compiler_run_hooks()
+{
+    mk_push_vars result hook hooks="$1"
+    shift
+
+    for hook in ${hooks}
+    do
+        ${hook} "$@"
+    done
+
+    mk_pop_vars
+}
+
 mk_add_link_target_posthook()
 {
     _MK_LINK_TARGET_HOOKS="$_MK_LINK_TARGET_HOOKS $*"
@@ -522,12 +535,27 @@ mk_add_link_posthook()
 
 mk_run_link_target_posthooks()
 {
-    mk_push_vars result
-    for _hook in ${_MK_LINK_TARGET_HOOKS}
-    do
-        ${_hook} "$@"
-    done
-    mk_pop_vars
+    _mk_compiler_run_hooks "$_MK_LINK_TARGET_HOOKS" "$@"
+}
+
+mk_add_link_target_prehook()
+{
+    _MK_LINK_TARGET_PREHOOKS="$_MK_LINK_TARGET_PREHOOKS $*"
+}
+
+mk_run_link_target_prehooks()
+{
+    _mk_compiler_run_hooks "$_MK_LINK_TARGET_PREHOOKS" "$@"
+}
+
+mk_add_compile_target_prehook()
+{
+    _MK_COMPILE_TARGET_PREHOOKS="$_MK_COMPILE_TARGET_PREHOOKS $*"
+}
+
+mk_run_compile_target_prehooks()
+{
+    _mk_compiler_run_hooks "$_MK_COMPILE_TARGET_PREHOOKS" "$@"
 }
 
 #
@@ -586,6 +614,16 @@ _mk_compile()
 
 _mk_compile_detect()
 {
+    # Preserve variables so prehooks can change them
+    mk_push_vars \
+        COMPILER="$COMPILER" \
+        CPPFLAGS="$CPPFLAGS" \
+        CFLAGS="$CFLAGS" \
+        CXXFLAGS="$CXXFLAGS" \
+        DEPS="$DEPS" \
+        SOURCE="$SOURCE" \
+        INCLUDEDIRS="$INCLUDEDIRS"
+
     # Invokes _mk_compile after autodetecting COMPILER
     case "${SOURCE##*.}" in
         c|s)
@@ -598,7 +636,9 @@ _mk_compile_detect()
             mk_fail "unsupport source file type: .${SOURCE##*.}"
             ;;
     esac
-    
+
+    mk_run_compile_target_prehooks
+  
     _mk_compile
 }
 
@@ -1098,6 +1138,8 @@ mk_library()
     mk_parse_params
     mk_require_params mk_library LIB
 
+    mk_run_link_target_prehooks mk_library
+
     [ "$COMPILER" = "c++" ] && IS_CXX=true
     
     _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS $MK_LIBDEPS"
@@ -1336,6 +1378,8 @@ mk_dlo()
         IS_CXX=false OSUFFIX PIC=yes
     mk_parse_params
     mk_require_params mk_dlo DLO
+
+    mk_run_link_target_prehooks mk_dlo
 
     [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
 
@@ -1589,6 +1633,8 @@ mk_program()
         EXT=""
     mk_parse_params
     mk_require_params mk_program PROGRAM
+
+    mk_run_link_target_prehooks mk_program
 
     if [ -z "$INSTALLDIR" ]
     then
