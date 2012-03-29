@@ -74,6 +74,29 @@ fi
 #>
 alias mk_unquote_list='eval set --'
 
+#<
+# @brief Append to list variable
+# @usage var items...
+#
+# Quotes and appends <param>items</param> to
+# the variable <param>var</param>.
+#
+# @example
+# FOO="'foo'"
+# mk_append_list FOO bar
+# # FOO is now: 'foo' 'bar'
+#>
+mk_append_list()
+{
+    __result="$result"
+    __var="$1"
+    shift
+    mk_quote_list "$@"
+    [ -n "$result" ] && eval "$__var=\"\${$__var:+\$$__var }\$result\""
+    result="$__result"
+    unset __result __var
+}
+
 ##
 #
 # Extended parameter support
