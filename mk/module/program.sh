@@ -26,20 +26,19 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module program
+# @brief Program finding
 #
-# program.sh -- search for runnable programs
-#
-# FIXME: move to core.sh?
-#
-##
-
+# This module provides functions for locating programs
+# on the build system.
+#>
 
 ### section configure
 
 #<
 # @brief Check for program on build system
-# @usage PROGRAM=name
+# @usage name
 # @usage VAR=varname candidates...
 # @option FAIL=yes|no If set to yes, fails configuration
 # if the program is not found.  Defaults to no.
@@ -115,4 +114,26 @@ mk_check_program()
     
     mk_pop_vars
     [ -n "$_res" ]
+}
+
+#<
+# @brief Check for programs on build system
+# @usage programs...
+# @option FAIL=yes|no If set to yes, fails configuration
+# if any program is not found.  Defaults to no.
+#
+# Checks for a list of available programs by passing
+# each to <funcref>mk_check_program</funcref>.
+#>
+mk_check_programs()
+{
+    mk_push_vars FAIL="no" prog
+    mk_parse_params
+    
+    for prog
+    do
+        mk_check_program FAIL="$FAIL" "$result"
+    done
+
+    mk_pop_vars
 }
