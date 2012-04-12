@@ -316,6 +316,7 @@ DEPENDS="core platform path"
 # @brief Style of C compiler
 # @export
 # @system
+# @value none No working C compiler is available
 # @value gcc The C compiler is gcc or gcc-compatible
 # @value unknown The C compiler style is unknown
 #
@@ -330,6 +331,7 @@ DEPENDS="core platform path"
 # @brief Style of C++ compiler
 # @export
 # @system
+# @value none No working C++ compiler is available
 # @value gcc The C++ compiler is g++ or g++-compatible
 # @value unknown The C++ compiler style is unknown
 #
@@ -2828,10 +2830,24 @@ EOF
 # @usage lang
 #
 # Sets the language used for subsequent configuration checks.
-# Valid values are "c" and "c++".
+# Valid values are "c" and "c++".  This function will fail
+# if a working compiler for the language is not available.
 #>
 mk_check_lang()
 {
+    case "$1" in
+        c)
+            [ "$MK_CC_STYLE" = "none" ] &&
+               mk_fail "C compiler unavailable"
+            ;;
+        c++)
+            [ "$MK_CXX_STYLE" = "none" ] &&
+               mk_fail "C++ compiler unavailable"
+            ;;
+        *)
+            mk_fail "Unsupported language: $1"
+            ;;
+    esac
     MK_CHECK_LANG="$1"
 }
 
@@ -3119,15 +3135,23 @@ _mk_cxx_primitive()
 _mk_check_cc_style()
 {
     mk_msg_checking "C compiler style"
+
     if cat <<EOF | _mk_cc_primitive >/dev/null 2>&1
+int main(int argc, char** argv) { return 0; }
+EOF
+    then
+        if cat <<EOF | _mk_cc_primitive >/dev/null 2>&1
 #ifndef __GNUC__
 #error nope
 #endif
 EOF
-    then
-        result="gcc"
+        then
+            result="gcc"
+        else
+            result="unknown"
+        fi
     else
-        result="unknown"
+        result="none"
     fi
     
     MK_CC_STYLE="$result"
@@ -3138,16 +3162,23 @@ _mk_check_cxx_style()
 {
     mk_msg_checking "C++ compiler style"
     if cat <<EOF | _mk_cxx_primitive >/dev/null 2>&1
+int main(int argc, char** argv) { return 0; }
+EOF
+    then
+        if cat <<EOF | _mk_cxx_primitive >/dev/null 2>&1
 #ifndef __GNUC__
 #error nope
 #endif
 EOF
-    then
-        result="gcc"
+        then
+            result="gcc"
+        else
+            result="unknown"
+        fi
     else
-        result="unknown"
+        result="none"
     fi
-    
+        
     MK_CXX_STYLE="$result"
     mk_msg_result "$MK_CXX_STYLE"
 }
@@ -3157,6 +3188,9 @@ _mk_check_cc_ld_style()
     mk_msg_checking "C compiler linker style"
 
     case "$MK_CC_STYLE" in
+        none)
+            result="none"
+            ;;
         gcc)
             _ld="`${MK_CC} -print-prog-name=ld`"
             case "`"$_ld" -v 2>&1`" in
@@ -3181,6 +3215,9 @@ _mk_check_cxx_ld_style()
     mk_msg_checking "C++ compiler linker style"
 
     case "$MK_CXX_STYLE" in
+        none)
+            result="none"
+            ;;
         gcc)
             _ld="`${MK_CXX} -print-prog-name=ld`"
             case "`"$_ld" -v 2>&1`" in
