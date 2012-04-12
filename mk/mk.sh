@@ -1230,16 +1230,23 @@ mk_normalize_path()
 
 _mk_find_resource()
 {
-    for __dir in ${MK_SEARCH_DIRS}
+    __resource="$1"
+    _IFS="$IFS"
+    IFS=":"
+    set -- ${MK_SEARCH_DIRS}
+    IFS="$_IFS"
+    for __dir
     do
-        __file="${__dir}/$1"
+        __file="${__dir}/$__resource"
         if [ -e "$__file" ]   
         then
             result="$__file"
+            unset __resource __file
             return 0
         fi
     done
 
+    unset __resource __file
     return 1
 }
 

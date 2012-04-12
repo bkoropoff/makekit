@@ -136,13 +136,10 @@ _mk_find_resources_recursive()
 
     _MK_MODULES="$_MK_MODULES $MODULES"
 
-    for _dir in ${MKLOCAL}
-    do
-        if [ -d "${MK_SOURCE_DIR}${1}/$_dir" ]
-        then
-            MK_SEARCH_DIRS="$MK_SEARCH_DIRS ${MK_SOURCE_DIR}${1}/$_dir"
-        fi
-    done
+    if [ -d "${MK_SOURCE_DIR}${1}/$MKLOCAL" ]
+    then
+        MK_SEARCH_DIRS="$MK_SEARCH_DIRS:${MK_SOURCE_DIR}${1}/$MKLOCAL"
+    fi
     
     for _dir in ${SUBDIRS}
     do
@@ -164,7 +161,7 @@ _mk_set_defaults()
 
 _mk_find_resources()
 {
-    _MK_MODULES=""
+    _MK_MODULES="$MK_EXTRA_MODULES"
     _mk_find_resources_recursive ""
     _mk_module_list $_MK_MODULES
 }
@@ -681,6 +678,20 @@ _basic_options()
         PARAM=path \
         DEFAULT='run' \
         HELP="Build tool install directory"
+
+    mk_option \
+        VAR=MK_EXTRA_SEARCH_DIRS \
+        OPTION=extra-search-dirs \
+        PARAM=paths \
+        DEFAULT='' \
+        HELP="Additional directories for MakeKit resources"
+
+    mk_option \
+        VAR=MK_EXTRA_MODULES \
+        OPTION=extra-modules \
+        PARAM=modules \
+        DEFAULT='' \
+        HELP="Additional modules to load"
         
     mk_option \
         VAR=MK_SHOW_VARS \
@@ -775,7 +786,7 @@ MK_MSG_DOMAIN="makekit"
 MK_ROOT_DIR="$PWD"
 _basic_options
 
-MK_SEARCH_DIRS="${MK_HOME}"
+MK_SEARCH_DIRS="$MK_HOME:$MK_EXTRA_SEARCH_DIRS"
 
 # Find all required resources
 _mk_find_resources
