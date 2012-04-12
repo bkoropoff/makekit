@@ -2835,6 +2835,44 @@ mk_check_lang()
     MK_CHECK_LANG="$1"
 }
 
+#<
+# @brief Turn on compiler warnings
+# @usage warning...
+#
+# Turns on the given list of warning flags
+# (<lit>-W</lit><param>warning</param>).
+# The <lit>error</lit> flag will be ignored
+# if the user disallowed it via the
+# <lit>--allow-werror</lit> option to
+# <filename>configure</filename>.
+#
+# @example
+# # Turn on all warnings and promote warnings to errors
+# mk_compiler_warnings all error
+# @endexample
+#>
+mk_compiler_warnings()
+{
+    mk_push_vars flag
+
+    for flag
+    do
+        case "$flag" in
+            error)
+                [ "$MK_ALLOW_WERROR" = "no" ] && continue
+                ;;
+        esac
+        
+        flag="-W$flag"
+        _mk_contains "$flag" ${MK_CFLAGS} ||
+           MK_CFLAGS="$MK_CFLAGS $flag"
+        _mk_contains "$flag" ${MK_CXXFLAGS} ||
+           MK_CXXFLAGS="$MK_CXXFLAGS $flag"
+    done
+
+    mk_pop_vars
+}
+
 option()
 {
     if [ "$MK_DEBUG" = yes ]
@@ -2843,6 +2881,13 @@ option()
     else
         _default_OPTFLAGS="-O2 -g"
     fi
+
+    mk_option \
+        OPTION="allow-werror" \
+        VAR=MK_ALLOW_WERROR \
+        PARAM="yes|no" \
+        DEFAULT="yes" \
+        HELP="Allow failing on compiler warnings"
 
     mk_option \
         OPTION="static-libs" \
