@@ -73,7 +73,7 @@ do_compile()
         _mk_slashless_name "${_object%.o}"
         DEP_FILE=".MakeKitDeps/$result.dep"
         mk_quote "$DEP_FILE.new"
-        DEP_FLAGS="-MMD -MP -MF $result"
+        DEP_FLAGS="-MMD -MP -MF $result $DEP_TARGET"
     fi
 
     if [ "$PIC" = "yes" ]
@@ -117,18 +117,21 @@ pretty="$result"
 
 if [ -z "$CONFTEST" -a "$MK_SYSTEM" = "host" -a "$MK_MULTIARCH" = "combine" ]
 then
+    DEP_TARGET="-MT $object"
     parts=""
     for _isa in ${MK_HOST_ISAS}
     do
         mk_system "host/$_isa"
-        mk_basename "$object"
-        mk_tempfile "$_isa.$result"
-        part="$result"
+        part="${object%.o}.$_isa.o"
         do_compile "$part" "$@"
-        parts="$parts $part"
+        mk_append_list parts "$part"
     done
-    _mk_compiler_multiarch_combine "$object" ${parts}
-    mk_tempfile_clear
+    mk_unquote_list "$parts"
+    _mk_compiler_multiarch_combine "$object" "$@"
+    for part
+    do
+        mk_safe_rm "$part"
+    done
 else
     do_compile "$object" "$@"
 fi
