@@ -618,7 +618,6 @@ _mk_compile_detect()
 {
     # Preserve variables so prehooks can change them
     mk_push_vars \
-        COMPILER="$COMPILER" \
         CPPFLAGS="$CPPFLAGS" \
         CFLAGS="$CFLAGS" \
         CXXFLAGS="$CXXFLAGS" \
