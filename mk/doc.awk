@@ -162,8 +162,8 @@ function process_func(func_name) {
         printf("</usage>\n");
     }
     for (i = 0; i < option_len; i++) {
-        split(option[i], parts);
-        part_count = split(parts[1], parts, "=");
+        split(option[i], args);
+        part_count = split(args[1], parts, "=");
         if (part_count >= 2) {
             printf("<option key=\"%s\" param=\"%s\">\n", parts[1], parts[2]);
         } else {
