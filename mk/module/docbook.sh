@@ -476,6 +476,7 @@ _mk_docbook()
     mk_cd_or_fail "$TMPDIR"
     mk_run_or_fail \
         "${XSLTPROC}" \
+        --nonet \
         --xinclude \
         --output "$MK_ROOT_DIR/$OUTPUT" \
         "$SHEET" \
