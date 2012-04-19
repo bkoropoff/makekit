@@ -496,6 +496,7 @@ fi
 #
 # Utility functions
 #
+
 mk_resolve_header()
 {
     case "$1" in
@@ -1755,10 +1756,21 @@ mk_declare_internal_header()
     MK_INTERNAL_HEADERS="$MK_INTERNAL_HEADERS $1"
 }
 
+mk_have_internal_header()
+{
+    _mk_contains "$1" "$MK_INTERNAL_HEADERS"
+}
+
 mk_declare_internal_library()
 {
     MK_INTERNAL_LIBS="$MK_INTERNAL_LIBS $1"
 }
+
+mk_have_internal_library()
+{
+    _mk_contains "$1" "$MK_INTERNAL_LIBS"
+}
+
 
 #
 # Helper functions for configure() stage
