@@ -87,7 +87,11 @@ mk_moonunit()
 
     for _header in ${HEADERDEPS}
     do
-        _deps="$_deps '${MK_INCLUDEDIR}/${_header}'"
+        if mk_have_internal_header "$_header"
+        then
+            mk_resolve_header "$_header"
+            mk_append_list _deps "$result"
+        fi
     done
 
     mk_target \
