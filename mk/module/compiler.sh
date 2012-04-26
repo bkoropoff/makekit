@@ -1758,7 +1758,7 @@ mk_declare_internal_header()
 
 mk_have_internal_header()
 {
-    _mk_contains "$1" "$MK_INTERNAL_HEADERS"
+    _mk_contains "$1" $MK_INTERNAL_HEADERS
 }
 
 mk_declare_internal_library()
@@ -1768,7 +1768,7 @@ mk_declare_internal_library()
 
 mk_have_internal_library()
 {
-    _mk_contains "$1" "$MK_INTERNAL_LIBS"
+    _mk_contains "$1" $MK_INTERNAL_LIBS
 }
 
 
