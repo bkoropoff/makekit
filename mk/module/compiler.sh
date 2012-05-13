@@ -565,14 +565,18 @@ mk_run_compile_target_prehooks()
 # Helper functions for make() stage
 #
 
+# Generates name for object file
+# $1 = source file
+# $2 = suffix (avoids collisions for same source file)
+# $3 = extension
 _mk_objname()
 {
-    result="${1%.*}${OSUFFIX}.${MK_SYSTEM%/*}"
+    result="${1%.*}${2}.${MK_SYSTEM%/*}"
     if [ "${MK_SYSTEM#*/}" != "${MK_SYSTEM}" ]
     then
         result="$result.${MK_SYSTEM#*/}"
     fi
-    result="$result.o"
+    result="$result$3"
 }
 
 _mk_process_headerdeps()
@@ -599,23 +603,13 @@ _mk_process_headerdeps()
     done
 }
 
-_mk_compile()
+_mk_set_compiler_for_link()
 {
-    mk_basename "$SOURCE"
-    _mk_objname "$result"
-    _object="$result"
-    
-    mk_resolve_target "${SOURCE}"
-    _res="$result"
-    mk_quote "$_res"
-    
-    mk_target \
-        TARGET="$_object" \
-        DEPS="$DEPS $_INT_DEPS $result" \
-        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %COMPILER %PIC '$@' "$_res"
+    COMPILER=c
+    $IS_CXX && COMPILER=c++
 }
 
-_mk_compile_detect()
+_mk_compile()
 {
     # Preserve variables so prehooks can change them
     mk_push_vars \
@@ -624,22 +618,50 @@ _mk_compile_detect()
         CXXFLAGS="$CXXFLAGS" \
         DEPS="$DEPS" \
         SOURCE="$SOURCE" \
-        INCLUDEDIRS="$INCLUDEDIRS"
-
-    # Invokes _mk_compile after autodetecting COMPILER
-    case "${SOURCE##*.}" in
-        c|s)
-            COMPILER="c"
-            ;;
-        [cC][pP]|[cC][pP][pP]|[cC][xX][xX]|[cC][cC]|C)
-            COMPILER="c++"
-            ;;
-        *)
-            mk_fail "unsupport source file type: .${SOURCE##*.}"
-            ;;
-    esac
+        OBJECT="$OBJECT" \
+        INCLUDEDIRS="$INCLUDEDIRS" \
+        COMPILER="$COMPILER"
 
     mk_run_compile_target_prehooks
+
+    mk_resolve_target "${SOURCE}"
+    mk_append_list DEPS "$result"
+    
+    mk_target \
+        TARGET="$OBJECT" \
+        DEPS="$DEPS" \
+        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %COMPILER %PIC '$@' "$result"
+}
+
+_mk_compile_detect()
+{
+    # Detect COMPILER and OBJECT if not set
+    mk_push_vars OBJECT="$OBJECT" COMPILER="$COMPILER"
+    
+    if [ -z "$COMPILER" ]
+    then
+        case "${SOURCE##*.}" in
+            c|s)
+                COMPILER="c"
+                ;;
+            [cC][pP]|[cC][pP][pP]|[cC][xX][xX]|[cC][cC]|C)
+                COMPILER="c++"
+                ;;
+            *)
+                mk_fail "unsupported source file type: .${SOURCE##*.}"
+                ;;
+        esac
+    fi
+        
+    # Update IS_CXX so caller knows to use CXX to link
+    [ "$COMPILER" = "c++" ] && IS_CXX=true
+
+    if [ -z "$OBJECT" ]
+    then
+        mk_basename "$SOURCE"
+        _mk_objname "$result" "$OSUFFIX" ".o"
+        OBJECT="$result"
+    fi
   
     _mk_compile
 }
@@ -647,7 +669,8 @@ _mk_compile_detect()
 #<
 # @brief Build an object file
 # @usage SOURCE=source options...
-# @option SOURCE=source indicates the source file to compile.
+# @option SOURCE=source Indicates the source file to compile.
+# @option OBJECT=object Sets explicit output object file.
 # @option ... Common options are documented in the
 # <modref>compiler</modref> module.
 #
@@ -656,7 +679,9 @@ _mk_compile_detect()
 #>
 mk_compile()
 {
-    mk_push_vars SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC OSUFFIX COMPILER
+    mk_push_vars \
+        SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC \
+        OBJECT OSUFFIX COMPILER IS_CXX
     mk_parse_params
     
     _mk_process_headerdeps "$SOURCE"
@@ -994,7 +1019,6 @@ _mk_library()
         mk_quote "$result"
         _deps="$_deps $result"
         _objects="$_objects $result"
-        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
     _mk_add_groups
@@ -1010,7 +1034,7 @@ _mk_library()
         fi
     done
     
-    ${IS_CXX} && COMPILER="c++"
+    _mk_set_compiler_for_link
 
     mk_target \
         TARGET="$TARGET" \
@@ -1135,15 +1159,13 @@ mk_library()
     mk_push_vars \
         INSTALLDIR="$MK_LIBDIR" LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
         HEADERDEPS LIBDIRS INCLUDEDIRS VERSION=0:0:0 DEPS OBJECTS \
-        SYMFILE SONAME LINKS COMPILER=c IS_CXX=false EXT="${MK_LIB_EXT}" \
+        SYMFILE SONAME LINKS COMPILER IS_CXX=false EXT="${MK_LIB_EXT}" \
         TARGET STATIC_NAME static_deps
     mk_parse_params
     mk_require_params mk_library LIB
 
     mk_run_link_target_prehooks mk_library
 
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
-    
     _mk_verify_libdeps "lib$LIB${EXT}" "$LIBDEPS $MK_LIBDEPS"
     _mk_process_headerdeps "lib$LIB${EXT}"
 
@@ -1330,7 +1352,6 @@ _mk_dlo()
         mk_quote "$result"
         _deps="$_deps $result"
         _objects="$_objects $result"
-        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
     _mk_add_groups
@@ -1346,7 +1367,7 @@ _mk_dlo()
         fi
     done
     
-    ${IS_CXX} && COMPILER="c++"
+    _mk_set_compiler_for_link
 
     mk_target \
         TARGET="$TARGET" \
@@ -1376,7 +1397,7 @@ mk_dlo()
     mk_push_vars \
         DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION="no" \
-        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE SONAME COMPILER=c \
+        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE SONAME COMPILER \
         IS_CXX=false OSUFFIX PIC=yes
     mk_parse_params
     mk_require_params mk_dlo DLO
@@ -1385,8 +1406,6 @@ mk_dlo()
 
     [ -z "$INSTALLDIR" ] && INSTALLDIR="${MK_LIBDIR}"
 
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
-    
     _mk_verify_libdeps "$DLO${EXT}" "$LIBDEPS $MK_LIBDEPS"
     _mk_process_headerdeps "$DLO${EXT}"
 
@@ -1461,7 +1480,6 @@ _mk_add_group()
         _mk_compile_detect
         mk_quote "$result"
         objects="$objects $result"
-        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
 
     mk_pop_vars
@@ -1591,7 +1609,6 @@ _mk_program()
         mk_quote "$result"
         _deps="$_deps $result"
         _objects="$_objects $result"
-        [ "$COMPILER" = "c++" ] && IS_CXX=true
     done
     
     _mk_add_groups
@@ -1607,7 +1624,7 @@ _mk_program()
         fi
     done
 
-    ${IS_CXX} && COMPILER="c++"
+    _mk_set_compiler_for_link
     
     mk_target \
         TARGET="$TARGET" \
@@ -1631,7 +1648,7 @@ mk_program()
     mk_push_vars \
         PROGRAM SOURCES SOURCE OBJECTS GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR \
-        COMPILER=c IS_CXX=false PIC=no OSUFFIX
+        COMPILER IS_CXX=false PIC=no OSUFFIX
         EXT=""
     mk_parse_params
     mk_require_params mk_program PROGRAM
@@ -1648,8 +1665,6 @@ mk_program()
             INSTALLDIR="$MK_BINDIR"
         fi
     fi
-
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
 
     _mk_verify_libdeps "$PROGRAM" "$LIBDEPS $MK_LIBDEPS"
     _mk_process_headerdeps "$PROGRAM"
