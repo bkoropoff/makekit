@@ -194,6 +194,51 @@ DEPENDS="core platform path"
 #       </para>
 #     </item>
 #   </defentry>
+#   <defentry>
+#     <term><lit>PCH=</lit><param>header</param></term>
+#     <item>
+#       <para>
+#         Specifies a header to automatically precompile and include when
+#         building source files.  Precompiled headers can speed up
+#         compilation of some projects.  If the header is also included
+#         directly by the source code, it should use include guards to
+#         avoid being processed twice.
+#       </para>
+#       <para>
+#         The <var>result</var> of an explict call to
+#         <funcref>mk_pch</funcref> may be used instead of a plain header.
+#         This allows sharing a single precompiled header across multiple build
+#         targets, but care must be taken to ensure that compiler
+#         flags match or the precompiled header may be rejected.
+#       </para>
+#       <para>
+#         Applicable functions: 
+#         <funcref>mk_compile</funcref>,
+#         <funcref>mk_group</funcref>,
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#       </para>
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>COMPILER=</lit><param>compiler</param></term>
+#     <item>
+#       <para>
+#         Explicitly overrides the compiler used to build source files.
+#         Must be precisely <lit>c</lit> or <lit>c++</lit>.
+#       </para>
+#       <para>
+#         Applicable functions: 
+#         <funcref>mk_compile</funcref>,
+#         <funcref>mk_pch</funcref>,
+#         <funcref>mk_group</funcref>,
+#         <funcref>mk_program</funcref>,
+#         <funcref>mk_library</funcref>,
+#         <funcref>mk_dlo</funcref>
+#       </para>
+#     </item>
+#   </defentry>
 # </deflist>
 #>
 
@@ -579,6 +624,20 @@ _mk_objname()
     result="$result$3"
 }
 
+# Generates name for pch file
+# $1 = source file
+# $2 = compiler
+# $3 = extension
+_mk_pchname()
+{
+    result="${1%.*}${2}.${MK_SYSTEM%/*}"
+    if [ "${MK_SYSTEM#*/}" != "${MK_SYSTEM}" ]
+    then
+        result="$result.${MK_SYSTEM#*/}"
+    fi
+    result="$result.${1##*.}$3"
+}
+
 _mk_process_headerdeps()
 {
     for _header in ${MK_HEADERDEPS} ${HEADERDEPS}
@@ -606,7 +665,7 @@ _mk_process_headerdeps()
 _mk_set_compiler_for_link()
 {
     COMPILER=c
-    $IS_CXX && COMPILER=c++
+    $USED_CXX && COMPILER=c++
 }
 
 _mk_compile()
@@ -620,9 +679,31 @@ _mk_compile()
         SOURCE="$SOURCE" \
         OBJECT="$OBJECT" \
         INCLUDEDIRS="$INCLUDEDIRS" \
-        COMPILER="$COMPILER"
+        COMPILER="$COMPILER" \
+        PCH="$PCH"
 
     mk_run_compile_target_prehooks
+
+    # Resolve PCH
+    case "$PCH" in
+        "")
+            : # Nothing to do
+            ;;
+        *.gch)
+            # Already resolved (likely result of manual mk_pch invocation)
+            mk_resolve_file "$PCH"
+            PCH="$result"
+            mk_append_list DEPS "@$result"
+            ;;
+        *)
+            # Resolve to specific file for compiler and ISA
+            mk_basename "$PCH"
+            _mk_pchname "$result" "$OSUFFIX.$COMPILER" ".gch"
+            mk_resolve_file "$result"
+            PCH="$result"
+            mk_append_list DEPS "@$result"
+            ;;
+    esac
 
     mk_resolve_target "${SOURCE}"
     mk_append_list DEPS "$result"
@@ -630,7 +711,9 @@ _mk_compile()
     mk_target \
         TARGET="$OBJECT" \
         DEPS="$DEPS" \
-        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %COMPILER %PIC '$@' "$result"
+        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %COMPILER %PIC %PCH '$@' "$result"
+
+    mk_pop_vars
 }
 
 _mk_compile_detect()
@@ -653,8 +736,9 @@ _mk_compile_detect()
         esac
     fi
         
-    # Update IS_CXX so caller knows to use CXX to link
-    [ "$COMPILER" = "c++" ] && IS_CXX=true
+    # Update USED_{CC,CXX} so caller knows how to link or generate PCHs
+    [ "$COMPILER" = "c++" ] && USED_CXX=true
+    [ "$COMPILER" = "c" ] && USED_CC=true
 
     if [ -z "$OBJECT" ]
     then
@@ -664,6 +748,8 @@ _mk_compile_detect()
     fi
   
     _mk_compile
+
+    mk_pop_vars
 }
 
 #<
@@ -681,11 +767,110 @@ mk_compile()
 {
     mk_push_vars \
         SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC \
-        OBJECT OSUFFIX COMPILER IS_CXX
+        OBJECT OSUFFIX COMPILER USED_CXX USED_CC
     mk_parse_params
     
     _mk_process_headerdeps "$SOURCE"
     _mk_compile_detect
+    
+    mk_pop_vars
+}
+
+_mk_pch()
+{
+    mk_push_vars \
+        COMPILER="$COMPILER" \
+        OBJECT="$OBJECT" \
+        CFLAGS="$CFLAGS -x c-header" \
+        CXXFLAGS="$CXXFLAGS -x c++-header" \
+        PCH
+
+    if [ -z "$COMPILER" ]
+    then
+        case "$SOURCE" in
+            *.h)
+                COMPILER="c"
+                ;;
+            *.[hH][pP][pP])
+                COMPILER="c++"
+                ;;
+            *)
+                mk_fail "unsupported source file type: .${SOURCE##*.}"
+                ;;
+        esac
+    fi
+
+    if [ -z "$OBJECT" ]
+    then
+        mk_basename "$SOURCE"
+        _mk_pchname "$result" "$OSUFFIX.$COMPILER" ".gch"
+        OBJECT="$result"
+    fi
+    
+    _mk_compile
+    
+    mk_pop_vars
+}
+
+_mk_gen_pch()
+{
+    mk_push_vars COMPILER SOURCE
+
+    case "$PCH" in
+        *.gch|"")
+            : # Already resolved or not used, nothing to do
+            ;;
+        *)
+            # We were given a plain header, so we need
+            # to generate rules for building the PCH now
+            SOURCE="$PCH"
+            
+            if $USED_CC
+            then
+                COMPILER=c
+                _mk_pch
+            fi
+            
+            if $USED_CXX
+            then
+                COMPILER=c++
+                _mk_pch
+            fi
+            ;;
+    esac
+
+    mk_pop_vars
+}
+
+#<
+# @brief Build pre-compiled header
+# @usage SOURCE=source options...
+# @option SOURCE=source Indicates the header file to compile.
+# @option ... Common options are documented in the
+# <modref>compiler</modref> module.
+#
+# Defines a target to build a pre-compiled C/C++ header file.  Sets
+# <var>result</var> to the generated target.  By default, the correct
+# language to use is guessed based on the file extension.  Use
+# the <param>COMPILER</param> option to choose explicitly (e.g. compile
+# a <filename>.h</filename> file with the C++ compiler).
+#
+# It is generally preferable to avoid explicitly building pre-compiled
+# headers and instead pass the header to compile directly to the
+# <param>PCH</param> option to <funcref>mk_program</funcref> et al.
+# This helps ensure that the header is compiled with the same set of
+# compiler flags and for the correct language.
+#>
+mk_pch()
+{
+    mk_push_vars \
+        SOURCE HEADERDEPS DEPS INCLUDEDIRS CPPFLAGS CFLAGS CXXFLAGS PIC \
+        OBJECT OSUFFIX COMPILER USED_CXX USED_CC
+    mk_parse_params
+    
+    _mk_process_headerdeps "$SOURCE"
+
+    _mk_pch
     
     mk_pop_vars
 }
@@ -1021,6 +1206,8 @@ _mk_library()
         _objects="$_objects $result"
     done
     
+    _mk_gen_pch
+
     _mk_add_groups
     _objects="$_objects $result"
     _deps="$_deps $result"
@@ -1070,6 +1257,8 @@ _mk_library_static()
         _objects="$_objects $result"
     done
     
+    _mk_gen_pch
+
     _mk_add_groups
     _objects="$_objects $result"
     _deps="$_deps $result"
@@ -1158,9 +1347,9 @@ mk_library()
 {
     mk_push_vars \
         INSTALLDIR="$MK_LIBDIR" LIB SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
-        HEADERDEPS LIBDIRS INCLUDEDIRS VERSION=0:0:0 DEPS OBJECTS \
-        SYMFILE SONAME LINKS COMPILER IS_CXX=false EXT="${MK_LIB_EXT}" \
-        TARGET STATIC_NAME static_deps
+        HEADERDEPS LIBDIRS INCLUDEDIRS PCH VERSION=0:0:0 DEPS OBJECTS \
+        SYMFILE SONAME LINKS COMPILER USED_CXX=false USED_CC=false \
+        EXT="${MK_LIB_EXT}" TARGET STATIC_NAME static_deps
     mk_parse_params
     mk_require_params mk_library LIB
 
@@ -1354,6 +1543,8 @@ _mk_dlo()
         _objects="$_objects $result"
     done
     
+    _mk_gen_pch
+
     _mk_add_groups
     _objects="$_objects $result"
     _deps="$_deps $result"
@@ -1397,8 +1588,8 @@ mk_dlo()
     mk_push_vars \
         DLO SOURCES SOURCE GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS LIBDIRS INCLUDEDIRS VERSION="no" \
-        OBJECTS DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE SONAME COMPILER \
-        IS_CXX=false OSUFFIX PIC=yes
+        OBJECTS PCH DEPS INSTALLDIR EXT="${MK_DLO_EXT}" SYMFILE SONAME COMPILER \
+        USED_CXX=false USED_CC=false OSUFFIX PIC=yes
     mk_parse_params
     mk_require_params mk_dlo DLO
 
@@ -1455,9 +1646,10 @@ mk_dlo()
 _mk_add_group()
 {
     mk_push_vars \
-        COMPILER CPPFLAGS CFLAGS CXXFLAGS DEPS SOURCE INCLUDEDIRS \
+        COMPILER CPPFLAGS CFLAGS CXXFLAGS DEPS SOURCE INCLUDEDIRS PCH \
         MK_SUBDIR="$MK_SUBDIR" OSUFFIX="$OSUFFIX.${1##*/}" \
-        sources cppflags cflags cxxflags ldflags subdir libdirs libdeps deps groupdeps
+        sources cppflags cflags cxxflags ldflags subdir libdirs \
+        libdeps pch deps groupdeps
     
     mk_resolve_file "$1.${MK_SYSTEM%/*}.${MK_SYSTEM#*/}.og"
     mk_source_or_fail "$result"
@@ -1471,6 +1663,7 @@ _mk_add_group()
     LIBDIRS="$LIBDIRS $libdirs"
     LIBDEPS="$LIBDEPS $libdeps"
     INCLUDEDIRS="$includedirs"
+    PCH="$PCH"
     groups="$groups $groupdeps"
     groups="${groups# }"
 
@@ -1481,6 +1674,8 @@ _mk_add_group()
         mk_quote "$result"
         objects="$objects $result"
     done
+
+    _mk_gen_pch
 
     mk_pop_vars
 }
@@ -1529,6 +1724,8 @@ _mk_group()
         echo libdirs="$result"
         mk_quote "$INCLUDEDIRS"
         echo includedirs="$result"
+        mk_quote "$PCH"
+        echo pch="$result"
         mk_quote "$DEPS"
         echo deps="$result"
         mk_quote "$GROUPDEPS"
@@ -1553,7 +1750,7 @@ mk_group()
 {
     mk_push_vars \
         GROUP SOURCES SOURCE CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LIBDEPS \
-        HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS \
+        HEADERDEPS GROUPDEPS LIBDIRS INCLUDEDIRS OBJECTS DEPS PCH \
         includedir
     mk_parse_params
     mk_require_params mk_group GROUP
@@ -1610,11 +1807,13 @@ _mk_program()
         _deps="$_deps $result"
         _objects="$_objects $result"
     done
+
+    _mk_gen_pch
     
     _mk_add_groups
     _objects="$_objects $result"
     _deps="$_deps $result"
-    
+
     for _lib in ${LIBDEPS} ${MK_LIBDEPS}
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
@@ -1648,7 +1847,7 @@ mk_program()
     mk_push_vars \
         PROGRAM SOURCES SOURCE OBJECTS GROUPS CPPFLAGS CFLAGS CXXFLAGS \
         LDFLAGS LIBDEPS HEADERDEPS DEPS LIBDIRS INCLUDEDIRS INSTALLDIR \
-        COMPILER IS_CXX=false PIC=no OSUFFIX
+        COMPILER PCH USED_CXX=false USED_CC=false PIC=no OSUFFIX
         EXT=""
     mk_parse_params
     mk_require_params mk_program PROGRAM

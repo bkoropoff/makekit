@@ -65,6 +65,12 @@ do_compile()
     mk_defname "${MK_CANONICAL_SYSTEM%/*}"
     FLAGS="$FLAGS -D_MK_$result"
     
+    PCH_FLAGS=""
+    if [ -n "$PCH" ]
+    then
+        mk_append_list PCH_FLAGS "-include" "${PCH%.*}"
+    fi
+
     mk_msg_domain compile
     
     if [ -z "$CONFTEST" ]
@@ -91,7 +97,7 @@ do_compile()
     
     mk_mkdirname "$_object"
     
-    mk_unquote_list "$DEP_FLAGS"
+    mk_unquote_list "$DEP_FLAGS" "$PCH_FLAGS"
     mk_run_or_fail ${CPROG} \
         ${FLAGS} \
         "$@" \
