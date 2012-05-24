@@ -1663,7 +1663,7 @@ _mk_add_group()
     LIBDIRS="$LIBDIRS $libdirs"
     LIBDEPS="$LIBDEPS $libdeps"
     INCLUDEDIRS="$includedirs"
-    PCH="$PCH"
+    PCH="$pch"
     groups="$groups $groupdeps"
     groups="${groups# }"
 
@@ -1772,6 +1772,13 @@ mk_group()
     # Resolve deps
     mk_resolve_targets "$DEPS"
     DEPS="$result"
+
+    # Resolve PCH
+    if [ -n "$PCH" ]
+    then
+        mk_resolve_target "$PCH"
+        PCH="$result"
+    fi
 
     TARGET="$GROUP.${MK_SYSTEM%/*}.${MK_SYSTEM#*/}.og"
     _mk_group "$@"
