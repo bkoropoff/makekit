@@ -458,6 +458,69 @@ make()
       build rule will not be included.
     </important>
   </section>
+  <section id="c-pch" xreflabel="Pre-compiled Headers">
+    <title>Pre-compiled Headers</title>
+    <para>
+      Pre-compiled headers help reduce build times for large projects
+      by avoiding parsing the same header files multiple times.  C++
+      templates in particular tend to result in large header files,
+      and pre-compiling them can be a substantial win for build times.
+      <productname>MakeKit</productname> makes it easy to use
+      pre-compiled headers with both <productname>gcc</productname>
+      and <productname>clang</productname>.
+    </para>
+    <para>
+      The easiest way to use a pre-compiled header is by passing
+      <parameter>PCH=<replaceable>header</replaceable></parameter> to
+      <function><xref linkend="mk_program"/></function>,
+      <function><xref linkend="mk_library"/></function>,
+      <function><xref linkend="mk_dlo"/></function>, or
+      <function><xref linkend="mk_group"/></function>.  The
+      pre-compiled header will be included before all other headers
+      via the <parameter>-include</parameter> parameter to the
+      compiler.  If <replaceable>header</replaceable> is also included
+      by source files, it should use a standard include guard.
+    </para>
+    <para>
+      Pre-compiled headers are highly sensitive to language (C or C++)
+      and various compiler settings (e.g. PIC versus non-PIC code).
+      Using this method will ensure that the pre-compiled header is
+      built with compatible settings and for the correct language,
+      but does not allow sharing the result between build targets.
+    </para>
+    <para>
+      You can use <function><xref linkend="mk_pch"/></function> to
+      produce an explicit pre-compiled header.  Capture the value
+      of <varname>result</varname> and pass it as
+      <parameter>PCH</parameter> to subsequent build targets.
+      It is up to you to ensure that it is built with compatible
+      settings.  The following non-exhaustive list of parameters
+      can affect the result:
+    </para>
+    <variablelist>
+      <varlistentry>
+	<term><parameter>PIC</parameter></term>
+	<listitem>
+	  <para>
+	    Must be <literal>no</literal> (the default) for
+	    programs and static libraries, and <literal>yes</literal>
+	    for libraries and dynamically-loadable objects.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><parameter>COMPILER</parameter></term>
+	<listitem>
+	  <para>
+	    Since many header extensions are ambiguous, you should
+	    manually specify <literal>c</literal> or <literal>c++</literal>
+	    to determine which compiler should be used to generate
+	    the pre-compiled header.
+	  </para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
   <section xml:id="c-checks">
     <title>Configuration Tests</title>
     <para>
