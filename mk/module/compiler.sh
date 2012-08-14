@@ -1790,13 +1790,6 @@ _mk_program()
 {
     unset _deps _objects
     
-    if [ "${MK_SYSTEM%/*}" = "build" ]
-    then
-        _libdir="@${MK_RUNMK_LIBDIR}"
-    else
-        _libdir="$MK_LIBDIR"
-    fi
-    
     mk_comment "program ${PROGRAM} ($MK_SYSTEM) from ${MK_SUBDIR#/}"
 
     # Create object prefix based on program name
@@ -1825,7 +1818,7 @@ _mk_program()
     do
         if _mk_contains "$_lib" ${MK_INTERNAL_LIBS}
         then
-            mk_quote "${_libdir}/lib${_lib}.la"
+            mk_quote "$MK_LIBDIR/lib${_lib}.la"
             _deps="$_deps $result"
         fi
     done
