@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_multiarch_do</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn02.html" title="Core Functionality" /><link rel="prev" href="mk_compat_done.html" title="mk_compat_done" /><link rel="next" href="mk_multiarch_done.html" title="mk_multiarch_done" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_multiarch_do</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_compat_done.html">Prev</a> </td><th width="60%" align="center">Core Functionality</th><td width="20%" align="right"> <a accesskey="n" href="mk_multiarch_done.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_multiarch_do"><a id="mk_multiarch_do"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_multiarch_do — Execute commands for multiple ISAs</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... platform ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_multiarch_do</code></p></div></div><div class="refsection" title="Description"><a id="idp3249344"></a><h2>Description</h2>
+<p>
+Executes a set of commands beginning with <code class="function"><a class="xref" href="mk_multiarch_do.html" title="mk_multiarch_do"><span class="refentrytitle">mk_multiarch_do</span></a></code>
+and ending with <code class="function"><a class="xref" href="mk_multiarch_done.html" title="mk_multiarch_done"><span class="refentrytitle">mk_multiarch_done</span></a></code> for each ISA of the
+host system.  During the configure phase, this allows running tests
+or maniuplating variables for each ISA where the results might differ
+between them (e.g. pointer size, system library directory, library file extension).
+During the make phase, it allows building multiple versions of a binary for
+each ISA.  On systems that use "fat" binaries, this function is a no-op
+during the make phase.
+</p>
+</div><div class="refsection" title="Examples"><a id="idp3249616"></a><h2>Examples</h2><pre class="programlisting">
+configure()
+{
+    mk_config_header "include/config.h"
+
+    mk_multiarch_do
+        mk_check_sizeofs HEADERDEPS="stdlib.h" "void*" "size_t"
+        mk_define MY_LIB_DIR "\"$MK_LIBDIR/foobar\""
+    mk_multiarch_done
+}
+
+make()
+{
+    mk_multiarch_do
+        mk_library LIB="foobarclient" SOURCES="foobar.c"
+    mk_multiarch_done
+}
+</pre></div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_compat_done.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn02.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_multiarch_done.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_compat_done </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_multiarch_done</td></tr></table></div></body></html>

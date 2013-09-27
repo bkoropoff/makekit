@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 3. C Language Projects</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="conventions.html" title="Chapter 2. Conventions and Patterns" /><link rel="next" href="pt02.html" title="Part II. Reference" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 3. C Language Projects</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="conventions.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="pt02.html">Next</a></td></tr></table><hr /></div><div class="chapter" title="Chapter 3. C Language Projects"><div class="titlepage"><div><div><h2 class="title"><a id="c-projects"></a>Chapter 3. C Language Projects</h2></div></div></div>
+  
+  
+  <p>
+      This chapter will show you how to use <span class="productname">MakeKit</span>
+      to configure and build a C language project.
+  </p>
+
+  <div class="section" title="Building Programs"><div class="titlepage"><div><div><h2 class="title"><a id="c-programs"></a>Building Programs</h2></div></div></div>
+    
+    <p>
+      Programs are built using the <code class="function"><a class="xref" href="mk_program.html" title="mk_program"><span class="refentrytitle">mk_program</span></a></code> function, which requires
+      at a minimum a list of source files and a program name.  The program name is passed
+      as the <em class="parameter"><code>PROGRAM</code></em> parameter, and the list of sources files is passed
+      as the <em class="parameter"><code>SOURCES</code></em> parameter.  Consider <a class="xref" href="c-projects.html#c-hello-world" title="Example 3.1. Using mk_program">Example 3.1, “Using <code class="function">mk_program</code>”</a>
+      for a simple "Hello, World" program <code class="filename">hello</code>, it's source file
+      <code class="filename">main.c</code>, and the <code class="filename">MakeKitBuild</code> file to build it.
+    </p>
+    <div class="example"><a id="c-hello-world"></a><p class="title"><strong>Example 3.1. Using <code class="function">mk_program</code></strong></p><div class="example-contents">
+      
+      <div class="variablelist"><dl><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
+<pre class="programlisting">
+#include &lt;stdio.h&gt;
+
+int main(int argc, char** argv)
+{
+    printf("Hello, world!\n");
+}
+</pre>
+	  </dd><dt><span class="term"><code class="filename">MakeKitBuild</code></span></dt><dd>
+<pre class="programlisting">
+make()
+{
+    mk_program \
+        PROGRAM=hello \
+        SOURCES="main.c"
+}
+</pre>
+	  </dd></dl></div>
+    </div></div><br class="example-break" />
+    <p>
+      By default, the program will be installed in the usual binary directory
+      (e.g. <code class="filename">/usr/local/bin</code>).  The install location
+      can be changed with the <em class="parameter"><code>INSTALLDIR</code></em> parameter to
+      <code class="function">mk_program</code>.
+    </p>
+    
+    <div class="section" title="Finding Header Files"><div class="titlepage"><div><div><h3 class="title"><a id="idp2635832"></a>Finding Header Files</h3></div></div></div>
+      
+      <p>
+	A C project with a complex layout will typically need to look for headers
+	from multiple directories within the source tree.  Using the
+	<em class="parameter"><code>INCLUDEDIRS</code></em> parameter to <code class="function">mk_program</code>,
+	you can specify a list of directories where the compiler should look for
+	header files.  Adding a header file <code class="filename">include/values.h</code>
+	to our small example project and modifying <code class="filename">MakeKitBuild</code>
+	to find it yields <a class="xref" href="c-projects.html#c-include-dirs" title="Example 3.2. Using INCLUDEDIRS">Example 3.2, “Using <em class="parameter"><code>INCLUDEDIRS</code></em>”</a>.
+      </p>
+
+      <div class="example"><a id="c-include-dirs"></a><p class="title"><strong>Example 3.2. Using <em class="parameter"><code>INCLUDEDIRS</code></em></strong></p><div class="example-contents">
+	
+	<div class="variablelist"><dl><dt><span class="term"><code class="filename">include/values.h</code></span></dt><dd>
+<pre class="programlisting">
+#define MESSAGE "Hello, World!"
+</pre>
+	    </dd><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
+<pre class="programlisting">
+#include &lt;stdio.h&gt;
+#include "values.h"
+
+int main(int argc, char** argv)
+{
+    printf("%s\n", MESSAGE);
+}
+</pre>
+	    </dd><dt><span class="term"><code class="filename">MakeKitBuild</code></span></dt><dd>
+<pre class="programlisting">
+make()
+{
+    mk_program \
+        PROGRAM=hello \
+        SOURCES="main.c" \
+        INCLUDEDIRS="include"
+}
+</pre>
+	    </dd></dl></div>
+      </div></div><br class="example-break" />
+    </div>
+    <div class="section" title="Linking To Libraries"><div class="titlepage"><div><div><h3 class="title"><a id="idp2631120"></a>Linking To Libraries</h3></div></div></div>
+      
+      <p>
+	To link your program to other libraries, specify them as a list
+	via the <em class="parameter"><code>LIBDEPS</code></em> parameter.  Each library should be
+	specified exactly as you would with <em class="parameter"><code>-l</code></em> to the C
+	compiler (without the <code class="filename">lib</code> prefix).  See 
+	<a class="xref" href="c-projects.html#c-link-lib" title="Example 3.3. Using LIBDEPS">Example 3.3, “Using <em class="parameter"><code>LIBDEPS</code></em>”</a>, which links to <code class="filename">libm</code>
+	to use the <code class="function">sqrt()</code> function.
+      </p>
+      <div class="example"><a id="c-link-lib"></a><p class="title"><strong>Example 3.3. Using <em class="parameter"><code>LIBDEPS</code></em></strong></p><div class="example-contents">
+	
+	<div class="variablelist"><dl><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
+<pre class="programlisting">
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include "values.h"
+
+int main(int argc, char** argv)
+{
+    printf("%s\n", MESSAGE);
+    printf("The square root of 2.0 is %f\n", sqrt(2.0));
+}
+</pre>
+	    </dd><dt><span class="term"><code class="filename">MakeKitBuild</code></span></dt><dd>
+<pre class="programlisting">
+make()
+{
+    mk_program \
+        PROGRAM=hello \
+        SOURCES="main.c" \
+        INCLUDEDIRS="include" \
+        LIBDEPS="m"
+}
+</pre>
+	    </dd></dl></div>
+      </div></div><br class="example-break" />
+    </div>
+  </div>
+  <div class="section" title="Building Libraries"><div class="titlepage"><div><div><h2 class="title"><a id="idp2644200"></a>Building Libraries</h2></div></div></div>
+    
+    <p>
+      <span class="productname">MakeKit</span> allows you to build two types of libraries:
+    </p>
+    <div class="variablelist"><dl><dt><span class="term">Shared libraries</span></dt><dd>
+	  <p>
+	    A shared library is a collection of address-relocatable code which is combined
+	    with the program that links against it at startup by the system dynamic linker.
+	    Shared libraries are built with the <code class="function">mk_library</code> function.
+	  </p>
+	</dd><dt><span class="term">Dynamically loadable objects</span></dt><dd>
+	  <p>
+	    A dynamically loadable object is a blob of code which is explicitly loaded
+	    and executed by a program through functions like <code class="function">dlopen()</code>.
+	    Dynamically loadable objects are typically used to implement plugins.  Although
+	    on many <span class="productname">UNIX</span> systems dynamically loadable objects and
+	    shared libraries are the same type of file, some systems distinguish between
+	    the two.  For example, <span class="productname">Mac OS X</span> distinguishes between
+	    <code class="filename">.dylib</code> (shared libraries) and <code class="filename">.bundle</code>
+	    or <code class="filename">.so</code> (dynamically loadable objects).  To build a dynamically
+	    loadable object, use the <code class="function">mk_dlo</code> function, which takes nearly
+	    identical parameters to <code class="function">mk_library</code>.
+	  </p>
+	</dd></dl></div>
+    <p>
+      As with building programs, building a library requires a library name, passed as the
+      <em class="parameter"><code>LIB</code></em> parameter, and a list of sources, passed as the
+      <em class="parameter"><code>SOURCES</code></em> parameter.  The library name should be specified
+      without a filename extension or the <code class="filename">lib</code> prefix.  Consider
+      <a class="xref" href="c-projects.html#c-library" title="Example 3.4. Using mk_library">Example 3.4, “Using <code class="function">mk_library</code>”</a>, which expands on previous examples by building a
+      small library and linking it into the program <code class="filename">hello</code>.
+    </p>
+    <div class="example"><a id="c-library"></a><p class="title"><strong>Example 3.4. Using <code class="function">mk_library</code></strong></p><div class="example-contents">
+      
+      <div class="variablelist"><dl><dt><span class="term"><code class="filename">include/example.h</code></span></dt><dd>
+<pre class="programlisting">
+external unsigned long factorial(unsigned long i);
+</pre>
+	  </dd><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
+<pre class="programlisting">
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include "values.h"
+#include "example.h"
+
+int main(int argc, char** argv)
+{
+    printf("%s\n", MESSAGE);
+    printf("The square root of 2.0 is %f\n", sqrt(2.0));
+    printf("5! is %lu\n", factorial(5));
+}
+</pre>
+	  </dd><dt><span class="term"><code class="filename">example.c</code></span></dt><dd>
+<pre class="programlisting">
+#include "example.h"
+
+unsigned long factorial(unsigned long i)
+{
+    return i == 1 ? 1 : i * factorial(i - 1);
+}
+</pre>
+	  </dd><dt><span class="term"><code class="filename">MakeKitBuild</code></span></dt><dd>
+<pre class="programlisting">
+make()
+{
+    mk_library \
+        LIB=example \
+        SOURCES="example.c" \
+        INCLUDEDIRS="include"
+
+    mk_program \
+        PROGRAM=hello \
+	SOURCES="main.c" \
+        INCLUDEDIRS="include" \
+        LIBDEPS="m example"
+}
+</pre>
+	    </dd></dl></div>
+    </div></div><br class="example-break" />
+    <p>
+      As you can see, <code class="function">mk_library</code> accepts many of the same parameters
+      as <code class="function">mk_program</code>, including <em class="parameter"><code>INCLUDEDIRS</code></em>.
+      As with programs, libraries can specify dependencies on other shared libraries
+      with <em class="parameter"><code>LIBDEPS</code></em>.
+    </p>
+    <div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>
+      Some systems do not allow inter-dependencies between shared libraries.  On those
+      systems, <span class="productname">MakeKit</span> will propagate dependencies
+      forward to any program that links against them.  The resulting program may
+      explicitly depend on libraries from which it consumes no symbols.
+    </div>
+    <p>
+      Our new library was linked into <code class="filename">hello</code> the same way as the
+      system library <code class="filename">libm</code>.  Note that the order of the two function
+      invocations in <code class="filename">MakeKitBuild</code> is significant.
+      Because <code class="function">mk_program</code> was called after
+      <code class="function">mk_library</code>, it knows that <code class="filename">libexample</code>
+      is a library we build ourselves rather than pre-existing on the system, and it adds
+      appropriate dependencies to the generated <code class="filename">Makefile</code>.
+    </p>
+  </div>
+  <div class="section" title="Groups"><div class="titlepage"><div><div><h2 class="title"><a id="c-projects-groups"></a>Groups</h2></div></div></div>
+    
+    <p>
+      When a library or program grows large enough, it is often
+      prudent to break its source code up across multiple
+      subdirectories to enhance organizational clarity and separation
+      of concerns.  Rather than maintaining a long list of source
+      files from disparate subdirectories in your invocation of
+      <code class="function">mk_library</code> or
+      <code class="function">mk_program</code>, you can use the
+      <code class="function">mk_group</code> function to group together a set
+      of source files and compiler flags into a logical unit which can
+      then be added in to your program or library.  This feature is an
+      analogue of "convenience libraries" available in
+      <span class="orgname">GNU</span> <span class="command"><strong>libtool</strong></span>.
+    </p>
+    <p>
+      Imagine that the currently diminuitive <code class="filename">libexample</code> is destined
+      to become a vast utility library with both math and string manipulation functions.
+      In anticipation of this, we break it into two subdirectories, <code class="filename">math</code>
+      and <code class="filename">string</code>.  We will build each subdirectory as an object
+      group and then combine the two into <code class="filename">libexample</code> using the
+      <em class="parameter"><code>GROUPS</code></em> parameter to <code class="function">mk_library</code>.
+      This yields <a class="xref" href="c-projects.html#c-group" title="Example 3.5. Using mk_group">Example 3.5, “Using <code class="function">mk_group</code>”</a>.
+    </p>
+    <div class="example"><a id="c-group"></a><p class="title"><strong>Example 3.5. Using <code class="function">mk_group</code></strong></p><div class="example-contents">
+      
+      <div class="variablelist"><dl><dt><span class="term"><code class="filename">include/example.h</code></span></dt><dd>
+<pre class="programlisting">
+/* Math functions */
+external unsigned long factorial(unsigned long i);
+/* String functions */
+external void reverse_string(char* str);
+</pre>
+	  </dd><dt><span class="term"><code class="filename">math/factorial.c</code></span></dt><dd>
+<pre class="programlisting">
+#include "example.h"
+
+unsigned long factorial(unsigned long i)
+{
+    return i == 1 ? 1 : i * factorial(i - 1);
+}
+</pre>
+	  </dd><dt><span class="term"><code class="filename">math/MakeKitBuild</code></span></dt><dd>
+<pre class="programlisting">
+make()
+{
+    mk_group \
+        GROUP=math \
+        SOURCES="*.c" \
+        INCLUDEDIRS="../include"
+}
+</pre>
+	    </dd><dt><span class="term"><code class="filename">string/reverse.c</code></span></dt><dd>
+<pre class="programlisting">
+#include &lt;string.h&gt;
+#include "example.h"
+
+unsigned void reverse_string(char* str)
+{
+    char* front = NULL;
+    char* back = NULL;
+    char tmp = 0;
+
+    for (front = str, back = str + strlen(str) - 1;
+         back &gt; front;
+         front++, back--)
+    {
+        tmp = *front;
+        *front = *back;
+        *back = tmp;
+    }
+}
+</pre>
+	  </dd><dt><span class="term"><code class="filename">string/MakeKitBuild</code></span></dt><dd>
+<pre class="programlisting">
+make()
+{
+    mk_group \
+        GROUP=string \
+        SOURCES="*.c" \
+        INCLUDEDIRS="../include"
+}
+</pre>
+	    </dd><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
+<pre class="programlisting">
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include "values.h"
+#include "example.h"
+
+int main(int argc, char** argv)
+{
+    char reverse[] = MESSAGE;
+
+    reverse_string(reverse);
+
+    printf("%s\n", MESSAGE);
+    printf("Reversed: %s\n", reverse);
+    printf("The square root of 2.0 is %f\n", sqrt(2.0));
+    printf("5! is %lu\n", factorial(5));
+}
+</pre>
+	  </dd><dt><span class="term"><code class="filename">MakeKitBuild</code></span></dt><dd>
+<pre class="programlisting">
+SUBDIRS="math string"
+
+make()
+{
+    mk_library \
+        LIB=example \
+        GROUPS="math/math string/string"
+
+    mk_program \
+        PROGRAM=hello \
+	SOURCES="main.c" \
+        INCLUDEDIRS="include" \
+        LIBDEPS="m example"
+}
+</pre>
+	    </dd></dl></div>
+    </div></div><br class="example-break" />
+    <p>
+      The <code class="function">mk_group</code> function accepts nearly the
+      same set of optional parameters as
+      <code class="function">mk_library</code>; in fact, you can even use
+      <em class="parameter"><code>GROUPDEPS</code></em> to combine object groups
+      together hierachically.
+    </p>
+    <p>
+      This particular example also demonstrates a useful shortcut enabled by keeping source
+      files neatly separated into subdirectories: filename patterns.  The invocations of
+      <code class="function">mk_group</code> in the <code class="filename">math</code> and <code class="filename">string</code>
+      subdirectories can include all C source files with <code class="literal">*.c</code>.  In general,
+      <span class="productname">MakeKit</span> supports filename patterns whenever specifying
+      source files.
+    </p>
+    <div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3>
+      Filename patterns only work against files that exist at the time that
+      <code class="filename">configure</code> is run.  Files that are created by a
+      build rule will not be included.
+    </div>
+  </div>
+  <div class="section" title="Pre-compiled Headers"><div class="titlepage"><div><div><h2 class="title"><a id="c-pch"></a>Pre-compiled Headers</h2></div></div></div>
+    
+    <p>
+      Pre-compiled headers help reduce build times for large projects
+      by avoiding parsing the same header files multiple times.  C++
+      templates in particular tend to result in large header files,
+      and pre-compiling them can be a substantial win for build times.
+      <span class="productname">MakeKit</span> makes it easy to use
+      pre-compiled headers with both <span class="productname">gcc</span>
+      and <span class="productname">clang</span>.
+    </p>
+    <p>
+      The easiest way to use a pre-compiled header is by passing
+      <em class="parameter"><code>PCH=<em class="replaceable"><code>header</code></em></code></em> to
+      <code class="function"><a class="xref" href="mk_program.html" title="mk_program"><span class="refentrytitle">mk_program</span></a></code>,
+      <code class="function"><a class="xref" href="mk_library.html" title="mk_library"><span class="refentrytitle">mk_library</span></a></code>,
+      <code class="function"><a class="xref" href="mk_dlo.html" title="mk_dlo"><span class="refentrytitle">mk_dlo</span></a></code>, or
+      <code class="function"><a class="xref" href="mk_group.html" title="mk_group"><span class="refentrytitle">mk_group</span></a></code>.  The
+      pre-compiled header will be included before all other headers
+      via the <em class="parameter"><code>-include</code></em> parameter to the
+      compiler.  If <em class="replaceable"><code>header</code></em> is also included
+      by source files, it should use a standard include guard.
+    </p>
+    <p>
+      Pre-compiled headers are highly sensitive to language (C or C++)
+      and various compiler settings (e.g. PIC versus non-PIC code).
+      Using this method will ensure that the pre-compiled header is
+      built with compatible settings and for the correct language,
+      but does not allow sharing the result between build targets.
+    </p>
+    <p>
+      You can use <code class="function"><a class="xref" href="mk_pch.html" title="mk_pch"><span class="refentrytitle">mk_pch</span></a></code> to
+      produce an explicit pre-compiled header.  Capture the value
+      of <code class="varname">result</code> and pass it as
+      <em class="parameter"><code>PCH</code></em> to subsequent build targets.
+      It is up to you to ensure that it is built with compatible
+      settings.  The following non-exhaustive list of parameters
+      can affect the result:
+    </p>
+    <div class="variablelist"><dl><dt><span class="term"><em class="parameter"><code>PIC</code></em></span></dt><dd>
+	  <p>
+	    Must be <code class="literal">no</code> (the default) for
+	    programs and static libraries, and <code class="literal">yes</code>
+	    for libraries and dynamically-loadable objects.
+	  </p>
+	</dd><dt><span class="term"><em class="parameter"><code>COMPILER</code></em></span></dt><dd>
+	  <p>
+	    Since many header extensions are ambiguous, you should
+	    manually specify <code class="literal">c</code> or <code class="literal">c++</code>
+	    to determine which compiler should be used to generate
+	    the pre-compiled header.
+	  </p>
+	</dd></dl></div>
+  </div>
+  <div class="section" title="Configuration Tests"><div class="titlepage"><div><div><h2 class="title"><a id="c-checks"></a>Configuration Tests</h2></div></div></div>
+    
+    <p>
+      Most projects of any significant complexity will need to determine how
+      and what source code to build based on the attributes of the host operating
+      system, available libraries, and so forth.  To this end,
+      <span class="productname">MakeKit</span> provides an array of functions to use in
+      <code class="function">configure()</code> within your <code class="filename">MakeKitBuild</code>
+      files.
+    </p>
+    <p>
+      The idioms used to configure projects with <span class="productname">MakeKit</span>
+      are very similar to <span class="command"><strong>autoconf</strong></span>'s.  This was an intentional
+      design decision to ease migration.
+    </p>
+    <p>
+      Most configuration tests result in <code class="literal">#define</code> statements being written
+      into a config header which you can include in your source files to make use of the test
+      results.  You can set the current config header with <code class="function">mk_config_header</code>.
+      You can add <code class="literal">#define</code> statements to the current config header with
+      <code class="function">mk_define</code>:
+    </p>
+    <div class="example"><a id="c-config-header"></a><p class="title"><strong>Example 3.6. Using <code class="function">mk_config_header</code></strong></p><div class="example-contents">
+      
+<pre class="programlisting">
+configure()
+{
+    # Place #defines in include/config.h relative
+    # to location of MakeKitBuild in source tree
+    mk_config_header "include/config.h"
+
+    # Define FOOBAR to 1
+    mk_define FOOBAR 1
+    
+    # Define BUILD_TIME to current time as a string
+    # using UNIX 'date' program
+    mk_define BUILD_TIME "\"`date`\""
+}
+</pre>
+    </div></div><br class="example-break" />
+    <div class="section" title="Test Basics"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-basics"></a>Test Basics</h3></div></div></div>
+      
+      <p>
+	Most configuration checks do one or more of the following:
+      </p>
+      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">Display the test being performed to the user</li><li class="listitem">Perform a test using the C compiler</li><li class="listitem">Set a variable to the result of the test</li><li class="listitem">Add a define to the config header with the result of the test</li><li class="listitem">Cache the results to speed up subsequent runs of <code class="filename">configure</code></li><li class="listitem">Display the result of the test to the user</li></ul></div>
+      <p>
+	The names of variables and defines are usually based on the item in question (e.g.
+	the name of the header or library), with a few transformations:
+      </p>
+      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">All lowercase letters are converted to uppercase</li><li class="listitem">
+	  All <code class="literal">*</code> (asterisk) characters are converted to <code class="literal">P</code>.
+	</li><li class="listitem">All other characters are converted to _.</li></ul></div>
+      <p>
+	These rules are the same as those used in <span class="command"><strong>autoconf</strong></span>.  Hereafter, a
+	name derived by these rules will be referred to as a <em class="replaceable"><code>varname</code></em>.
+      </p>
+      <p>
+	Most of the configuration checks have two forms, singular and plural.  The plural
+	form takes a list of items and performs the above steps for each item, and is the
+	most common and convenient way of performing a check.  The singular form takes
+	only a single item has none of the side effects of the plural form.  Instead, it
+	sets the variable <code class="varname">result</code> to the result of the test, and
+	returns 0 (logical true in shell script) if the test succeeded, and 1 (logical false)
+	otherwise.  This form is useful for writing more elaborate custom tests.
+      </p>
+      <p>
+	Many of the tests have 3 possible results: <code class="literal">internal</code>,
+	<code class="literal">external</code>, and <code class="literal">no</code>.  If the item being
+	checked for is provided by the current project -- for example, checking for
+	a library which is built in a preceding source directory -- the test will
+	trivially succeed with <code class="literal">internal</code>.  If the item was identified
+	as being provided by the operating system or build environment, such as a system
+	header, the result will be <code class="literal">external</code>.  If the item was not
+	found, the result will be <code class="literal">no</code>.
+      </p>
+    </div>
+    <div class="section" title="Checking For Headers"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-headers"></a>Checking For Headers</h3></div></div></div>
+      
+      <p>
+	To check for the presence of a header on the system, use
+	<code class="function">mk_check_headers</code>.  This function takes
+	a list of header names and tests for the presence and usability
+	of each one by attempting to compile a small program that includes
+	it.  For each header, it will do the following:
+      </p>
+      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+	  Set the variable <code class="varname">HAVE_<em class="replaceable"><code>varname</code></em></code>
+	  to the result of the test.
+	</li><li class="listitem">
+	  If the header was found, define <code class="literal">HAVE_<em class="replaceable"><code>varname</code></em></code>
+	</li></ul></div>
+      <div class="example"><a id="c-mk-check-headers"></a><p class="title"><strong>Example 3.7. Using <code class="function">mk_check_headers</code></strong></p><div class="example-contents">
+	
+<pre class="programlisting">
+configure()
+{
+    mk_config_header "include/config.h"
+
+    # Check for some basic header files
+    mk_check_headers stdio.h stdlib.h string.h does-not-exist.h
+    
+    # On a reasonable system, the following variables will be set:
+    #
+    # HAVE_STDIO_H=external
+    # HAVE_STDLIB_H=external
+    # HAVE_STRING_H=external
+    # HAVE_DOES_NOT_EXIST_H=no
+    #
+    # The following defines will be written into config.h:
+    #
+    # #define HAVE_STDIO_H
+    # #define HAVE_STDLIB_H
+    # #define HAVE_STRING_H
+}
+</pre>
+      </div></div><br class="example-break" />
+      <p>
+	If these side effects are undesirable, you can use the singular form
+	<code class="function">mk_check_header</code>.
+      </p>
+    </div>
+    <div class="section" title="Checking For Libraries"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-libraries"></a>Checking For Libraries</h3></div></div></div>
+      
+      <p>
+	To check for the presence of a library, use <code class="function">mk_check_libraries</code>.
+	For each library name specified, it will test for its presence and usability by
+	attempting to compile and link a test program against it.  For each library
+	it will do the following:
+      </p>
+      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+	  Set the variable <code class="varname">HAVE_LIB_<em class="replaceable"><code>varname</code></em></code>
+	  to the result of the test.
+	</li><li class="listitem">
+	  If the test succeeds, export the variable <code class="varname">LIB_<em class="replaceable"><code>varname</code></em></code>
+	  with the name of the library exactly as passed to <code class="function">mk_check_libraries</code>.
+	  Otherwise, the variable will be set as the empty string.  This is useful for conditionally
+	  including the library in a <code class="literal">LIBDEPS=</code> list to <code class="function">mk_program</code>
+	  and friends.
+	</li><li class="listitem">
+	  If the library was found, define <code class="literal">HAVE_LIB_<em class="replaceable"><code>varname</code></em></code>.
+	</li></ul></div>
+      <p>
+	Library names should be specified the same way as when linking to them with
+	<code class="function">mk_program</code>, with no <code class="literal">lib</code> prefix or
+	file extension.
+      </p>
+      <div class="example"><a id="c-mk-check-libraries"></a><p class="title"><strong>Example 3.8. Using <code class="function">mk_check_headers</code></strong></p><div class="example-contents">
+	
+<pre class="programlisting">
+configure()
+{
+    mk_config_header "include/config.h"
+
+    # Check for some common UNIX libraries
+    mk_check_libraries m pthread does-not-exist
+    
+    # On a typical Linux system, the following variables will be set:
+    #
+    # HAVE_LIB_M=external
+    # HAVE_LIB_PTHREAD=external
+    # HAVE_LIB_DOES_NOT_EXIST=no
+    # LIB_M=m
+    # LIB_PTHREAD=pthread
+    # LIB_DOES_NOT_EXIST=
+    #
+    # The following defines will be written into config.h:
+    #
+    # #define HAVE_LIB_M
+    # #define HAVE_LIB_PTHREAD
+}
+</pre>
+      </div></div><br class="example-break" />
+      <p>
+	If these side effects are undesirable, you can use the singular form
+	<code class="function">mk_check_library</code>.
+      </p>
+    </div>
+    <div class="section" title="Checking For Functions"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-functions"></a>Checking For Functions</h3></div></div></div>
+      
+      <p>
+	<code class="function">mk_check_functions</code> allows you to test for the availability
+	of a list of functions by attempting to compile and link test programs that
+	reference them.  For each function it will then do the following:
+      </p>
+      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+	  Set the variable <code class="varname">HAVE_<em class="replaceable"><code>varname</code></em></code>
+	  to the result of the test.  The possible results are <code class="literal">yes</code>
+	  and <code class="literal">no</code>.
+	</li><li class="listitem">
+	  If the function was found, define <code class="literal">HAVE_<em class="replaceable"><code>varname</code></em></code>.
+	</li><li class="listitem">
+	  If the function was found, define <code class="literal">HAVE_DECL_<em class="replaceable"><code>varname</code></em></code>
+	  to 1.  Otherwise, define it to 0.
+	</li></ul></div>
+      <p>
+	Unlike <span class="command"><strong>autoconf</strong></span>, this check ensures that a declaration
+	of the function was available in addition to the function's symbol being
+	present in a library.  You can use <code class="literal">HEADERDEPS=</code> and
+	<code class="literal">LIBDEPS=</code> parameters to <code class="function">mk_check_functions</code>
+	to specify header files and libraries that are necessary for the function
+	to be found.
+      </p>
+      <p>
+	Each function can be specified as a simple name, or as a full function prototype
+	in C syntax.  In the second case, <span class="productname">MakeKit</span> will verify
+	that the function exists and has a compatible prototype.  Bear in mind that
+	the resulting variable/define name will reflect any whitespace in your prototype.
+      </p>
+	<div class="example"><a id="c-mk-check-functions"></a><p class="title"><strong>Example 3.9. Using <code class="function">mk_check_functions</code></strong></p><div class="example-contents">
+	
+<pre class="programlisting">
+configure()
+{
+    mk_config_header "include/config.h"
+
+    # Check for some functions in libm
+    mk_check_functions \
+        HEADERDEPS="math.h" \
+        LIBDEPS="m" \
+        sin cos "double sqrt(double)" does_not_exist
+    
+    # On a typical UNIX system, the following variables will be set:
+    #
+    # HAVE_SIN=yes
+    # HAVE_COS=yes
+    # HAVE_DOUBLE_SQRT__DOUBLE_=yes
+    # HAVE_DOES_NOT_EXIST=no
+    #
+    # The following defines will be written into config.h:
+    #
+    # #define HAVE_SIN
+    # #define HAVE_COS
+    # #define HAVE_DOUBLE_SQRT__DOUBLE_
+    # #define HAVE_DECL_SIN 1
+    # #define HAVE_DECL_COS 1
+    # #define HAVE_DECL_DOUBLE_SQRT__DOUBLE_ 1
+    # #define HAVE_DECL_DOES_NOT_EXIST 0
+}
+</pre>
+      </div></div><br class="example-break" />
+      <p>
+	If these side effects are undesirable, you can use the singular form
+	<code class="function">mk_check_function</code>.
+      </p>
+    </div>
+    <div class="section" title="Checking For Types"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-types"></a>Checking For Types</h3></div></div></div>
+      
+      <p>
+	<code class="function">mk_check_types</code> allows you to test for the availability
+	of a list of types by attempting to compile test programs that reference them.
+	For each type it will then do the following:
+      </p>
+      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+	  Set the variable <code class="varname">HAVE_<em class="replaceable"><code>varname</code></em></code>
+	  to the result of the test.  The possible results are <code class="literal">yes</code>
+	  and <code class="literal">no</code>.
+	</li><li class="listitem">
+	  If the type was found, define <code class="literal">HAVE_<em class="replaceable"><code>varname</code></em></code>.
+	</li></ul></div>
+      <p>
+	You can use a <code class="literal">HEADERDEPS=</code> parameter to
+	<code class="function">mk_check_types</code> to specify header
+	files necessary to find the type definition.
+      </p>
+      <div class="example"><a id="c-mk-check-types"></a><p class="title"><strong>Example 3.10. Using <code class="function">mk_check_types</code></strong></p><div class="example-contents">
+	
+<pre class="programlisting">
+configure()
+{
+    mk_config_header "include/config.h"
+
+    # Check for some types in stdlib.h and inttypes.h
+    mk_check_types \
+        HEADERDEPS="stdlib.h inttypes.h" \
+        size_t int64_t uint64_t does_not_exist_t
+    
+    # On a typical UNIX system, the following variables will be set:
+    #
+    # HAVE_SIZE_T=yes
+    # HAVE_INT64_T=yes
+    # HAVE_UINT64_T=yes
+    # HAVE_DOES_NOT_EXIST_T=no
+    #
+    # The following defines will be written into config.h:
+    #
+    # #define HAVE_SIZE_T
+    # #define HAVE_INT64_T
+    # #define HAVE_UINT64_T
+}
+</pre>
+      </div></div><br class="example-break" />
+      <p>
+	If these side effects are undesirable, you can use the singular form
+	<code class="function">mk_check_type</code>.
+      </p>
+    </div>
+    <div class="section" title="Checking For Sizes of Types"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-sizes"></a>Checking For Sizes of Types</h3></div></div></div>
+      
+      <p>
+	<code class="function">mk_check_sizeofs</code> allows you to test for the
+	sizes of a list of types.  For each type it will then do the following:
+      </p>
+      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+	  Set the variable <code class="varname">SIZEOF_<em class="replaceable"><code>varname</code></em></code>
+	  to the result of the test.
+	</li><li class="listitem">
+	  Define <code class="varname">SIZEOF_<em class="replaceable"><code>varname</code></em></code>
+	  to the result of the test.
+	</li></ul></div>
+      <p>
+	You can use a <code class="literal">HEADERDEPS=</code> parameter to
+	<code class="function">mk_check_types</code> to specify header
+	files necessary to find the type definitions.  Note that
+	if this function fails to determine the size of a type
+	it will abort configuration, so you might want to first check
+	that the types exist with <code class="function">mk_check_types</code>.
+      </p>
+      <div class="example"><a id="c-mk-check-sizeofs"></a><p class="title"><strong>Example 3.11. Using <code class="function">mk_check_sizeofs</code></strong></p><div class="example-contents">
+	
+<pre class="programlisting">
+configure()
+{
+    mk_config_header "include/config.h"
+
+    # Check for sizes of some types
+    mk_check_types \
+        HEADERDEPS="stdlib.h inttypes.h" \
+        size_t int64_t "void*"
+    
+    # On a typical 32-bit UNIX system, the following variables will be set:
+    #
+    # SIZEOF_SIZE_T=4
+    # SIZEOF_INT64_T=8
+    # SIZEOF_VOIDP=4
+    #
+    # The following defines will be written into config.h:
+    #
+    # #define SIZEOF_SIZE_T 4
+    # #define SIZEOF_INT64_T 8
+    # #define SIZEOF_VOIDP 4
+}
+</pre>
+      </div></div><br class="example-break" />
+      <p>
+	If these side effects are undesirable, you can use the singular form
+	<code class="function">mk_check_sizeof</code>.
+      </p>
+    </div>
+  </div>
+</div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="conventions.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="pt01.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="pt02.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 2. Conventions and Patterns </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Part II. Reference</td></tr></table></div></body></html>

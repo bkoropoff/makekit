@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_prebuilt_library</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn03.html" title="Compiler Module" /><link rel="prev" href="mk_pch.html" title="mk_pch" /><link rel="next" href="mk_program.html" title="mk_program" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_prebuilt_library</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_pch.html">Prev</a> </td><th width="60%" align="center">Compiler Module</th><td width="20%" align="right"> <a accesskey="n" href="mk_program.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_prebuilt_library"><a id="mk_prebuilt_library"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_prebuilt_library — Stage a pre-built library</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... compiler ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_prebuilt_library</code>  <code class="literal">LIB=</code><em class="replaceable"><code>name</code></em>   <em class="replaceable"><code>options</code></em>... </p></div></div><div class="refsection" title="Options"><a id="idp3566840"></a><h2>Options</h2><div class="variablelist"><dl><dt><span class="term"><code class="literal">LIB=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
+Sets the name of the library. Do not specify a leading <code class="literal">lib</code> or file extension.
+</p></dd><dt><span class="term"><code class="literal">SHARED=</code><em class="replaceable"><code>shared</code></em></span></dt><dd><p>
+Specifies the shared library binary.
+</p></dd><dt><span class="term"><code class="literal">STATIC=</code><em class="replaceable"><code>static</code></em></span></dt><dd><p>
+Specifies the static library file.
+</p></dd><dt><span class="term"><code class="literal">LA=</code><em class="replaceable"><code>la</code></em></span></dt><dd><p>
+Specifies the libtool archive file.  If not specified, one will be generated.
+</p></dd><dt><span class="term"><code class="literal">VERSION=</code><em class="replaceable"><code>verspec</code></em></span></dt><dd><p>
+Sets the version as in <code class="function"><a class="xref" href="mk_library.html" title="mk_library"><span class="refentrytitle">mk_library</span></a></code>.
+</p></dd><dt><span class="term"><em class="replaceable"><code>...</code></em></span></dt><dd><p>
+Other common options documented in the <code class="varname"><a class="xref" href="compiler.html" title="compiler"><span class="refentrytitle">compiler</span></a></code> module.
+</p></dd></dl></div></div><div class="refsection" title="Description"><a id="idp3584648"></a><h2>Description</h2>
+<p>
+Defines a target to install a pre-built a C/C++ library.
+This may be useful if you do not have the source for
+a library you wish to use and bundle with your project.
+</p>
+<p>
+At least one of <em class="replaceable"><code>shared</code></em> and <em class="replaceable"><code>static</code></em>
+must be specified.
+</p>
+<p>
+Sets <code class="varname">result</code> to the staged <code class="literal">.la</code> file in
+canonical target notation.
+</p>
+</div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_pch.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn03.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_program.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_pch </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_program</td></tr></table></div></body></html>

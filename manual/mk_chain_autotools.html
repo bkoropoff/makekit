@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_chain_autotools</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn04.html" title="Chaining Modules" /><link rel="prev" href="chain-autotools.html" title="chain-autotools" /><link rel="next" href="chain-compiler.html" title="chain-compiler" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_chain_autotools</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="chain-autotools.html">Prev</a> </td><th width="60%" align="center">Chaining Modules</th><td width="20%" align="right"> <a accesskey="n" href="chain-compiler.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_chain_autotools"><a id="mk_chain_autotools"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_chain_autotools — Build autotools source component</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... chain-autotools ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_chain_autotools</code>  <em class="replaceable"><code>options</code></em>...   <code class="literal">--</code>   <em class="replaceable"><code>configure_params</code></em>... </p></div></div><div class="refsection" title="Options"><a id="idp3636440"></a><h2>Options</h2><div class="variablelist"><dl><dt><span class="term"><code class="literal">MAKE_BUILD_TARGET=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
+The target name to pass to make when building the component.  Defaults to nothing (e.g. the default target in the Makefile, usually "all").
+</p></dd><dt><span class="term"><code class="literal">MAKE_INSTALL_TARGET=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
+The target name to pass to make when installing the component.  Defaults to "install".
+</p></dd><dt><span class="term"><code class="literal">INSTALL_PRE=</code><em class="replaceable"><code>func</code></em></span></dt><dd><p>
+Specifies a custom function to run before installing the component into the output directory. The function is passed the path to the output directory.
+</p></dd><dt><span class="term"><code class="literal">INSTALL_POST=</code><em class="replaceable"><code>func</code></em></span></dt><dd><p>
+Specifies a custom function to run after installing the component into the output directory. The function is passed the path to the output directory.
+</p></dd><dt><span class="term"><code class="literal">BUILDDEP_PATTERNS=</code><em class="replaceable"><code>inc_patterns</code></em></span></dt><dd><p>
+An optional list of patterns that will be passed to <code class="literal">find</code> to identify files within the source tree that should trigger a rebuild when changed. A reasonable default will be used if not specified that works for most C/C++ autotools projects.
+</p></dd><dt><span class="term"><code class="literal">BUILDDEP_EXCLUDE_PATTERNS=</code><em class="replaceable"><code>exc_patterns</code></em></span></dt><dd><p>
+An optional list of patterns that will be passed to <code class="literal">find</code> to prune when looking for files in the source tree.  A reasonable default that skips all hidden files and directories will be used if not specified.
+</p></dd><dt><span class="term"><em class="replaceable"><code>...</code></em></span></dt><dd><p>
+Any option supported by <code class="function"><a class="xref" href="mk_chain_compiler.html" title="mk_chain_compiler"><span class="refentrytitle">mk_chain_compiler</span></a></code>.
+</p></dd><dt><span class="term"><em class="replaceable"><code>configure_params</code></em></span></dt><dd><p>
+Additional parameters to pass to the component's configure script.
+</p></dd></dl></div></div><div class="refsection" title="Description"><a id="idp3648648"></a><h2>Description</h2>
+<p>
+Builds and installs an autotools (autoconf, automake, libtool) source
+component using <code class="function"><a class="xref" href="mk_chain_compiler.html" title="mk_chain_compiler"><span class="refentrytitle">mk_chain_compiler</span></a></code>.  Default configure
+and build functions are used that take the component through
+the usual <code class="literal">configure</code>, <code class="literal">make</code>, <code class="literal">make install</code>
+procedure.
+</p>
+<p>
+The trailing positional arguments to this function are passed verbatim
+to the configure script of the component.  In addition, flags such as
+<code class="literal">--prefix</code> are passed automatically according to how the
+MakeKit project was configured.
+</p>
+</div><div class="refsection" title="Examples"><a id="idp3647848"></a><h2>Examples</h2><pre class="programlisting">
+make()
+{
+    # Build popt in the popt-1.15 directory
+    mk_autotools \
+        SOURCEDIR="popt-1.15" HEADERS="popt.h" LIBS="popt" -- \
+        --disable-nls
+}
+</pre></div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="chain-autotools.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn04.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="chain-compiler.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">chain-autotools </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> chain-compiler</td></tr></table></div></body></html>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_system</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn02.html" title="Core Functionality" /><link rel="prev" href="mk_multiarch_done.html" title="mk_multiarch_done" /><link rel="next" href="program.html" title="program" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_system</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_multiarch_done.html">Prev</a> </td><th width="60%" align="center">Core Functionality</th><td width="20%" align="right"> <a accesskey="n" href="program.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_system"><a id="mk_system"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_system — Set target system</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... platform ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_system</code>  <em class="replaceable"><code>sys</code></em> </p></div></div><div class="refsection" title="Description"><a id="idp3256600"></a><h2>Description</h2>
+<p>
+Sets the system which will be the target of subsequent configure tests
+or build products.  This is important for cross-compiling or multiarchitecture
+builds.  The parameter <em class="replaceable"><code>sys</code></em> may be either "host" to target
+the host system (the system that will run the end product of the build),
+or "build" to target the build system (the system running MakeKit).
+</p>
+<p>
+Each system may support several ISAs (instruction set architectures)
+which can be targetted individually by suffixing /<code class="varname">isa</code> to the
+end of <em class="replaceable"><code>sys</code></em>, e.g. build/x86_64 or host/ppc64.  This allows
+exact control over which ISA is used for a configure test or a program
+or library.
+</p>
+<p>
+When targetting "host" or "build" rather than a specific ISA, the behavior
+is more complicated.  During the configure phase, tests will target
+the primary ISA for the system but assume that the result applies to all
+ISAs for the sake of speed.  During the make phase, the behavior varies
+by OS.  On systems that use "fat" or "universal" binaries, a multiarchitecture
+binary targetting all ISAs will be produced.  On other systems, the
+primary ISA will be targetted.
+</p>
+<p>
+Certain shell variables are considered "system" variables and will have
+their values swapped out appropriately when switching the target system,
+e.g. <code class="varname">MK_LIBDIR</code>.  You can declare your own system variables with
+<code class="literal"><code class="function"><a class="xref" href="mk_declare.html" title="mk_declare"><span class="refentrytitle">mk_declare</span></a></code> -s</code>.
+</p>
+<p>
+This function gives fine-grained control that may not be necessary
+if all you need is multiarchitecture support.  In this case, use
+<code class="function"><a class="xref" href="mk_multiarch_do.html" title="mk_multiarch_do"><span class="refentrytitle">mk_multiarch_do</span></a></code>.
+</p>
+</div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_multiarch_done.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn02.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="program.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_multiarch_done </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> program</td></tr></table></div></body></html>

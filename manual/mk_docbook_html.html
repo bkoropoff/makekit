@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_docbook_html</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn05.html" title="DocBook Module" /><link rel="prev" href="mk_check_docbook_pdf.html" title="mk_check_docbook_pdf" /><link rel="next" href="mk_docbook_man.html" title="mk_docbook_man" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_docbook_html</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_check_docbook_pdf.html">Prev</a> </td><th width="60%" align="center">DocBook Module</th><td width="20%" align="right"> <a accesskey="n" href="mk_docbook_man.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_docbook_html"><a id="mk_docbook_html"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_docbook_html — Generate html documentation</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="function">mk_docbook_html</code>  <code class="literal">SOURCE=</code><em class="replaceable"><code>source_file</code></em> </p></div></div><div class="refsection" title="Options"><a id="idp3597976"></a><h2>Options</h2><div class="variablelist"><dl><dt><span class="term"><code class="literal">SOURCE=</code><em class="replaceable"><code>source_file</code></em></span></dt><dd><p>
+specifies the DocBook XML source file to process
+</p></dd><dt><span class="term"><code class="literal">STYLESHEET=</code><em class="replaceable"><code>xsl_file</code></em></span></dt><dd><p>
+specifies the XSL stylesheet for generating html.  Defaults to <code class="literal">$MK_DOCBOOK_XSL_DIR/xhtml/profile-chunk.xsl</code>.
+</p></dd><dt><span class="term"><code class="literal">IMAGES=</code><em class="replaceable"><code>image_dir</code></em></span></dt><dd><p>
+specifies the directory from which to copy images used in the generated html.  Defaults to <code class="literal">$MK_DOCBOOK_XSL_DIR/images</code>.
+</p></dd><dt><span class="term"><code class="literal">INSTALLDIR=</code><em class="replaceable"><code>install_dir</code></em></span></dt><dd><p>
+specifies the directory where the generated documentation will be placed.  Defaults to <code class="literal">$MK_HTMLDIR</code>.
+</p></dd><dt><span class="term"><code class="literal">INCLUDES=</code><em class="replaceable"><code>source_list</code></em></span></dt><dd><p>
+specifies a list of additional xml files that might be included by <em class="replaceable"><code>source_file</code></em>, such as by XInclude.
+</p></dd><dt><span class="term"><code class="literal">DEPS=</code><em class="replaceable"><code>deps</code></em></span></dt><dd><p>
+specifies any additional dependencies needed to generate the documentation
+</p></dd></dl></div></div><div class="refsection" title="Description"><a id="idp3726416"></a><h2>Description</h2>
+<p>
+Processes the specified source file with XSLT to produce
+html documentation.
+</p>
+<p>
+To use this function, you must use <code class="function"><a class="xref" href="mk_check_docbook.html" title="mk_check_docbook"><span class="refentrytitle">mk_check_docbook</span></a></code>
+in a <code class="literal">configure</code> section of your project, and it must succeed.
+You can test if DocBook processing is available with
+<code class="function"><a class="xref" href="mk_have_docbook.html" title="mk_have_docbook"><span class="refentrytitle">mk_have_docbook</span></a></code>.  This function will fail
+if it is not.
+</p>
+</div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_check_docbook_pdf.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn05.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_docbook_man.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_check_docbook_pdf </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_docbook_man</td></tr></table></div></body></html>

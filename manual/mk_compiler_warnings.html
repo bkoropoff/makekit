@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_compiler_warnings</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn03.html" title="Compiler Module" /><link rel="prev" href="mk_compile.html" title="mk_compile" /><link rel="next" href="mk_config_header.html" title="mk_config_header" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_compiler_warnings</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_compile.html">Prev</a> </td><th width="60%" align="center">Compiler Module</th><td width="20%" align="right"> <a accesskey="n" href="mk_config_header.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_compiler_warnings"><a id="mk_compiler_warnings"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_compiler_warnings — Turn on compiler warnings</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... compiler ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_compiler_warnings</code>  <em class="replaceable"><code>warning</code></em>... </p></div></div><div class="refsection" title="Description"><a id="idp3544904"></a><h2>Description</h2>
+<p>
+Turns on the given list of warning flags
+(<code class="literal">-W</code><em class="replaceable"><code>warning</code></em>).
+The <code class="literal">error</code> flag will be ignored
+if the user disallowed it via the
+<code class="literal">--allow-werror</code> option to
+configure.
+</p>
+</div><div class="refsection" title="Examples"><a id="idp3533880"></a><h2>Examples</h2><pre class="programlisting">
+# Turn on all warnings and promote warnings to errors
+mk_compiler_warnings all error
+</pre></div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_compile.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn03.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_config_header.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_compile </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_config_header</td></tr></table></div></body></html>

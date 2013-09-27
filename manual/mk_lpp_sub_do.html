@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_lpp_sub_do</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn07.html" title="Package Modules" /><link rel="prev" href="mk_lpp_enabled.html" title="mk_lpp_enabled" /><link rel="next" href="mk_lpp_sub_done.html" title="mk_lpp_sub_done" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_lpp_sub_do</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_lpp_enabled.html">Prev</a> </td><th width="60%" align="center">Package Modules</th><td width="20%" align="right"> <a accesskey="n" href="mk_lpp_sub_done.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_lpp_sub_do"><a id="mk_lpp_sub_do"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_lpp_sub_do — Begin AIX fileset</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="function">mk_lpp_sub_do</code>  <code class="literal">SUBPACKAGE=</code><em class="replaceable"><code>name</code></em>   <code class="literal">DESCRIPTION=</code><em class="replaceable"><code>desc</code></em> </p></div></div><div class="refsection" title="Options"><a id="idp3873392"></a><h2>Options</h2><div class="variablelist"><dl><dt><span class="term"><code class="literal">SUBPACKAGE=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
+Sets the name of the fileset. This will be appended to the name of the overall package.
+</p></dd><dt><span class="term"><code class="literal">VERSION=</code><em class="replaceable"><code>ver</code></em></span></dt><dd><p>
+Sets the version of the fileset.  Defaults to the version specified for the overall package.
+</p></dd><dt><span class="term"><code class="literal">DESCRIPTION=</code><em class="replaceable"><code>desc</code></em></span></dt><dd><p>
+Sets a brief English-language description.
+</p></dd><dt><span class="term"><code class="literal">PREIN=</code><em class="replaceable"><code>prein</code></em></span></dt><dd><p>
+Indicates a script file that should be run before installing the fileset.  All scripts are processed as by <code class="function"><a class="xref" href="mk_output_file.html" title="mk_output_file"><span class="refentrytitle">mk_output_file</span></a></code>.
+</p></dd><dt><span class="term"><code class="literal">UNPREIN=</code><em class="replaceable"><code>unprein</code></em></span></dt><dd><p>
+Indicates a script file that should be run to revert the effects of the <em class="replaceable"><code>prein</code></em> script.
+</p></dd><dt><span class="term"><code class="literal">POSTIN=</code><em class="replaceable"><code>postin</code></em></span></dt><dd><p>
+Indicates a script file that should be run after installing the fileset.
+</p></dd><dt><span class="term"><code class="literal">UNPOSTIN=</code><em class="replaceable"><code>unpostin</code></em></span></dt><dd><p>
+Indicates a script file that should be run to revert the effects of the <em class="replaceable"><code>postin</code></em> script.
+</p></dd><dt><span class="term"><code class="literal">PRERM=</code><em class="replaceable"><code>prerm</code></em></span></dt><dd><p>
+Indicates a script that should be run before removing a previous version of the fileset.
+</p></dd><dt><span class="term"><code class="literal">CONFIG=</code><em class="replaceable"><code>config</code></em></span></dt><dd><p>
+Indicates a script that should be run when configuring the fileset.
+</p></dd><dt><span class="term"><code class="literal">UNCONFIG=</code><em class="replaceable"><code>unconfig</code></em></span></dt><dd><p>
+Indicates a script that should be run when unconfiguring the fileset.
+</p></dd><dt><span class="term"><code class="literal">REQUISITES=</code><em class="replaceable"><code>reqfile</code></em></span></dt><dd><p>
+Specifies an optional requisites file that describes the dependencies of the fileset.
+</p></dd><dt><span class="term"><code class="literal">UPSIZE=</code><em class="replaceable"><code>upspec</code></em></span></dt><dd><p>
+Specifies a list of directories and how much space in 512-byte blocks might need to be allocated in order to install the fileset, e.g. <code class="literal">"/opt 2048"</code>.
+</p></dd></dl></div></div><div class="refsection" title="Description"><a id="idp3869072"></a><h2>Description</h2>
+<p>
+Begins the definition of a fileset within an AIX package.
+Use functions such as <code class="function"><a class="xref" href="mk_package_patterns.html" title="mk_package_patterns"><span class="refentrytitle">mk_package_patterns</span></a></code> to
+include files in the package.
+</p>
+<p>
+By default, intermediate directories for included files
+are assumed to exist on the target system to avoid potentially
+overriding their permissions.  If you install files into directories
+that are not pre-existing on the system, you should specify
+them with <code class="function"><a class="xref" href="mk_package_dirs.html" title="mk_package_dirs"><span class="refentrytitle">mk_package_dirs</span></a></code>.
+</p>
+<p>
+Use <code class="function"><a class="xref" href="mk_lpp_sub_done.html" title="mk_lpp_sub_done"><span class="refentrytitle">mk_lpp_sub_done</span></a></code> to complete the definition.
+</p>
+</div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_lpp_enabled.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn07.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_lpp_sub_done.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_lpp_enabled </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_lpp_sub_done</td></tr></table></div></body></html>

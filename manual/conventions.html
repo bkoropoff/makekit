@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 2. Conventions and Patterns</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="project-setup.html" title="Chapter 1. Setting Up Your Project" /><link rel="next" href="c-projects.html" title="Chapter 3. C Language Projects" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 2. Conventions and Patterns</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="project-setup.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="c-projects.html">Next</a></td></tr></table><hr /></div><div class="chapter" title="Chapter 2. Conventions and Patterns"><div class="titlepage"><div><div><h2 class="title"><a id="conventions"></a>Chapter 2. Conventions and Patterns</h2></div></div></div>
+  
+  <p>
+    This chapter will familiarize you with common conventions and patterns
+    you will encounter with MakeKit.  Although the build files you will
+    write are just POSIX shell scripts, MakeKit adds a few twists to keep
+    you on your toes:
+  </p>
+  <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+      Build rules that may look like special syntax are actually just
+      helper functions that take parameters with explicit names.
+    </li><li class="listitem">
+      MakeKitBuild files are arranged recursively, but your project
+      is configured and built without leaving the directory where
+      <span class="command"><strong>configure</strong></span> is first run.  A special target
+      notation for specifying build sources and products helps flatten
+      your nested project hierarchy down to a single Makefile.
+    </li></ul></div>
+  <div class="section" title="Life in Shell"><div class="titlepage"><div><div><h2 class="title"><a id="life-in-shell"></a>Life in Shell</h2></div></div></div>
+    
+    <p>
+      MakeKit uses POSIX shell as its implementation and build file
+      language because it strikes a good balance between flexibility
+      and simplicity.  Some loftier build systems try to abstract the
+      task of building source code into a platform-neutral,
+      declarative syntax (I hear XML is popular) and eschew the
+      quick-and-dirty direct execution of Makefiles and shell script.
+      MakeKit also provides a bevy of modules and functions to keep
+      the grittier details of turning source code into binaries out of
+      sight and out of mind, but any project of non-trivial complexity
+      must inevitably dabble in the arcane and ad-hoc.  When it comes
+      time to descend the ivory tower of abstraction you'll find
+      <span class="command"><strong>awk</strong></span>, <span class="command"><strong>sed</strong></span>, and other UNIX
+      workhorses close at hand.
+    </p>
+    <p>
+      For open source projects in particular, the choice of POSIX
+      shell means fewer build dependencies for consumers of your
+      source distribution.  MakeKit comes with a copy of the
+      excellent, fast-as-its-name-implies <span class="command"><strong>dash</strong></span>
+      shell packed into a single .c file.  The
+      <code class="filename">configure</code> script will build it on the fly
+      when first run, providing insurance against older platforms
+      that lack POSIX-compliant <code class="filename">/bin/sh</code>.
+    </p>
+    <p>
+      Being able to unpack a source tarball onto any sane UNIX system
+      (perhaps augmented with <span class="command"><strong>gcc</strong></span>) and build it
+      without first installing the author's favorite build system or
+      scripting language isn't an inconsequential feature.  It is one
+      of the reasons — outside of cultural inertia — for
+      the continued ubiquity of GNU autotools.  MakeKit achieves this
+      without inscrutable preprocessing steps by perl and m4.  According
+      to my rough calculations that makes it 66% saner by volume.
+    </p>
+    <div class="section" title="Keyword Parameters"><div class="titlepage"><div><div><h3 class="title"><a id="idp2528264"></a>Keyword Parameters</h3></div></div></div>
+      
+      <p>
+	MakeKit provides a few amenities to make your stay in the world
+	of shell script more enjoyable.  As you may have noted in the
+	previous chapter, many functions in MakeKit take parameters
+	with explicit names of the form <code class="literal">VAR=</code><em class="replaceable"><code>value</code></em>.  For example:
+      </p>
+      <pre class="programlisting">
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"</pre>
+      <p>
+	These keyword parameters make it clear at a glance what each
+	one means even if you aren't familiar with the function in question.
+	Note that because this is simply a call to a shell function, each
+	line except the last needs a backslash to continue the parameter
+	list on the next line.  This is the recommended way to format
+	calls to functions with many parameters.
+      </p>
+      <p>
+	The keyword parameters in a function call may appear in any order.
+	Many functions have optional parameters that may be omitted entirely.
+      </p>
+      <div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3>
+	Keyword parameters are intentionally evocative of the GNU
+	<span class="command"><strong>automake</strong></span> syntax that many have grown
+	accustomed to.  However, don't forget that you are writing
+	a shell script and not a Makefile!
+      </div>
+      <p>
+	You can write your own functions that take keyword parameters
+	using <a class="xref" href="mk_parse_params.html" title="mk_parse_params"><span class="refentrytitle">mk_parse_params</span></a>.  This will set each
+	keyword parameter passed to your function to the shell variable
+	of the same name.  You should consider using
+	<a class="xref" href="mk_push_vars.html" title="mk_push_vars"><span class="refentrytitle">mk_push_vars</span></a> and <a class="xref" href="mk_pop_vars.html" title="mk_pop_vars"><span class="refentrytitle">mk_pop_vars</span></a>
+	to avoid clobbering their existing values.
+      </p>
+    </div>
+    <div class="section" title="Quoting and Lists"><div class="titlepage"><div><div><h3 class="title"><a id="idp2566736"></a>Quoting and Lists</h3></div></div></div>
+      
+      <p>
+	Often a function will take a list of items as one of its keyword
+	parameters, such as the <code class="literal">SOURCES</code> parameter
+	in the above example.  Lists in MakeKit are whitespace-separated.
+	You could add <code class="filename">goodbye.c</code> to
+	the above example as follows:
+      </p>
+      <pre class="programlisting">
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c goodbye.c" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"</pre>
+      <p>
+	If you want to use spaces in an item, you will need to add
+	an additional level of quoting around that item.  Since
+	the <code class="literal">SOURCES</code> parameter is enclosed in
+	double quotes, the easiest option is to use single quotes
+	within it:
+      </p>
+      <pre class="programlisting">
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c goodbye.c 'this name has spaces.c'" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"</pre>
+    <p>
+      If a list is getting a bit long and you want to line wrap
+      it, be sure to use a backslash at the end of each line to
+      indicate that it continues to the next:
+    </p>
+    <pre class="programlisting">
+mk_program \
+    PROGRAM="hello" \
+    SOURCES="hello.c \
+             goodbye.c \
+             'this name has spaces.c'" \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"</pre>
+    <p>
+      Any list passed in this manner must be internally shell-quoted
+      to preserve characters that have special meaning to the shell,
+      such as spaces and dollar signs.  If the extra quoting is tripping
+      you up, there is an alternative syntax that lets you specify
+      a list as ordinary function parameters, removing one of the
+      layers of quoting:
+    </p>
+    <pre class="programlisting">
+mk_program \
+    PROGRAM="hello" \
+    @SOURCES={ hello.c goodbye.c "this name has spaces.c" } \
+    INCLUDEDIRS="../include" \
+    LIBDEPS="foobar"</pre>
+    <p>
+      If you wish to programmatically quote a string or lists of strings
+      so that they are suitable to pass as one of these parameters, use
+      <a class="xref" href="mk_quote.html" title="mk_quote"><span class="refentrytitle">mk_quote</span></a> or <a class="xref" href="mk_quote_list.html" title="mk_quote_list"><span class="refentrytitle">mk_quote_list</span></a>.
+      You can expand a quoted list into the position parameters
+      (<code class="literal">$1</code>, <code class="literal">$2</code>, ...) using
+      <a class="xref" href="mk_unquote_list.html" title="mk_unquote_list"><span class="refentrytitle">mk_unquote_list</span></a>.
+    </p>
+    </div>
+    <div class="section" title="Special Variables"><div class="titlepage"><div><div><h3 class="title"><a id="idp2477576"></a>Special Variables</h3></div></div></div>
+      
+      <p>
+	MakeKit allows you to declare variables with special behavior
+	using the <a class="xref" href="mk_declare.html" title="mk_declare"><span class="refentrytitle">mk_declare</span></a> function.  There are 4
+	types of attributes which may be used in any combination:
+      </p>
+      <div class="variablelist"><dl><dt><span class="term">Exported (<code class="literal">mk_declare -e</code>)</span></dt><dd>
+	    <p>
+	      An exported variable will have its value at the time
+	      <span class="command"><strong>configure</strong></span> was run saved so that it
+	      is available when the user runs <span class="command"><strong>make</strong></span>.
+	      This is primarily useful when writing custom build rules.
+	    </p>
+	  </dd><dt><span class="term">Inherited (<code class="literal">mk_declare -i</code>)</span></dt><dd>
+	    <p>
+	      An inherited variable has its value passed down from
+	      each <code class="filename">MakeKitBuild</code> to those specified
+	      in its <code class="literal">SUBDIRS</code> list.  The value may
+	      be overridden by a subdirectory (and the new value will
+	      be passed to its subdirectories in turn), but it will
+	      not affect the value seen by sibling or parent directories.
+	    </p>
+	    <p>
+	      You may prefer to think of inherited variables as being
+	      scoped according to the hierarchy of your
+	      <code class="filename">MakeKitBuild</code> files.  Ordinary variables
+	      have completely dynamic scope, and any changes to them
+	      made by one build file will be seen by all others that
+	      are processed subsequently.
+	    </p>
+	  </dd><dt><span class="term">Output (<code class="literal">mk_declare -o</code>)</span></dt><dd>
+	    <p>
+	      An output variable is one that can be substituted
+	      into a file processed by <a class="xref" href="mk_output_file.html" title="mk_output_file"><span class="refentrytitle">mk_output_file</span></a>.
+	      This is equivalent to the variable substitution
+	      feature in GNU autoconf.
+	    </p>
+	  </dd><dt><span class="term">System (<code class="literal">mk_declare -s</code>)</span></dt><dd>
+	    <p>
+	      A system variable can take on multiple values according
+	      to what system is currently being targeted by configure
+	      tests or build rules.  For example, the <a class="xref" href="MK_CC.html" title="MK_CC"><span class="refentrytitle">MK_CC</span></a>
+	      variable, which specifies the C compiler to use, might
+	      be different depending on whether we wish to build a program
+	      that will be run by the build system (the computer running
+	      MakeKit) or the host system (the computer that will run
+	      the final product).  This distinction is important when
+	      cross-compiling.
+	    </p>
+	    <p>
+	      When the current target system is changed with a function
+	      such as <a class="xref" href="mk_system.html" title="mk_system"><span class="refentrytitle">mk_system</span></a>, values of system
+	      variables are swapped in and out appropriately.
+	    </p>
+	  </dd></dl></div>
+    </div>
+  </div>
+  <div class="section" title="File Layout"><div class="titlepage"><div><div><h2 class="title"><a id="idp2526256"></a>File Layout</h2></div></div></div>
+    
+    <p>
+      MakeKit allows you to organize your project in a hierarchy,
+      dividing work among <code class="filename">MakeKitBuild</code> files in
+      each subdirectory.  This is leads to good separation of
+      concerns, modularity, and composability.  However, MakeKit
+      always generates a single <code class="filename">Makefile</code> rooted
+      firmly in the directory where <span class="command"><strong>configure</strong></span> was
+      run, and all build rules are constructed relative to it.  This
+      avoids the many well-documented flaws of recursive
+      <span class="command"><strong>make</strong></span>, but it means you must bear in mind
+      following:
+    </p>
+    <div class="important" title="The Iron-clad Law of MakeKit" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">The Iron-clad Law of MakeKit</h3>
+      
+      The current working directory when configuring or building is
+      always <a class="xref" href="MK_ROOT_DIR.html" title="MK_ROOT_DIR"><span class="refentrytitle">MK_ROOT_DIR</span></a>, the directory where
+      <span class="command"><strong>configure</strong></span> was run.
+    </div>
+    <div class="section" title="Finding Your Files"><div class="titlepage"><div><div><h3 class="title"><a id="idp2543312"></a>Finding Your Files</h3></div></div></div>
+      
+      <p>
+	Many MakeKit functions conveniently accept file paths relative
+	to the current <code class="filename">MakeKitBuild</code> file in the
+	hierarchy (in fact, as you will soon find out, it is a bit more
+	sophisticated than that).  However, if you are calling out to a
+	trusty UNIX program such as <span class="command"><strong>sed</strong></span> or
+	<span class="command"><strong>cp</strong></span> you will need to be a bit more specific
+	about where to look.  There are several variables that indicate
+	areas where files of interest can be found:
+      </p>
+      <div class="variablelist"><dl><dt><span class="term">Source directory (<a class="xref" href="MK_SOURCE_DIR.html" title="MK_SOURCE_DIR"><span class="refentrytitle">MK_SOURCE_DIR</span></a>)</span></dt><dd><p>This is the top of your source tree where your top-level
+	  <code class="filename">MakeKitBuild</code> file can be found.</p></dd><dt><span class="term">Source subdirectory (<a class="xref" href="MK_SOURCE_SUBDIR.html" title="MK_SOURCE_SUBDIR"><span class="refentrytitle">MK_SOURCE_SUBDIR</span></a>)</span></dt><dd><p>This is the directory within your source tree where the
+	  <code class="filename">MakeKitBuild</code> file currently being processed
+	  can be found.</p></dd><dt><span class="term">Object directory (<a class="xref" href="MK_OBJECT_DIR.html" title="MK_OBJECT_DIR"><span class="refentrytitle">MK_OBJECT_DIR</span></a>)</span></dt><dd><p>This is the top of the object directory where intermediate
+	  build products are stored (in particular, <code class="filename">.o</code>
+	  files from the compiler).  Its layout exactly mirrors that of
+	  your source tree.</p></dd><dt><span class="term">Object subdirectory (<a class="xref" href="MK_OBJECT_SUBDIR.html" title="MK_OBJECT_SUBDIR"><span class="refentrytitle">MK_OBJECT_SUBDIR</span></a>)</span></dt><dd><p>This is the subdirectory within the object tree that
+	  mirrors the current source subdirectory.</p></dd><dt><span class="term">Stage directory (<a class="xref" href="MK_STAGE_DIR.html" title="MK_STAGE_DIR"><span class="refentrytitle">MK_STAGE_DIR</span></a>)</span></dt><dd><p>This is the directory where final build products are
+	  "staged" before they are installed with <span class="command"><strong>make
+	  install</strong></span> or packaged up in your package format of
+	  choice.  It has a layout mirroring that of the UNIX root
+	  filesystem: <code class="literal">$MK_STAGE_DIR/usr/bin</code>,
+	  <code class="literal">$MK_STAGE_DIR/usr/lib</code>, etc.</p></dd></dl></div>
+    </div>
+    <div class="section" title="Target Notation"><div class="titlepage"><div><div><h3 class="title"><a id="idp2529768"></a>Target Notation</h3></div></div></div>
+      
+      <p>
+	Rather than forcing you to use the aforementioned variables
+	whenever you want to specify the location of a file, most
+	MakeKit functions accept paths in a standard target notation.
+      </p>
+      <p>
+	A relative path (one not beginning with a <code class="literal">/</code>)
+	indicates a file relative to <code class="varname">MK_SOURCE_SUBDIR</code>
+	or <code class="varname">MK_OBJECT_SUBDIR</code>.  If the file exists
+	in the source directory at the time the target is resolved, then
+	it is taken to be that file.  Otherwise, it is assumed to be
+	an intermediate build product in the object directory.
+      </p>
+      <p>
+	An absolute path (one beginning with <code class="literal">/</code>)
+	indicates a file relative to <code class="varname">MK_STAGE_DIR</code>.
+	For example, using <a class="xref" href="mk_stage.html" title="mk_stage"><span class="refentrytitle">mk_stage</span></a> allows you to
+	create a rule that simply copies a file.  If you indicate that
+	you want to copy a file to <code class="filename">/etc/foo.conf</code>,
+	this will result in a <code class="filename">Makefile</code> rule that
+	actually creates <code class="literal">$MK_STAGE_DIR/etc/foo.conf</code>.
+      </p>
+      <p>
+	Finally, there is a fully-qualified form that all targets
+	are resolved to.  If a target begins with <code class="literal">@</code>,
+	it indicates that the following path should be interpreted
+	verbatim.  If the path is relative, it is relative to
+	<code class="varname">MK_ROOT_DIR</code>.  If it is absolute, then
+	it indicates that precise absolute path on the filesystem.
+	You can use <a class="xref" href="mk_resolve_target.html" title="mk_resolve_target"><span class="refentrytitle">mk_resolve_target</span></a> to resolve
+	any target to this canonical form.
+      </p>
+      <p>
+	In general, functions that perform configuration tests,
+	process build files, or create build rules use target notation
+	for any paths they accept.  On the other hand, there are
+	many pure utility functions (such as <a class="xref" href="mk_mkdir.html" title="mk_mkdir"><span class="refentrytitle">mk_mkdir</span></a>)
+	that perform useful filesystem operations or paper over
+	incompatibilities between various flavors of UNIX; these
+	accept ordinary paths.
+      </p>
+    </div>
+  </div>
+</div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="project-setup.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="pt01.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="c-projects.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 1. Setting Up Your Project </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 3. C Language Projects</td></tr></table></div></body></html>

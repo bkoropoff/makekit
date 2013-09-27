@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_stage</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn02.html" title="Core Functionality" /><link rel="prev" href="mk_resolve_target.html" title="mk_resolve_target" /><link rel="next" href="mk_stamp_target.html" title="mk_stamp_target" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_stage</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_resolve_target.html">Prev</a> </td><th width="60%" align="center">Core Functionality</th><td width="20%" align="right"> <a accesskey="n" href="mk_stamp_target.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_stage"><a id="mk_stage"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_stage — Install files or directories into staging area</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... core ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_stage</code>  <code class="literal">SOURCE=</code><em class="replaceable"><code>source_path</code></em>   <code class="literal">DEST=</code><em class="replaceable"><code>dest_path</code></em> </p></div><div class="cmdsynopsis"><p><code class="function">mk_stage</code>  <code class="literal">SOURCE=</code><em class="replaceable"><code>source_path</code></em>   <code class="literal">DESTDIR=</code><em class="replaceable"><code>dest_dir</code></em> </p></div><div class="cmdsynopsis"><p><code class="function">mk_stage</code>  <code class="literal">DESTDIR=</code><em class="replaceable"><code>dest_dir</code></em>   <em class="replaceable"><code>sources</code></em>... </p></div></div><div class="refsection" title="Options"><a id="idp3005784"></a><h2>Options</h2><div class="variablelist"><dl><dt><span class="term"><code class="literal">MODE=</code><em class="replaceable"><code>mode</code></em></span></dt><dd><p>
+Specifies the UNIX mode of the destination files or directories
+</p></dd><dt><span class="term"><code class="literal">DEPS=</code><em class="replaceable"><code>deps</code></em></span></dt><dd><p>
+Specifies additional dependencies of the destination files or directories other than the sources.
+</p></dd></dl></div></div><div class="refsection" title="Description"><a id="idp2994344"></a><h2>Description</h2>
+<p>
+Defines targets that copy one or more files or directories into
+the staging area.  In the first form, a single file or directory
+is copied, with the <em class="replaceable"><code>dest_path</code></em> specifying the complete
+destination path.  In the second form, the <em class="replaceable"><code>dest_dir</code></em>
+parameter specifies the directory into which the source will be
+copied; the name of the source will be preserved.  In the third form,
+multiple sources are copied into <em class="replaceable"><code>dest_dir</code></em>.
+</p>
+<p>
+If a source is a directory, the entire directory will be copied
+recursively.  If the source is within the source tree, any files or
+directories beginning with . will be exluded
+from the recursive copy.  This is intended to avoid copying hidden
+source control directories such as .svn.
+</p>
+</div><div class="refsection" title="Examples"><a id="idp2991096"></a><h2>Examples</h2><pre class="programlisting">
+# Copy a single file or directory
+mk_stage SOURCE=foobar.conf.example DEST=/etc/foobar.conf
+mk_stage SOURCE=foobar.d.example DEST=/etc/foobar.d
+
+# Copy a single file or directory, specifying destination directory
+Source filename is preserved
+mk_stage SOURCE=foobar.conf DESTDIR=/etc
+mk_stage SOURCE=foobar.d DESTDIR=/etc
+
+# Copy multiple files and directories to destination directory
+Source filenames are preserved
+mk_stage DESTDIR=/etc foo.conf bar.conf
+</pre></div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_resolve_target.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn02.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_stamp_target.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_resolve_target </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_stamp_target</td></tr></table></div></body></html>

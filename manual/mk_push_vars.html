@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_push_vars</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn01.html" title="Utility Functions" /><link rel="prev" href="mk_pop_vars.html" title="mk_pop_vars" /><link rel="next" href="mk_quote.html" title="mk_quote" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_push_vars</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_pop_vars.html">Prev</a> </td><th width="60%" align="center">Utility Functions</th><td width="20%" align="right"> <a accesskey="n" href="mk_quote.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_push_vars"><a id="mk_push_vars"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_push_vars — Save variables</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="function">mk_push_vars</code>  <em class="replaceable"><code>vars..</code></em> </p></div><div class="cmdsynopsis"><p><code class="function">mk_push_vars</code>  <code class="literal">var=</code><em class="replaceable"><code>value...</code></em> </p></div></div><div class="refsection" title="Description"><a id="idp2817632"></a><h2>Description</h2>
+<p>
+Saves each variable in <em class="replaceable"><code>vars</code></em> to a safe location
+and then sets it to the empty string, or if the second form is used,
+to <em class="replaceable"><code>value</code></em>.  This provides a mechanism for "local
+variables" that works in any POSIX-compliant shell.
+</p>
+<p>
+This should only be used once per function, perferably near the top.
+When used, you must ensure that <code class="function"><a class="xref" href="mk_pop_vars.html" title="mk_pop_vars"><span class="refentrytitle">mk_pop_vars</span></a></code> appears
+near the end of the function, and that it is always reached in any
+code path.
+</p>
+</div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_pop_vars.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn01.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_quote.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_pop_vars </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_quote</td></tr></table></div></body></html>

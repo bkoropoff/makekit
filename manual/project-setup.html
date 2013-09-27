@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 1. Setting Up Your Project</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="pt01.html" title="Part I. Guide" /><link rel="next" href="conventions.html" title="Chapter 2. Conventions and Patterns" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 1. Setting Up Your Project</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="pt01.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="conventions.html">Next</a></td></tr></table><hr /></div><div class="chapter" title="Chapter 1. Setting Up Your Project"><div class="titlepage"><div><div><h2 class="title"><a id="project-setup"></a>Chapter 1. Setting Up Your Project</h2></div></div></div>
+  
+  <p>
+    This chapter will walk you through the basics of setting up a
+    <span class="productname">MakeKit</span> project.  It will assume a C language project,
+    the finer details of which are covered in <a class="xref" href="c-projects.html" title="Chapter 3. C Language Projects">Chapter 3, <em>C Language Projects</em></a>.
+    However, the steps here remain the same for any sort of project.
+  </p>
+
+  <div class="section" title="Directory Layout"><div class="titlepage"><div><div><h2 class="title"><a id="idp2497288"></a>Directory Layout</h2></div></div></div>
+    
+    <p>
+      All <span class="productname">MakeKit</span> rules are placed in <code class="filename">MakeKitBuild</code>.
+      You can opt to use a single such file in the top level directory of your project, or split
+      your build logic into smaller <code class="filename">MakeKitBuild</code> files in each subdirectory
+      of your project, or some intermediate arrangement.  A typical project opting for multiple
+      small files might look like the following:
+    </p>
+    <div class="itemizedlist" title="project-name/"><p class="title"><strong><code class="filename">project-name/</code></strong></p><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">default.conf</code></p></li><li class="listitem">
+	<p><code class="filename">include/</code></p>
+	<div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">project-name.h</code></p></li></ul></div>
+      </li><li class="listitem">
+	<p><code class="filename">src/</code></p>
+	<div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">project-name.c</code></p></li></ul></div>
+      </li><li class="listitem">
+	<p><code class="filename">doc/</code></p>
+	<div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">readme.txt</code></p></li></ul></div>
+      </li></ul></div>
+  </div>
+  <div class="section" title="Build Files"><div class="titlepage"><div><div><h2 class="title"><a id="idp2502840"></a>Build Files</h2></div></div></div>
+    
+    <p>
+      Once you've decided where to place your <code class="filename">MakeKitBuild</code> files, you'll
+      need to put something in them.  Each file is an ordinary POSIX shell script, but it should
+      adhere to a particular structure which <span class="productname">MakeKit</span> expects.
+      The following shows what the top-level <code class="filename">MakeKitBuild</code> might
+      look like for our example project layout:
+    </p>
+    <div class="informalexample">
+<pre class="programlisting">
+SUBDIRS="include src doc" <a class="co" id="co.mkb.subdirs" href="project-setup.html#mkb.subdirs"><img src="images/callouts/1.png" alt="1" border="0" /></a>
+MODULES="core compiler" <a class="co" id="co.mkb.modules" href="project-setup.html#mkb.modules"><img src="images/callouts/2.png" alt="2" border="0" /></a>
+PROJECT_NAME="project-name" <a class="co" id="co.mkb.project_name" href="project-setup.html#mkb.project_name"><img src="images/callouts/3.png" alt="3" border="0" /></a>
+
+defaults() <a class="co" id="co.mkb.defaults" href="project-setup.html#mkb.defaults"><img src="images/callouts/4.png" alt="4" border="0" /></a>
+{
+    PREFIX=/opt/project-name
+}
+
+option() <a class="co" id="co.mkb.option" href="project-setup.html#mkb.option"><img src="images/callouts/5.png" alt="5" border="0" /></a>
+{
+    mk_option \
+        OPTION="config-file" \
+        VAR="CONFIG_FILE" \
+        PARAM="path" \
+        DEFAULT="${MK_SYSCONFDIR}/project-name.conf" \
+        HELP="Configuration file path"
+}
+
+configure() <a class="co" id="co.mkb.configure" href="project-setup.html#mkb.configure"><img src="images/callouts/6.png" alt="6" border="0" /></a>
+{
+    mk_msg "configuration file: $CONFIG_FILE"
+}
+
+make() <a class="co" id="co.mkb.make" href="project-setup.html#mkb.make"><img src="images/callouts/7.png" alt="7" border="0" /></a>
+{
+    mk_stage SOURCE="default.conf" DEST="$CONFIG_FILE"
+}
+</pre>
+    </div>
+    <div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a id="mkb.subdirs"></a><a href="#co.mkb.subdirs"><img src="images/callouts/1.png" alt="1" border="0" /></a> </p></td><td valign="top" align="left">
+	<p>
+	  The <code class="varname">SUBDIRS</code> variable specifies a list of subdirectories
+	  where <span class="productname">MakeKit</span> should look for further
+	  <code class="filename">MakeKitBuild</code> files.  This line can be omitted if
+	  there are no subdirectories to specify.
+	</p>
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.modules"></a><a href="#co.mkb.modules"><img src="images/callouts/2.png" alt="2" border="0" /></a> </p></td><td valign="top" align="left">
+	<p>
+	  The <code class="varname">MODULES</code> variable specifies which
+	  <span class="productname">MakeKit</span> modules you will be using.
+          Each module adds additional functionality on top of the core
+	  build engine.  For example, the <code class="literal">compiler</code>
+	  module gives you access to functions for configure and building
+	  C language programs and libraries.
+	</p>
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.project_name"></a><a href="#co.mkb.project_name"><img src="images/callouts/3.png" alt="3" border="0" /></a> </p></td><td valign="top" align="left">
+         <p>
+           The <code class="varname">PROJECT_NAME</code> variable specified
+           the name of the project.  If unspecified, the name of the directory
+           of the <code class="filename">MakeKitBuild</code> file is used instead.
+         </p>
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.defaults"></a><a href="#co.mkb.defaults"><img src="images/callouts/4.png" alt="4" border="0" /></a> </p></td><td valign="top" align="left">
+         <p>
+           The <code class="function">defaults</code> function allows you to set default
+	   values for options that are usually specified by the user when configuring
+	   the project to be built, such as the installation prefix.
+         </p>
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.option"></a><a href="#co.mkb.option"><img src="images/callouts/5.png" alt="5" border="0" /></a> </p></td><td valign="top" align="left">
+	<p>
+	  The <code class="function">option</code> function is where you can define
+	  configuration options for your project which can be passed on the
+	  command line.  Each option is declared with with <code class="function">mk_option</code>
+	  function, which specifies the option name as passed on the command line
+	  (<em class="parameter"><code>OPTION</code></em>), the shell variable to store the setting in
+	  (<em class="parameter"><code>VAR</code></em>), a one-word description of the parameter
+	  that should be passed to the option (<em class="parameter"><code>PARAM</code></em>), a default
+	  value to use if the option isn't specified (<em class="parameter"><code>DEFAULT</code></em>),
+	  and a help message descriping the option (<em class="parameter"><code>HELP</code></em>).
+	  This particular example allows customizing the location of a configuration file.
+	</p>
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.configure"></a><a href="#co.mkb.configure"><img src="images/callouts/6.png" alt="6" border="0" /></a> </p></td><td valign="top" align="left">
+	<p>
+	  The <code class="function">configure</code> function is where you can perform any
+	  configuration for your project.  Typical operations performed here include
+	  processing any options which were specified and testing that the system meets
+	  any prerequisites for building.  Messages are usually printed to the user
+	  summarizing what is being done.
+	</p>
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.make"></a><a href="#co.mkb.make"><img src="images/callouts/7.png" alt="7" border="0" /></a> </p></td><td valign="top" align="left">
+	<p>
+	  The <code class="function">make</code> function is the meat of your build system.
+	  This is where you should define the build rules for your project that produce
+	  its actual end products.  The example above installs a default configuration
+	  file into the location that was specified with the <em class="parameter"><code>config-file</code></em>
+	  parameter.
+	</p>
+      </td></tr></table></div>
+    <p>
+      All of these elements are optional.  It is not unusual for subdirectories that
+      act only as organizational elements to contain a <code class="filename">MakeKitBuild</code>
+      with only a <code class="varname">SUBDIRS</code> line.
+    </p>
+    <p>
+      Your build files will be processed as follows, starting from the top-level
+      <code class="filename">MakeKitBuild</code>:
+    </p>
+    <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">The <code class="function">option</code> function will be run if present.</li><li class="listitem">The <code class="function">configure</code> function will be run if present.</li><li class="listitem">For each directory in <code class="varname">SUBDIRS</code>, the <code class="filename">
+      MakeKitBuild</code> file in that directory will be recursively processed according to this list.</li><li class="listitem">The <code class="function">make</code> function will be run if present</li></ul></div>
+    <p>
+      If you wish for the <code class="function">make</code> function of a directory to be run before (or in the middle) of processing subdirectories, you may put <code class="literal">.</code> in <code class="varname">SUBDIRS</code>.
+    </p>
+  </div>
+  <div class="section" title="Installing MakeKit"><div class="titlepage"><div><div><h2 class="title"><a id="idp2520416"></a>Installing <span class="productname">MakeKit</span></h2></div></div></div>
+    
+    <p>
+      Once your build files are in place, you're ready to install a copy of
+      <span class="productname">MakeKit</span> into your project directory.  This step makes
+      your build system self-contained and ready to distribute to other people.  Simply
+      run the following in your shell:
+    </p>
+<pre class="screen">
+$ makekit init
+</pre>
+    <p>
+      This will install a copy of <span class="productname">MakeKit</span> into the
+      <code class="filename">mk</code> subdirectory, and create an executable
+      <code class="filename">configure</code> script which can be run to configure your
+      project.
+    </p>
+    <p>
+      You can see additional options to the <span class="command"><strong>makekit init</strong></span> command
+      by specifying the <code class="option">-h</code> option:
+    </p>
+<pre class="screen">
+$ makekit init -h
+makekit init -- install MakeKit files into current directory
+
+Usage: makekit init [ options ]
+
+Options:
+
+  -h,--help         Show this help
+  -s                Symlink files instead of copying them
+  -f                Overwrite existing files
+</pre>
+  </div>
+  <div class="section" title="Configuring"><div class="titlepage"><div><div><h2 class="title"><a id="idp2540224"></a>Configuring</h2></div></div></div>
+    
+    <p>
+      Once <span class="productname">MakeKit</span> has been installed, you are
+      ready to run <code class="filename">configure</code> to generate a <code class="filename">Makefile</code>
+      for your project.  You should always configure from a directory other than
+      your project directory to avoid cluttering it with generated files.  This also
+      allows you to have multiple build areas with different settings (e.g. debug
+      versus release).
+    </p>
+    <p>
+      For example, the following sequence of commands demonstrates creating a build
+      area called <code class="filename">build</code> and the result of running <code class="filename">configure</code>
+      from within it.
+    </p>
+<pre class="screen">
+$ mkdir build
+$ cd build
+$ ../configure
+           [makekit] initializing
+          [platform] build operating system: linux
+          [platform] build distribution: ubuntu
+          [platform] build distribution version: 10.10
+          [platform] build processor architecture: x86
+          [platform] build instruction set architectures: x86_32
+          [platform] host operating system: linux
+          [platform] host distribution: ubuntu
+          [platform] host distribution version: 10.10
+          [platform] host processor architecture: x86
+          [platform] host instruction set architectures: x86_32
+              [path] prefix: /opt/project-name
+              [path] exec prefix: /opt/project-name
+              [path] library dir (x86_32): /opt/project-name/lib
+              [path] include dir: /opt/project-name/include
+              [path] binary dir: /opt/project-name/bin
+              [path] system binary dir: /opt/project-name/sbin
+              [path] system config dir: /opt/project-name/etc
+              [path] local state dir: /opt/project-name/var
+              [path] data root dir: /opt/project-name/share
+              [path] data dir: /opt/project-name/share/project-name
+              [path] documenation dir: /opt/project-name/share/doc/project-name
+              [path] HTML documentation dir: /opt/project-name/share/doc/project-name/html
+              [path] manpage dir: /opt/project-name/share/man
+          [compiler] default C compiler: gcc
+          [compiler] default C preprocessor flags: 
+          [compiler] default C compiler flags: -O2 -g
+          [compiler] default linker flags: -O2 -g
+          [compiler] C compiler (build/x86_32): gcc -m32
+          [compiler] C preprocessor flags (build/x86_32): 
+          [compiler] C compiler flags (build/x86_32): -O2 -g
+          [compiler] linker flags (build/x86_32): -O2 -g
+          [compiler] C compiler (host/x86_32): gcc -m32
+          [compiler] C preprocessor flags (host/x86_32): 
+          [compiler] C compiler flags (host/x86_32): -O2 -g
+          [compiler] linker flags (host/x86_32): -O2 -g
+      [project-name] configuration file: /opt/project-name/etc/project-name.conf
+</pre>
+    <p>
+      You can see the full set of options to <code class="filename">configure</code> by passing
+      <em class="parameter"><code>--help</code></em>:
+    </p>
+<pre class="screen">
+$ ../configure --help
+Usage: makekit configure [ option | @settings_file ] ...
+Options:
+  --sourcedir=path            Source directory [.]
+  --objectdir=path            Intermediate file directory [object]
+  --stagedir=path             Staging directory [stage]
+  --rundir=path               Build tool install directory [run]
+  --show-vars=yes|no          Always show options as variable names in help
+                              output [no]
+  --help=yes|no               Show this help [yes]
+
+Options (platform):
+  --build-os=value            Build operating system [linux]
+  --build-arch=value          Build CPU architecture [x86]
+  --build-isas=value          Build instruction set architectures [x86_32]
+  --build-distro=value        Build operating system distribution [ubuntu]
+  --build-distro-version=value
+                              Build operating system distribution version
+                              [10.10]
+  --build-distro-archetype=value
+                              Build operating system distribution archetype
+                              [debian]
+  --host-os=value             Host operating system [linux]
+  --host-arch=value           Host CPU architecture [x86]
+  --host-isas=value           Host instruction set architectures [x86_32]
+  --host-distro=value         Host operating system distribution [ubuntu]
+  --host-distro-version=value Host operating system distribution version [10.10]
+  --host-distro-archetype=value
+                              Host operating system distribution archetype
+                              [debian]
+
+Options (core):
+  --fail-on-warn=yes|no       Fail on warnings [no]
+  --debug=yes|no              Build in debug mode [no]
+
+Options (path):
+  --prefix=path               Architecture-independent installation prefix
+                              [/opt/project-name]
+  --exec-prefix=path          Architecture-dependent installation prefix
+                              [/opt/project-name]
+  --libdir=path               Library directory (x86_32) [/opt/project-name/lib]
+  --includedir=path           Header file directory [/opt/project-name/include]
+  --bindir=path               User executable directory [/opt/project-name/bin]
+  --sbindir=path              System executable directory
+                              [/opt/project-name/sbin]
+  --libexecdir=path           Program executable directory
+                              [/opt/project-name/libexec]
+  --sysconfdir=path           System configuration directory
+                              [/opt/project-name/etc]
+  --localstatedir=path        Local state directory [/opt/project-name/var]
+  --datarootdir=path          Root data directory [/opt/project-name/share]
+  --datadir=path              Data directory
+                              [/opt/project-name/share/project-name]
+  --docdir=path               Documentation directory
+                              [/opt/project-name/share/doc/project-name]
+  --htmldir=path              HTML documentation directory
+                              [/opt/project-name/share/doc/project-name/html]
+  --mandir=path               UNIX man page directory
+                              [/opt/project-name/share/man]
+
+Options (compiler):
+  CC=program                  Default C compiler [gcc]
+  CPPFLAGS=flags              Default C preprocessor flags []
+  CFLAGS=flags                Default C compiler flags [-O2 -g]
+  LDFLAGS=flags               Default linker flags [-O2 -g]
+  BUILD_X86_32_CC=program     C compiler (build/x86_32) [gcc -m32]
+  BUILD_X86_32_CPPFLAGS=flags C preprocessor flags (build/x86_32) []
+  BUILD_X86_32_CFLAGS=flags   C compiler flags (build/x86_32) [-O2 -g]
+  BUILD_X86_32_LDFLAGS=flags  Linker flags (build/x86_32) [-O2 -g]
+  HOST_X86_32_CC=program      C compiler (host/x86_32) [gcc -m32]
+  HOST_X86_32_CPPFLAGS=flags  C preprocessor flags (host/x86_32) []
+  HOST_X86_32_CFLAGS=flags    C compiler flags (host/x86_32) [-O2 -g]
+  HOST_X86_32_LDFLAGS=flags   Linker flags (host/x86_32) [-O2 -g]
+
+Options (project-name):
+  --config-file=path          Configuration file path
+                              [/opt/project-name/etc/project-name.conf]
+</pre>
+    <p>
+      Note that this includes options for <span class="productname">MakeKit</span> itself, all
+      modules which were used (either directly or indirectly), and finally options from
+      the project.
+    </p>
+  </div>
+  <div class="section" title="Building"><div class="titlepage"><div><div><h2 class="title"><a id="idp2526824"></a>Building</h2></div></div></div>
+    
+    <p>
+      At this point, the project is ready to be built by running <span class="command"><strong>make</strong></span>.
+      When complete, all end products will have been placed in the <code class="filename">stage</code>
+      directory, which has an internal structure mirroring the UNIX root filesystem.  From here,
+      the products can be copied into place or packaged up using your favorite packaging format.
+      <span class="productname">MakeKit</span> also generates the following set of convenience targets
+      to aid in your workflow:
+    </p>
+    <div class="variablelist"><dl><dt><span class="term"><span class="command"><strong>make <em class="replaceable"><code>subdir</code></em></strong></span></span></dt><dd>
+	  <p>
+	    Builds products only from <em class="replaceable"><code>subdir</code></em> and any of its
+	    transitive subdirectories.  For example, <span class="command"><strong>make <code class="filename">doc</code></strong></span>
+	    or <span class="command"><strong>make <code class="filename">src</code></strong></span>.
+	  </p>
+	</dd><dt><span class="term"><span class="command"><strong>make clean</strong></span></span></dt><dd>
+	  <p>
+	    Removes all built intermediate products while leaving end products
+	    (anything in <code class="filename">stage</code>) untouched.
+	  </p>
+	</dd><dt><span class="term"><span class="command"><strong>make SUBDIR=<em class="replaceable"><code>subdir</code></em> clean</strong></span></span></dt><dd>
+	  <p>
+	    Removes all built intermediate products only from
+	    <em class="replaceable"><code>subdir</code></em> and any of its transitive subdirectories.
+	  </p>
+	</dd><dt><span class="term"><span class="command"><strong>make scrub</strong></span></span></dt><dd>
+	  <p>
+	    Removes everything that <span class="command"><strong>make clean</strong></span> removes, plus
+	    all end products in the <code class="filename">stage</code> directory.
+	  </p>
+	</dd><dt><span class="term"><span class="command"><strong>make scour</strong></span></span></dt><dd>
+	  <p>
+	    Completely removes all generated files from the build area, including
+	    all intermediate and end products and anything generated by running
+	    <code class="filename">configure</code>.
+	  </p>
+	</dd><dt><span class="term"><span class="command"><strong>make install</strong></span></span></dt><dd>
+	  <p>
+	    Installs all end products built so far into their final locations
+	    on the filesystem.  You will generally need root permissions to do this.
+	  </p>
+	</dd><dt><span class="term"><span class="command"><strong>make DESTDIR=<em class="replaceable"><code>dest</code></em> install</strong></span></span></dt><dd>
+	  <p>
+	    Installs all end products built so far into <em class="replaceable"><code>dest</code></em>
+	    rather than <code class="filename">/</code>.  This might be useful for creating a package
+	    or binary tarball.  Of course, you could just tar up <code class="filename">stage</code>
+	    directly...
+	  </p>
+	</dd></dl></div>
+  </div>
+</div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="pt01.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="pt01.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="conventions.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Part I. Guide </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 2. Conventions and Patterns</td></tr></table></div></body></html>

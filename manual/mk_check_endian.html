@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_check_endian</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn03.html" title="Compiler Module" /><link rel="prev" href="MK_RPATHFLAGS.html" title="MK_RPATHFLAGS" /><link rel="next" href="mk_check_function.html" title="mk_check_function" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_check_endian</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="MK_RPATHFLAGS.html">Prev</a> </td><th width="60%" align="center">Compiler Module</th><td width="20%" align="right"> <a accesskey="n" href="mk_check_function.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_check_endian"><a id="mk_check_endian"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_check_endian — Check endianness of system</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... compiler ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_check_endian</code></p></div></div><div class="refsection" title="Description"><a id="idp3455064"></a><h2>Description</h2>
+<p>
+Checks the endianness of the current system and sets the variable
+<code class="varname">ENDIANNESS</code> to the result ("little" or "big").  If the
+result was "big", it also defines <code class="varname">WORDS_BIGENDIAN</code> in
+the current config header.
+</p>
+<p>
+This function will work in cross-compiling configurations.
+</p>
+</div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="MK_RPATHFLAGS.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn03.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_check_function.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">MK_RPATHFLAGS </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_check_function</td></tr></table></div></body></html>

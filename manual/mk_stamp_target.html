@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_stamp_target</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn02.html" title="Core Functionality" /><link rel="prev" href="mk_stage.html" title="mk_stage" /><link rel="next" href="mk_symlink.html" title="mk_symlink" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_stamp_target</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_stage.html">Prev</a> </td><th width="60%" align="center">Core Functionality</th><td width="20%" align="right"> <a accesskey="n" href="mk_symlink.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_stamp_target"><a id="mk_stamp_target"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_stamp_target — Define a stamp file target</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... core ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_stamp_target</code>  <em class="replaceable"><code>command</code></em>... </p></div></div><div class="refsection" title="Options"><a id="idp3025448"></a><h2>Options</h2><div class="variablelist"><dl><dt><span class="term"><code class="literal">DEPS=</code><em class="replaceable"><code>deps</code></em></span></dt><dd><p>
+A list of dependencies.
+</p></dd><dt><span class="term"><code class="literal">NAME=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
+An optional string which will be present in the generated stamp file name.
+</p></dd></dl></div></div><div class="refsection" title="Description"><a id="idp3013856"></a><h2>Description</h2>
+<p>
+Defines a target that simply creates or updates
+a stamp file with touch.  If
+<em class="replaceable"><code>command</code></em> is specified, it will be
+interpeted as a command to run before updating
+the stamp file, and is subject to the same
+processing as in <code class="function"><a class="xref" href="mk_target.html" title="mk_target"><span class="refentrytitle">mk_target</span></a></code>.
+</p>
+<p>
+Sets <code class="varname">result</code> to the generated target.
+</p>
+</div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="mk_stage.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="rn02.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="mk_symlink.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">mk_stage </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> mk_symlink</td></tr></table></div></body></html>
