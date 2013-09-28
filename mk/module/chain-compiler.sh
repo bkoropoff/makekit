@@ -155,22 +155,18 @@ mk_chain_compiler()
         mk_unquote_list "$LINKS"
         mk_resolve_target "${MK_LIBDIR}/$1"
         mk_quote "$result"
-        link_target="$result"
-        deps="$result"
-        TARGETS="$TARGETS $result"
-        shift
+        LINK_TARGETS="$LINK_TARGETS $result"
 
         for link
         do
-            mk_quote "${MK_LIBDIR}/$link"
-            deps="$deps $result"
-            mk_quote "${MK_LIBDIR}/$link:$link_target"
+            mk_resolve_target "${MK_LIBDIR}/$link"
+            mk_quote "$result"
             TARGETS="$TARGETS $result"
         done
 
-        mk_quote "${MK_LIBDIR}/lib${LIB}.la:$deps"
+        mk_resolve_target "${MK_LIBDIR}/lib${LIB}.la"
+        mk_quote "$result"
         TARGETS="$TARGETS $result"
-        LINK_TARGETS="$LINK_TARGETS $link_target"
 
         mk_resolve_file "${MK_LIBDIR}/lib${LIB}.la"
         mk_varname "$result"
@@ -204,22 +200,18 @@ mk_chain_compiler()
 
         mk_resolve_target "$_dlodir/$1"
         mk_quote "$result"
-        link_target="$result"
-        deps="$result"
-        TARGETS="$TARGETS $result"
-        shift
+        LINK_TARGETS="$LINK_TARGETS $result"
 
         for link
         do
-            mk_quote "$_dlodir/$link"
-            deps="$deps $result"
-            mk_quote "$_dlodir/$link:$link_target"
+            mk_resolve_target "$_dlodir/$link"
+            mk_quote "$result"
             TARGETS="$TARGETS $result"
         done
 
-        mk_quote "$_dlodir/$DLO:$deps"
+        mk_resolve_target "$_dlodir/$DLO"
+        mk_quote "$result"
         TARGETS="$TARGETS $result"
-        LINK_TARGETS="$LINK_TARGETS $link_target"
 
         mk_resolve_file "$_dlodir/$DLO"
         mk_varname "$result"
@@ -240,8 +232,7 @@ mk_chain_compiler()
                 ;;
         esac
 
-        link_target="$result"
-        mk_quote "$link_target"
+        mk_quote "$result"
         TARGETS="$TARGETS $result"
         LINK_TARGETS="$LINK_TARGETS $result"
     done
