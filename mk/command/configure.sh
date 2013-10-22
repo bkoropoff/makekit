@@ -802,6 +802,10 @@ then
     exit 0
 fi
 
+# Normalize source path to remove extraneous . and ..
+mk_normalize_path "$MK_SOURCE_DIR"
+MK_SOURCE_DIR="$result"
+
 # Don't allow building in the source directory
 _canon_sourcedir="`cd "${MK_SOURCE_DIR}" && pwd`"
 _canon_rootdir="`cd "${MK_ROOT_DIR}" && pwd`"
