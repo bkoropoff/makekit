@@ -1,4 +1,4 @@
-SUBDIRS="mkdash doc"
+SUBDIRS="mkdash doc test"
 MODULES="core path"
 
 make()

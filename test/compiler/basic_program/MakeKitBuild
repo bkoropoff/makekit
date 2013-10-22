@@ -1,0 +1,19 @@
+MODULES="core compiler"
+
+configure()
+{
+    mk_check_lang c
+}
+
+make()
+{
+    mk_program PROGRAM=hello SOURCES=hello.c
+}
+
+mktest()
+{
+    mk_msg "Checking program output"
+
+    [ "`stage/usr/local/bin/hello`" = "Hello, world!" ] \
+        || mk_fail "unexpected output from hello"
+}

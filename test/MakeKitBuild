@@ -1,0 +1,109 @@
+configure()
+{
+    mk_resolve_file helper.sh
+    mk_absolute_path "$result"
+    mk_declare -e -i HELPER="$result"
+}
+
+make()
+{
+    mk_phony_target \
+        NAME="test" \
+        run_tests MAKE='$(MAKE)' TEST='$(TEST)'
+
+    mk_add_clean_target tests
+}
+
+run_tests()
+{
+    mk_push_vars MAKE TEST match subdir testcount=0 passcount=0 failcount=0 skipcount=0
+    mk_parse_params
+
+    [ -z "$TEST" ] && TEST="*"
+
+    mk_fnmatch_compile "$TEST"
+    match="$result"
+
+    mk_msg_domain test
+
+    mk_absolute_path "$MK_SOURCE_DIR/makekit"
+    makekit="$result"
+
+    for subdir in "$MK_SOURCE_SUBDIR"/*/*
+    do
+        if [ -d "$subdir" -a -f "$subdir/MakeKitBuild" ]
+        then
+            result="${subdir#$MK_SOURCE_SUBDIR/}"
+            $match "$result" && run_test "$result"
+        fi
+    done
+
+    mk_msg "summary: $testcount tests, $passcount passed, $failcount failed, $skipcount skipped"
+
+    unset -f "$match"
+
+    mk_pop_vars
+}
+
+run_test()
+{
+    mk_push_vars \
+        CONFIGURE_OPTIONS="" \
+        MAKE_TARGET="all" \
+        sourcedir builddir test
+
+    test="$1"
+
+    builddir="tests/$test"
+
+    mk_absolute_path "$MK_SOURCE_SUBDIR/$test"
+    sourcedir="$result"
+
+    mk_msg_begin "$test: "
+
+    mk_function_exists mktest && unset -f mktest
+    mk_source_or_fail "$sourcedir/MakeKitBuild"
+    mk_function_exists make && unset -f make
+
+    mk_safe_rm "$builddir"
+    mk_mkdir "$builddir"
+
+    (
+        mk_cd_or_fail "$builddir"
+
+        MK_VERBOSE=1
+
+        mk_msg "$test"
+
+        mk_unquote_list "$CONFIGURE_OPTIONS"
+        mk_run_or_fail "$makekit" configure --sourcedir="$sourcedir" "@$HELPER" "$@"
+        
+        mk_run_or_fail ${MAKE} "$MAKE_TARGET"
+
+        if mk_function_exists mktest
+        then
+            mktest || exit "$?"
+        fi
+
+        mk_msg "PASS"
+    ) >> "$builddir/test.log" 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+        if [ -e "$builddir/.skip" ]
+        then
+            skipcount=$(($skipcount + 1))
+            mk_msg_end "SKIP (`cat $builddir/.skip`)"
+        else
+            failcount=$(($failcount + 1))
+            mk_msg_end "FAIL"
+        fi
+    else
+        passcount=$(($passcount + 1))
+        mk_msg_end "PASS"
+    fi
+
+    testcount=$(($testcount + 1))
+
+    mk_pop_vars
+}

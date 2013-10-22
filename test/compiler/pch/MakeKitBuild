@@ -1,0 +1,13 @@
+MODULES="core compiler"
+
+configure()
+{
+    mk_check_lang c
+    mk_check_lang c++
+}
+
+make()
+{
+    mk_program PROGRAM=helloc SOURCES=hello.c PCH=hello.h
+    mk_program PROGRAM=hellocxx SOURCES=hello.cpp PCH=hello.h
+}
