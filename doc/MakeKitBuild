@@ -105,6 +105,11 @@ make()
             --module chain-generic chain-compiler chain-autotools
 
         reference \
+            OUTPUT="reference/fetch.xml" -- \
+            --title "Fetch Module" \
+            --module fetch
+
+        reference \
             OUTPUT="reference/docbook.xml" -- \
             --title "DocBook Module" \
             --module docbook
