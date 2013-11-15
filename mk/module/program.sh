@@ -36,6 +36,11 @@
 
 ### section configure
 
+_mk_is_executable()
+{
+    [ -x "$1" -a ! -d "$1" ]
+}
+
 #<
 # @brief Check for program on build system
 # @usage name
@@ -82,7 +87,7 @@ mk_check_program()
             mk_msg_result "(internal)"
             _res="${MK_RUN_BINDIR}/${_cand}"
             break
-        elif [ -x "$_cand" ]
+        elif _mk_is_executable "$_cand"
         then
             _res="$_cand"
             mk_msg_result "$_cand"
@@ -92,7 +97,7 @@ mk_check_program()
             IFS=":"
             for __dir in ${MK_PATH} ${PATH}
             do
-                if [ -x "${__dir}/${_cand}" ]
+                if _mk_is_executable "${__dir}/${_cand}"
                 then
                     _res="${__dir}/${_cand}"
                     mk_msg_result "$_res"
