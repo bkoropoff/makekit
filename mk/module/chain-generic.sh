@@ -212,31 +212,15 @@ mk_chain_generic()
         outdirs="$outdirs $outdir"
     fi
 
-    DEPS=""
-    mk_unquote_list "$TARGETS"
-    for temp
-    do
-        deps=""
-        case "$temp" in
-            *:*)
-                deps="${temp#*:}"
-                temp="${temp%%:*}"
-                ;;
-        esac
+    # Resolve all targets now so they are in canonical form
+    # for pass-through via %TARGETS to build command
+    mk_resolve_targets "$TARGETS"
+    TARGETS="$result"
 
-        mk_target \
-            TARGET="$temp" \
-            DEPS="$stamps $deps" \
-            _mk_chain_stage %PASSVARS '$@' "*$outdirs"
-        mk_quote "$result"
-        DEPS="$DEPS $result"
-    done
-
-    _mk_slashless_name ".${NAME}_${SYSTEM}_targets"
-    mk_target \
-        TARGET="$result" \
-        DEPS="$DEPS" \
-        mk_run_or_fail touch '$@'
+    mk_multi_target \
+        TARGETS="$TARGETS" \
+        DEPS="$stamps" \
+        _mk_chain_stage %PASSVARS %TARGETS "*$outdirs"
 
     mk_pop_vars
 }
@@ -288,17 +272,25 @@ _mk_chain_build()
 
 _mk_chain_stage()
 {
+    mk_push_vars PASSVARS STAGE TARGETS outdirs target
     mk_parse_params
     mk_safe_source "$PASSVARS"
 
-    # $1 = target
-    # ... = output dirs
+    mk_quote_list "$@"
+    outdirs="$result"
 
-    mk_msg_domain "stage"
-    mk_pretty_path "$1"
-    mk_msg "$result"
+    mk_unquote_list "$TARGETS"
+    for target
+    do
+        mk_msg_domain "stage"
+        mk_pretty_target "$target"
+        mk_msg "$result"
 
-    "$STAGE" "$@"
+        mk_unquote_list "$outdirs"
+        "$STAGE" "${target#@}" "$@"
+    done
+
+    mk_pop_vars
 }
 
 #<
