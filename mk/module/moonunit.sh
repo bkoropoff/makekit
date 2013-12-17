@@ -52,7 +52,7 @@ _mk_invoke_moonunit_stub()
     if ! ${MOONUNIT_STUB} \
         CPP="$MK_CC -E" \
         CXXCPP="$MK_CXX -E" \
-        CPPFLAGS="$MK_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}" \
+        CPPFLAGS="$MK_CPPFLAGS $MK_ISA_CPPFLAGS $CPPFLAGS -I${MK_STAGE_DIR}${MK_INCLUDEDIR}" \
         -o "$__output" \
         "$@"
     then
