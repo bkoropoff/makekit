@@ -45,6 +45,8 @@ option()
     for candidate in \
         /usr/share/xml/docbook/stylesheet/docbook-xsl \
         /usr/share/sgml/docbook/xsl-stylesheets \
+        /usr/share/doc/docbook-style-xsl \
+        /usr/share/doc/docbook5-style-xsl \
         /opt/local/share/xsl/docbook-xsl
     do
         if [ -d "$candidate" ]
