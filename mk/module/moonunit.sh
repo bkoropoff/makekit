@@ -152,6 +152,7 @@ mk_moonunit_test()
             DEBUG='$(DEBUG)' \
             DEBUGGER='$(DEBUGGER)' \
             TEST='$(TEST)' \
+            LOGLEVEL='$(LOGLEVEL)' \
             XML='$(XML)' \
             HTML='$(HTML)' \
             TITLE='$(TITLE)' \
@@ -225,7 +226,7 @@ make()
 
 _mk_moonunit_test()
 {
-    mk_push_vars DEBUG DEBUGGER TEST XML HTML TITLE RUN PARAMS params msg la ret
+    mk_push_vars DEBUG DEBUGGER TEST XML HTML TITLE RUN PARAMS LOGLEVEL params msg la ret
     mk_parse_params
     
     mk_msg_domain moonunit
@@ -259,11 +260,16 @@ _mk_moonunit_test()
         XML="$result"
     fi
 
+    [ -z "$LOGLEVEL" ] && LOGLEVEL=info
+
+    mk_quote_list -l console:loglevel="$LOGLEVEL"
+    params="$params $result"
+
     if [ -n "$XML" ]
     then
         [ -n "$RUN" ] && RUN=",name=$RUN"
         [ -n "$TITLE" ] && TITLE=",title=$TITLE"
-        mk_quote -l console -l xml:file="$XML$RUN$TITLE"
+        mk_quote -l xml:file="$XML$RUN$TITLE",loglevel="$LOGLEVEL"
         params="$params $result"
     fi
 
