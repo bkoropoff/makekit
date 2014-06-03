@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_resolve_target</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn02.html" title="Core Functionality" /><link rel="prev" href="mk_pretty_target.html" title="mk_pretty_target" /><link rel="next" href="mk_stage.html" title="mk_stage" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_resolve_target</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_pretty_target.html">Prev</a> </td><th width="60%" align="center">Core Functionality</th><td width="20%" align="right"> <a accesskey="n" href="mk_stage.html">Next</a></td></tr></table><hr /></div><div class="refentry" title="mk_resolve_target"><a id="mk_resolve_target"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_resolve_target — Resolve target to fully-qualified form</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="programlisting">
-MODULES="... core ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_resolve_target</code>  <em class="replaceable"><code>target</code></em> </p></div></div><div class="refsection" title="Options"><a id="idp2987824"></a><h2>Options</h2><div class="variablelist"><dl><dt><span class="term"><em class="replaceable"><code>target</code></em></span></dt><dd><p>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_resolve_target</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.78.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn02.html" title="Core Functionality" /><link rel="prev" href="mk_pretty_target.html" title="mk_pretty_target" /><link rel="next" href="mk_stage.html" title="mk_stage" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_resolve_target</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mk_pretty_target.html">Prev</a> </td><th width="60%" align="center">Core Functionality</th><td width="20%" align="right"> <a accesskey="n" href="mk_stage.html">Next</a></td></tr></table><hr /></div><div class="refentry"><a id="mk_resolve_target"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_resolve_target — Resolve target to fully-qualified form</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><pre class="programlisting">
+MODULES="... core ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_resolve_target</code>  <em class="replaceable"><code>target</code></em> </p></div></div><div class="refsection"><a id="idm140208485228432"></a><h2>Options</h2><div class="variablelist"><dl class="variablelist"><dt><span class="term"><em class="replaceable"><code>target</code></em></span></dt><dd><p>
 the target to resolve
-</p></dd></dl></div></div><div class="refsection" title="Description"><a id="idp2997256"></a><h2>Description</h2>
+</p></dd></dl></div></div><div class="refsection"><a id="idm140208485226048"></a><h2>Description</h2>
 <p>
 This function resolves a target in MakeKit target notation
 to a fully-qualified form which always identifies a unique resource on the filesystem.
@@ -12,7 +12,7 @@ usually relative to the root build directory.
 </p>
 <p>
 Resolution is performed according to the form of <em class="replaceable"><code>target</code></em> as follows:
-</p><div class="variablelist"><dl><dt><span class="term"><code class="literal">@</code><em class="replaceable"><code>path</code></em></span></dt><dd><p>
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="literal">@</code><em class="replaceable"><code>path</code></em></span></dt><dd><p>
         <em class="replaceable"><code>target</code></em> is already fully-qualified and is returned
         verbatim by mk_resolve_target.
     </p></dd><dt><span class="term"><code class="literal">/</code><em class="replaceable"><code>file</code></em></span></dt><dd><p>
@@ -33,7 +33,7 @@ Resolution is performed according to the form of <em class="replaceable"><code>t
 This function returns 0 on success and sets <code class="varname">result</code> to the fully-qualified
 target.
 </p>
-</div><div class="refsection" title="Examples"><a id="idp3011144"></a><h2>Examples</h2><pre class="programlisting">
+</div><div class="refsection"><a id="idm140208485206368"></a><h2>Examples</h2><pre class="programlisting">
 # For the following examples, let:
 # MK_SOURCE_DIR=source
 # MK_OBJECT_DIR=object

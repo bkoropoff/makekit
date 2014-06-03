@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 3. C Language Projects</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="conventions.html" title="Chapter 2. Conventions and Patterns" /><link rel="next" href="pt02.html" title="Part II. Reference" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 3. C Language Projects</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="conventions.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="pt02.html">Next</a></td></tr></table><hr /></div><div class="chapter" title="Chapter 3. C Language Projects"><div class="titlepage"><div><div><h2 class="title"><a id="c-projects"></a>Chapter 3. C Language Projects</h2></div></div></div>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 3. C Language Projects</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.78.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="conventions.html" title="Chapter 2. Conventions and Patterns" /><link rel="next" href="pt02.html" title="Part II. Reference" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 3. C Language Projects</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="conventions.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="pt02.html">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a id="c-projects"></a>Chapter 3. C Language Projects</h2></div></div></div>
   
   
   <p>
@@ -7,7 +7,7 @@
       to configure and build a C language project.
   </p>
 
-  <div class="section" title="Building Programs"><div class="titlepage"><div><div><h2 class="title"><a id="c-programs"></a>Building Programs</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="c-programs"></a>Building Programs</h2></div></div></div>
     
     <p>
       Programs are built using the <code class="function"><a class="xref" href="mk_program.html" title="mk_program"><span class="refentrytitle">mk_program</span></a></code> function, which requires
@@ -19,7 +19,7 @@
     </p>
     <div class="example"><a id="c-hello-world"></a><p class="title"><strong>Example 3.1. Using <code class="function">mk_program</code></strong></p><div class="example-contents">
       
-      <div class="variablelist"><dl><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
+      <div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
 <pre class="programlisting">
 #include &lt;stdio.h&gt;
 
@@ -46,7 +46,7 @@ make()
       <code class="function">mk_program</code>.
     </p>
     
-    <div class="section" title="Finding Header Files"><div class="titlepage"><div><div><h3 class="title"><a id="idp2635832"></a>Finding Header Files</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="idm140208485879632"></a>Finding Header Files</h3></div></div></div>
       
       <p>
 	A C project with a complex layout will typically need to look for headers
@@ -60,7 +60,7 @@ make()
 
       <div class="example"><a id="c-include-dirs"></a><p class="title"><strong>Example 3.2. Using <em class="parameter"><code>INCLUDEDIRS</code></em></strong></p><div class="example-contents">
 	
-	<div class="variablelist"><dl><dt><span class="term"><code class="filename">include/values.h</code></span></dt><dd>
+	<div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="filename">include/values.h</code></span></dt><dd>
 <pre class="programlisting">
 #define MESSAGE "Hello, World!"
 </pre>
@@ -87,7 +87,7 @@ make()
 	    </dd></dl></div>
       </div></div><br class="example-break" />
     </div>
-    <div class="section" title="Linking To Libraries"><div class="titlepage"><div><div><h3 class="title"><a id="idp2631120"></a>Linking To Libraries</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="idm140208485869024"></a>Linking To Libraries</h3></div></div></div>
       
       <p>
 	To link your program to other libraries, specify them as a list
@@ -99,7 +99,7 @@ make()
       </p>
       <div class="example"><a id="c-link-lib"></a><p class="title"><strong>Example 3.3. Using <em class="parameter"><code>LIBDEPS</code></em></strong></p><div class="example-contents">
 	
-	<div class="variablelist"><dl><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
+	<div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="filename">main.c</code></span></dt><dd>
 <pre class="programlisting">
 #include &lt;stdio.h&gt;
 #include &lt;math.h&gt;
@@ -126,12 +126,12 @@ make()
       </div></div><br class="example-break" />
     </div>
   </div>
-  <div class="section" title="Building Libraries"><div class="titlepage"><div><div><h2 class="title"><a id="idp2644200"></a>Building Libraries</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="idm140208485859904"></a>Building Libraries</h2></div></div></div>
     
     <p>
       <span class="productname">MakeKit</span> allows you to build two types of libraries:
     </p>
-    <div class="variablelist"><dl><dt><span class="term">Shared libraries</span></dt><dd>
+    <div class="variablelist"><dl class="variablelist"><dt><span class="term">Shared libraries</span></dt><dd>
 	  <p>
 	    A shared library is a collection of address-relocatable code which is combined
 	    with the program that links against it at startup by the system dynamic linker.
@@ -161,7 +161,7 @@ make()
     </p>
     <div class="example"><a id="c-library"></a><p class="title"><strong>Example 3.4. Using <code class="function">mk_library</code></strong></p><div class="example-contents">
       
-      <div class="variablelist"><dl><dt><span class="term"><code class="filename">include/example.h</code></span></dt><dd>
+      <div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="filename">include/example.h</code></span></dt><dd>
 <pre class="programlisting">
 external unsigned long factorial(unsigned long i);
 </pre>
@@ -212,7 +212,7 @@ make()
       As with programs, libraries can specify dependencies on other shared libraries
       with <em class="parameter"><code>LIBDEPS</code></em>.
     </p>
-    <div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>
+    <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>
       Some systems do not allow inter-dependencies between shared libraries.  On those
       systems, <span class="productname">MakeKit</span> will propagate dependencies
       forward to any program that links against them.  The resulting program may
@@ -228,7 +228,7 @@ make()
       appropriate dependencies to the generated <code class="filename">Makefile</code>.
     </p>
   </div>
-  <div class="section" title="Groups"><div class="titlepage"><div><div><h2 class="title"><a id="c-projects-groups"></a>Groups</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="c-projects-groups"></a>Groups</h2></div></div></div>
     
     <p>
       When a library or program grows large enough, it is often
@@ -255,7 +255,7 @@ make()
     </p>
     <div class="example"><a id="c-group"></a><p class="title"><strong>Example 3.5. Using <code class="function">mk_group</code></strong></p><div class="example-contents">
       
-      <div class="variablelist"><dl><dt><span class="term"><code class="filename">include/example.h</code></span></dt><dd>
+      <div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="filename">include/example.h</code></span></dt><dd>
 <pre class="programlisting">
 /* Math functions */
 external unsigned long factorial(unsigned long i);
@@ -365,13 +365,13 @@ make()
       <span class="productname">MakeKit</span> supports filename patterns whenever specifying
       source files.
     </p>
-    <div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3>
+    <div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3>
       Filename patterns only work against files that exist at the time that
       <code class="filename">configure</code> is run.  Files that are created by a
       build rule will not be included.
     </div>
   </div>
-  <div class="section" title="Pre-compiled Headers"><div class="titlepage"><div><div><h2 class="title"><a id="c-pch"></a>Pre-compiled Headers</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="c-pch"></a>Pre-compiled Headers</h2></div></div></div>
     
     <p>
       Pre-compiled headers help reduce build times for large projects
@@ -410,7 +410,7 @@ make()
       settings.  The following non-exhaustive list of parameters
       can affect the result:
     </p>
-    <div class="variablelist"><dl><dt><span class="term"><em class="parameter"><code>PIC</code></em></span></dt><dd>
+    <div class="variablelist"><dl class="variablelist"><dt><span class="term"><em class="parameter"><code>PIC</code></em></span></dt><dd>
 	  <p>
 	    Must be <code class="literal">no</code> (the default) for
 	    programs and static libraries, and <code class="literal">yes</code>
@@ -425,7 +425,7 @@ make()
 	  </p>
 	</dd></dl></div>
   </div>
-  <div class="section" title="Configuration Tests"><div class="titlepage"><div><div><h2 class="title"><a id="c-checks"></a>Configuration Tests</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="c-checks"></a>Configuration Tests</h2></div></div></div>
     
     <p>
       Most projects of any significant complexity will need to determine how
@@ -465,17 +465,17 @@ configure()
 }
 </pre>
     </div></div><br class="example-break" />
-    <div class="section" title="Test Basics"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-basics"></a>Test Basics</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-basics"></a>Test Basics</h3></div></div></div>
       
       <p>
 	Most configuration checks do one or more of the following:
       </p>
-      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">Display the test being performed to the user</li><li class="listitem">Perform a test using the C compiler</li><li class="listitem">Set a variable to the result of the test</li><li class="listitem">Add a define to the config header with the result of the test</li><li class="listitem">Cache the results to speed up subsequent runs of <code class="filename">configure</code></li><li class="listitem">Display the result of the test to the user</li></ul></div>
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">Display the test being performed to the user</li><li class="listitem">Perform a test using the C compiler</li><li class="listitem">Set a variable to the result of the test</li><li class="listitem">Add a define to the config header with the result of the test</li><li class="listitem">Cache the results to speed up subsequent runs of <code class="filename">configure</code></li><li class="listitem">Display the result of the test to the user</li></ul></div>
       <p>
 	The names of variables and defines are usually based on the item in question (e.g.
 	the name of the header or library), with a few transformations:
       </p>
-      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">All lowercase letters are converted to uppercase</li><li class="listitem">
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">All lowercase letters are converted to uppercase</li><li class="listitem">
 	  All <code class="literal">*</code> (asterisk) characters are converted to <code class="literal">P</code>.
 	</li><li class="listitem">All other characters are converted to _.</li></ul></div>
       <p>
@@ -502,7 +502,7 @@ configure()
 	found, the result will be <code class="literal">no</code>.
       </p>
     </div>
-    <div class="section" title="Checking For Headers"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-headers"></a>Checking For Headers</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-headers"></a>Checking For Headers</h3></div></div></div>
       
       <p>
 	To check for the presence of a header on the system, use
@@ -511,7 +511,7 @@ configure()
 	of each one by attempting to compile a small program that includes
 	it.  For each header, it will do the following:
       </p>
-      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
 	  Set the variable <code class="varname">HAVE_<em class="replaceable"><code>varname</code></em></code>
 	  to the result of the test.
 	</li><li class="listitem">
@@ -547,7 +547,7 @@ configure()
 	<code class="function">mk_check_header</code>.
       </p>
     </div>
-    <div class="section" title="Checking For Libraries"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-libraries"></a>Checking For Libraries</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-libraries"></a>Checking For Libraries</h3></div></div></div>
       
       <p>
 	To check for the presence of a library, use <code class="function">mk_check_libraries</code>.
@@ -555,7 +555,7 @@ configure()
 	attempting to compile and link a test program against it.  For each library
 	it will do the following:
       </p>
-      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
 	  Set the variable <code class="varname">HAVE_LIB_<em class="replaceable"><code>varname</code></em></code>
 	  to the result of the test.
 	</li><li class="listitem">
@@ -603,14 +603,14 @@ configure()
 	<code class="function">mk_check_library</code>.
       </p>
     </div>
-    <div class="section" title="Checking For Functions"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-functions"></a>Checking For Functions</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-functions"></a>Checking For Functions</h3></div></div></div>
       
       <p>
 	<code class="function">mk_check_functions</code> allows you to test for the availability
 	of a list of functions by attempting to compile and link test programs that
 	reference them.  For each function it will then do the following:
       </p>
-      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
 	  Set the variable <code class="varname">HAVE_<em class="replaceable"><code>varname</code></em></code>
 	  to the result of the test.  The possible results are <code class="literal">yes</code>
 	  and <code class="literal">no</code>.
@@ -671,14 +671,14 @@ configure()
 	<code class="function">mk_check_function</code>.
       </p>
     </div>
-    <div class="section" title="Checking For Types"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-types"></a>Checking For Types</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-types"></a>Checking For Types</h3></div></div></div>
       
       <p>
 	<code class="function">mk_check_types</code> allows you to test for the availability
 	of a list of types by attempting to compile test programs that reference them.
 	For each type it will then do the following:
       </p>
-      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
 	  Set the variable <code class="varname">HAVE_<em class="replaceable"><code>varname</code></em></code>
 	  to the result of the test.  The possible results are <code class="literal">yes</code>
 	  and <code class="literal">no</code>.
@@ -722,13 +722,13 @@ configure()
 	<code class="function">mk_check_type</code>.
       </p>
     </div>
-    <div class="section" title="Checking For Sizes of Types"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-sizes"></a>Checking For Sizes of Types</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="c-check-sizes"></a>Checking For Sizes of Types</h3></div></div></div>
       
       <p>
 	<code class="function">mk_check_sizeofs</code> allows you to test for the
 	sizes of a list of types.  For each type it will then do the following:
       </p>
-      <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+      <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
 	  Set the variable <code class="varname">SIZEOF_<em class="replaceable"><code>varname</code></em></code>
 	  to the result of the test.
 	</li><li class="listitem">

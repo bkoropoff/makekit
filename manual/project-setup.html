@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 1. Setting Up Your Project</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="pt01.html" title="Part I. Guide" /><link rel="next" href="conventions.html" title="Chapter 2. Conventions and Patterns" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 1. Setting Up Your Project</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="pt01.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="conventions.html">Next</a></td></tr></table><hr /></div><div class="chapter" title="Chapter 1. Setting Up Your Project"><div class="titlepage"><div><div><h2 class="title"><a id="project-setup"></a>Chapter 1. Setting Up Your Project</h2></div></div></div>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 1. Setting Up Your Project</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.78.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="pt01.html" title="Part I. Guide" /><link rel="next" href="conventions.html" title="Chapter 2. Conventions and Patterns" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 1. Setting Up Your Project</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="pt01.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="conventions.html">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a id="project-setup"></a>Chapter 1. Setting Up Your Project</h2></div></div></div>
   
   <p>
     This chapter will walk you through the basics of setting up a
@@ -8,7 +8,7 @@
     However, the steps here remain the same for any sort of project.
   </p>
 
-  <div class="section" title="Directory Layout"><div class="titlepage"><div><div><h2 class="title"><a id="idp2497288"></a>Directory Layout</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="idm140208486095728"></a>Directory Layout</h2></div></div></div>
     
     <p>
       All <span class="productname">MakeKit</span> rules are placed in <code class="filename">MakeKitBuild</code>.
@@ -17,18 +17,18 @@
       of your project, or some intermediate arrangement.  A typical project opting for multiple
       small files might look like the following:
     </p>
-    <div class="itemizedlist" title="project-name/"><p class="title"><strong><code class="filename">project-name/</code></strong></p><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">default.conf</code></p></li><li class="listitem">
+    <div class="itemizedlist"><p class="title"><strong><code class="filename">project-name/</code></strong></p><ul class="itemizedlist" type="disc"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">default.conf</code></p></li><li class="listitem">
 	<p><code class="filename">include/</code></p>
-	<div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">project-name.h</code></p></li></ul></div>
+	<div class="itemizedlist"><ul class="itemizedlist" type="circle"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">project-name.h</code></p></li></ul></div>
       </li><li class="listitem">
 	<p><code class="filename">src/</code></p>
-	<div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">project-name.c</code></p></li></ul></div>
+	<div class="itemizedlist"><ul class="itemizedlist" type="circle"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">project-name.c</code></p></li></ul></div>
       </li><li class="listitem">
 	<p><code class="filename">doc/</code></p>
-	<div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">readme.txt</code></p></li></ul></div>
+	<div class="itemizedlist"><ul class="itemizedlist" type="circle"><li class="listitem"><p><code class="filename">MakeKitBuild</code></p></li><li class="listitem"><p><code class="filename">readme.txt</code></p></li></ul></div>
       </li></ul></div>
   </div>
-  <div class="section" title="Build Files"><div class="titlepage"><div><div><h2 class="title"><a id="idp2502840"></a>Build Files</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="idm140208486080048"></a>Build Files</h2></div></div></div>
     
     <p>
       Once you've decided where to place your <code class="filename">MakeKitBuild</code> files, you'll
@@ -39,16 +39,16 @@
     </p>
     <div class="informalexample">
 <pre class="programlisting">
-SUBDIRS="include src doc" <a class="co" id="co.mkb.subdirs" href="project-setup.html#mkb.subdirs"><img src="images/callouts/1.png" alt="1" border="0" /></a>
-MODULES="core compiler" <a class="co" id="co.mkb.modules" href="project-setup.html#mkb.modules"><img src="images/callouts/2.png" alt="2" border="0" /></a>
-PROJECT_NAME="project-name" <a class="co" id="co.mkb.project_name" href="project-setup.html#mkb.project_name"><img src="images/callouts/3.png" alt="3" border="0" /></a>
+SUBDIRS="include src doc" <a class="co" id="co.mkb.subdirs" href="project-setup.html#mkb.subdirs"><span><img src="images/callouts/1.png" alt="1" border="0" /></span></a>
+MODULES="core compiler" <a class="co" id="co.mkb.modules" href="project-setup.html#mkb.modules"><span><img src="images/callouts/2.png" alt="2" border="0" /></span></a>
+PROJECT_NAME="project-name" <a class="co" id="co.mkb.project_name" href="project-setup.html#mkb.project_name"><span><img src="images/callouts/3.png" alt="3" border="0" /></span></a>
 
-defaults() <a class="co" id="co.mkb.defaults" href="project-setup.html#mkb.defaults"><img src="images/callouts/4.png" alt="4" border="0" /></a>
+defaults() <a class="co" id="co.mkb.defaults" href="project-setup.html#mkb.defaults"><span><img src="images/callouts/4.png" alt="4" border="0" /></span></a>
 {
     PREFIX=/opt/project-name
 }
 
-option() <a class="co" id="co.mkb.option" href="project-setup.html#mkb.option"><img src="images/callouts/5.png" alt="5" border="0" /></a>
+option() <a class="co" id="co.mkb.option" href="project-setup.html#mkb.option"><span><img src="images/callouts/5.png" alt="5" border="0" /></span></a>
 {
     mk_option \
         OPTION="config-file" \
@@ -58,25 +58,25 @@ option() <a class="co" id="co.mkb.option" href="project-setup.html#mkb.option"><
         HELP="Configuration file path"
 }
 
-configure() <a class="co" id="co.mkb.configure" href="project-setup.html#mkb.configure"><img src="images/callouts/6.png" alt="6" border="0" /></a>
+configure() <a class="co" id="co.mkb.configure" href="project-setup.html#mkb.configure"><span><img src="images/callouts/6.png" alt="6" border="0" /></span></a>
 {
     mk_msg "configuration file: $CONFIG_FILE"
 }
 
-make() <a class="co" id="co.mkb.make" href="project-setup.html#mkb.make"><img src="images/callouts/7.png" alt="7" border="0" /></a>
+make() <a class="co" id="co.mkb.make" href="project-setup.html#mkb.make"><span><img src="images/callouts/7.png" alt="7" border="0" /></span></a>
 {
     mk_stage SOURCE="default.conf" DEST="$CONFIG_FILE"
 }
 </pre>
     </div>
-    <div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a id="mkb.subdirs"></a><a href="#co.mkb.subdirs"><img src="images/callouts/1.png" alt="1" border="0" /></a> </p></td><td valign="top" align="left">
+    <div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a id="mkb.subdirs"></a><a href="#co.mkb.subdirs"><span><img src="images/callouts/1.png" alt="1" border="0" /></span></a> </p></td><td valign="top" align="left">
 	<p>
 	  The <code class="varname">SUBDIRS</code> variable specifies a list of subdirectories
 	  where <span class="productname">MakeKit</span> should look for further
 	  <code class="filename">MakeKitBuild</code> files.  This line can be omitted if
 	  there are no subdirectories to specify.
 	</p>
-      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.modules"></a><a href="#co.mkb.modules"><img src="images/callouts/2.png" alt="2" border="0" /></a> </p></td><td valign="top" align="left">
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.modules"></a><a href="#co.mkb.modules"><span><img src="images/callouts/2.png" alt="2" border="0" /></span></a> </p></td><td valign="top" align="left">
 	<p>
 	  The <code class="varname">MODULES</code> variable specifies which
 	  <span class="productname">MakeKit</span> modules you will be using.
@@ -85,19 +85,19 @@ make() <a class="co" id="co.mkb.make" href="project-setup.html#mkb.make"><img sr
 	  module gives you access to functions for configure and building
 	  C language programs and libraries.
 	</p>
-      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.project_name"></a><a href="#co.mkb.project_name"><img src="images/callouts/3.png" alt="3" border="0" /></a> </p></td><td valign="top" align="left">
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.project_name"></a><a href="#co.mkb.project_name"><span><img src="images/callouts/3.png" alt="3" border="0" /></span></a> </p></td><td valign="top" align="left">
          <p>
            The <code class="varname">PROJECT_NAME</code> variable specified
            the name of the project.  If unspecified, the name of the directory
            of the <code class="filename">MakeKitBuild</code> file is used instead.
          </p>
-      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.defaults"></a><a href="#co.mkb.defaults"><img src="images/callouts/4.png" alt="4" border="0" /></a> </p></td><td valign="top" align="left">
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.defaults"></a><a href="#co.mkb.defaults"><span><img src="images/callouts/4.png" alt="4" border="0" /></span></a> </p></td><td valign="top" align="left">
          <p>
            The <code class="function">defaults</code> function allows you to set default
 	   values for options that are usually specified by the user when configuring
 	   the project to be built, such as the installation prefix.
          </p>
-      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.option"></a><a href="#co.mkb.option"><img src="images/callouts/5.png" alt="5" border="0" /></a> </p></td><td valign="top" align="left">
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.option"></a><a href="#co.mkb.option"><span><img src="images/callouts/5.png" alt="5" border="0" /></span></a> </p></td><td valign="top" align="left">
 	<p>
 	  The <code class="function">option</code> function is where you can define
 	  configuration options for your project which can be passed on the
@@ -110,7 +110,7 @@ make() <a class="co" id="co.mkb.make" href="project-setup.html#mkb.make"><img sr
 	  and a help message descriping the option (<em class="parameter"><code>HELP</code></em>).
 	  This particular example allows customizing the location of a configuration file.
 	</p>
-      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.configure"></a><a href="#co.mkb.configure"><img src="images/callouts/6.png" alt="6" border="0" /></a> </p></td><td valign="top" align="left">
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.configure"></a><a href="#co.mkb.configure"><span><img src="images/callouts/6.png" alt="6" border="0" /></span></a> </p></td><td valign="top" align="left">
 	<p>
 	  The <code class="function">configure</code> function is where you can perform any
 	  configuration for your project.  Typical operations performed here include
@@ -118,7 +118,7 @@ make() <a class="co" id="co.mkb.make" href="project-setup.html#mkb.make"><img sr
 	  any prerequisites for building.  Messages are usually printed to the user
 	  summarizing what is being done.
 	</p>
-      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.make"></a><a href="#co.mkb.make"><img src="images/callouts/7.png" alt="7" border="0" /></a> </p></td><td valign="top" align="left">
+      </td></tr><tr><td width="5%" valign="top" align="left"><p><a id="mkb.make"></a><a href="#co.mkb.make"><span><img src="images/callouts/7.png" alt="7" border="0" /></span></a> </p></td><td valign="top" align="left">
 	<p>
 	  The <code class="function">make</code> function is the meat of your build system.
 	  This is where you should define the build rules for your project that produce
@@ -136,13 +136,13 @@ make() <a class="co" id="co.mkb.make" href="project-setup.html#mkb.make"><img sr
       Your build files will be processed as follows, starting from the top-level
       <code class="filename">MakeKitBuild</code>:
     </p>
-    <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">The <code class="function">option</code> function will be run if present.</li><li class="listitem">The <code class="function">configure</code> function will be run if present.</li><li class="listitem">For each directory in <code class="varname">SUBDIRS</code>, the <code class="filename">
+    <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">The <code class="function">option</code> function will be run if present.</li><li class="listitem">The <code class="function">configure</code> function will be run if present.</li><li class="listitem">For each directory in <code class="varname">SUBDIRS</code>, the <code class="filename">
       MakeKitBuild</code> file in that directory will be recursively processed according to this list.</li><li class="listitem">The <code class="function">make</code> function will be run if present</li></ul></div>
     <p>
       If you wish for the <code class="function">make</code> function of a directory to be run before (or in the middle) of processing subdirectories, you may put <code class="literal">.</code> in <code class="varname">SUBDIRS</code>.
     </p>
   </div>
-  <div class="section" title="Installing MakeKit"><div class="titlepage"><div><div><h2 class="title"><a id="idp2520416"></a>Installing <span class="productname">MakeKit</span></h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="idm140208486006592"></a>Installing <span class="productname">MakeKit</span></h2></div></div></div>
     
     <p>
       Once your build files are in place, you're ready to install a copy of
@@ -176,7 +176,7 @@ Options:
   -f                Overwrite existing files
 </pre>
   </div>
-  <div class="section" title="Configuring"><div class="titlepage"><div><div><h2 class="title"><a id="idp2540224"></a>Configuring</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="idm140208486000832"></a>Configuring</h2></div></div></div>
     
     <p>
       Once <span class="productname">MakeKit</span> has been installed, you are
@@ -322,7 +322,7 @@ Options (project-name):
       the project.
     </p>
   </div>
-  <div class="section" title="Building"><div class="titlepage"><div><div><h2 class="title"><a id="idp2526824"></a>Building</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="idm140208485987728"></a>Building</h2></div></div></div>
     
     <p>
       At this point, the project is ready to be built by running <span class="command"><strong>make</strong></span>.
@@ -332,7 +332,7 @@ Options (project-name):
       <span class="productname">MakeKit</span> also generates the following set of convenience targets
       to aid in your workflow:
     </p>
-    <div class="variablelist"><dl><dt><span class="term"><span class="command"><strong>make <em class="replaceable"><code>subdir</code></em></strong></span></span></dt><dd>
+    <div class="variablelist"><dl class="variablelist"><dt><span class="term"><span class="command"><strong>make <em class="replaceable"><code>subdir</code></em></strong></span></span></dt><dd>
 	  <p>
 	    Builds products only from <em class="replaceable"><code>subdir</code></em> and any of its
 	    transitive subdirectories.  For example, <span class="command"><strong>make <code class="filename">doc</code></strong></span>

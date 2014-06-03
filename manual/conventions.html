@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 2. Conventions and Patterns</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.76.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="project-setup.html" title="Chapter 1. Setting Up Your Project" /><link rel="next" href="c-projects.html" title="Chapter 3. C Language Projects" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 2. Conventions and Patterns</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="project-setup.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="c-projects.html">Next</a></td></tr></table><hr /></div><div class="chapter" title="Chapter 2. Conventions and Patterns"><div class="titlepage"><div><div><h2 class="title"><a id="conventions"></a>Chapter 2. Conventions and Patterns</h2></div></div></div>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Chapter 2. Conventions and Patterns</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.78.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="pt01.html" title="Part I. Guide" /><link rel="prev" href="project-setup.html" title="Chapter 1. Setting Up Your Project" /><link rel="next" href="c-projects.html" title="Chapter 3. C Language Projects" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 2. Conventions and Patterns</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="project-setup.html">Prev</a> </td><th width="60%" align="center">Part I. Guide</th><td width="20%" align="right"> <a accesskey="n" href="c-projects.html">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h2 class="title"><a id="conventions"></a>Chapter 2. Conventions and Patterns</h2></div></div></div>
   
   <p>
     This chapter will familiarize you with common conventions and patterns
@@ -7,7 +7,7 @@
     write are just POSIX shell scripts, MakeKit adds a few twists to keep
     you on your toes:
   </p>
-  <div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+  <div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
       Build rules that may look like special syntax are actually just
       helper functions that take parameters with explicit names.
     </li><li class="listitem">
@@ -17,7 +17,7 @@
       notation for specifying build sources and products helps flatten
       your nested project hierarchy down to a single Makefile.
     </li></ul></div>
-  <div class="section" title="Life in Shell"><div class="titlepage"><div><div><h2 class="title"><a id="life-in-shell"></a>Life in Shell</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="life-in-shell"></a>Life in Shell</h2></div></div></div>
     
     <p>
       MakeKit uses POSIX shell as its implementation and build file
@@ -54,7 +54,7 @@
       without inscrutable preprocessing steps by perl and m4.  According
       to my rough calculations that makes it 66% saner by volume.
     </p>
-    <div class="section" title="Keyword Parameters"><div class="titlepage"><div><div><h3 class="title"><a id="idp2528264"></a>Keyword Parameters</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="idm140208485955600"></a>Keyword Parameters</h3></div></div></div>
       
       <p>
 	MakeKit provides a few amenities to make your stay in the world
@@ -80,7 +80,7 @@ mk_program \
 	The keyword parameters in a function call may appear in any order.
 	Many functions have optional parameters that may be omitted entirely.
       </p>
-      <div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3>
+      <div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3>
 	Keyword parameters are intentionally evocative of the GNU
 	<span class="command"><strong>automake</strong></span> syntax that many have grown
 	accustomed to.  However, don't forget that you are writing
@@ -95,7 +95,7 @@ mk_program \
 	to avoid clobbering their existing values.
       </p>
     </div>
-    <div class="section" title="Quoting and Lists"><div class="titlepage"><div><div><h3 class="title"><a id="idp2566736"></a>Quoting and Lists</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="idm140208485948752"></a>Quoting and Lists</h3></div></div></div>
       
       <p>
 	Often a function will take a list of items as one of its keyword
@@ -159,14 +159,14 @@ mk_program \
       <a class="xref" href="mk_unquote_list.html" title="mk_unquote_list"><span class="refentrytitle">mk_unquote_list</span></a>.
     </p>
     </div>
-    <div class="section" title="Special Variables"><div class="titlepage"><div><div><h3 class="title"><a id="idp2477576"></a>Special Variables</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="idm140208485948496"></a>Special Variables</h3></div></div></div>
       
       <p>
 	MakeKit allows you to declare variables with special behavior
 	using the <a class="xref" href="mk_declare.html" title="mk_declare"><span class="refentrytitle">mk_declare</span></a> function.  There are 4
 	types of attributes which may be used in any combination:
       </p>
-      <div class="variablelist"><dl><dt><span class="term">Exported (<code class="literal">mk_declare -e</code>)</span></dt><dd>
+      <div class="variablelist"><dl class="variablelist"><dt><span class="term">Exported (<code class="literal">mk_declare -e</code>)</span></dt><dd>
 	    <p>
 	      An exported variable will have its value at the time
 	      <span class="command"><strong>configure</strong></span> was run saved so that it
@@ -217,7 +217,7 @@ mk_program \
 	  </dd></dl></div>
     </div>
   </div>
-  <div class="section" title="File Layout"><div class="titlepage"><div><div><h2 class="title"><a id="idp2526256"></a>File Layout</h2></div></div></div>
+  <div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="idm140208485923152"></a>File Layout</h2></div></div></div>
     
     <p>
       MakeKit allows you to organize your project in a hierarchy,
@@ -231,13 +231,13 @@ mk_program \
       <span class="command"><strong>make</strong></span>, but it means you must bear in mind
       following:
     </p>
-    <div class="important" title="The Iron-clad Law of MakeKit" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">The Iron-clad Law of MakeKit</h3>
+    <div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">The Iron-clad Law of MakeKit</h3>
       
       The current working directory when configuring or building is
       always <a class="xref" href="MK_ROOT_DIR.html" title="MK_ROOT_DIR"><span class="refentrytitle">MK_ROOT_DIR</span></a>, the directory where
       <span class="command"><strong>configure</strong></span> was run.
     </div>
-    <div class="section" title="Finding Your Files"><div class="titlepage"><div><div><h3 class="title"><a id="idp2543312"></a>Finding Your Files</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="idm140208485918304"></a>Finding Your Files</h3></div></div></div>
       
       <p>
 	Many MakeKit functions conveniently accept file paths relative
@@ -249,7 +249,7 @@ mk_program \
 	about where to look.  There are several variables that indicate
 	areas where files of interest can be found:
       </p>
-      <div class="variablelist"><dl><dt><span class="term">Source directory (<a class="xref" href="MK_SOURCE_DIR.html" title="MK_SOURCE_DIR"><span class="refentrytitle">MK_SOURCE_DIR</span></a>)</span></dt><dd><p>This is the top of your source tree where your top-level
+      <div class="variablelist"><dl class="variablelist"><dt><span class="term">Source directory (<a class="xref" href="MK_SOURCE_DIR.html" title="MK_SOURCE_DIR"><span class="refentrytitle">MK_SOURCE_DIR</span></a>)</span></dt><dd><p>This is the top of your source tree where your top-level
 	  <code class="filename">MakeKitBuild</code> file can be found.</p></dd><dt><span class="term">Source subdirectory (<a class="xref" href="MK_SOURCE_SUBDIR.html" title="MK_SOURCE_SUBDIR"><span class="refentrytitle">MK_SOURCE_SUBDIR</span></a>)</span></dt><dd><p>This is the directory within your source tree where the
 	  <code class="filename">MakeKitBuild</code> file currently being processed
 	  can be found.</p></dd><dt><span class="term">Object directory (<a class="xref" href="MK_OBJECT_DIR.html" title="MK_OBJECT_DIR"><span class="refentrytitle">MK_OBJECT_DIR</span></a>)</span></dt><dd><p>This is the top of the object directory where intermediate
@@ -263,7 +263,7 @@ mk_program \
 	  filesystem: <code class="literal">$MK_STAGE_DIR/usr/bin</code>,
 	  <code class="literal">$MK_STAGE_DIR/usr/lib</code>, etc.</p></dd></dl></div>
     </div>
-    <div class="section" title="Target Notation"><div class="titlepage"><div><div><h3 class="title"><a id="idp2529768"></a>Target Notation</h3></div></div></div>
+    <div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="idm140208485903248"></a>Target Notation</h3></div></div></div>
       
       <p>
 	Rather than forcing you to use the aforementioned variables
