@@ -123,8 +123,7 @@ make()
             OUTPUT="reference/package.xml" -- \
             --title "Package Modules" \
             --module package package-rpm package-deb \
-            package-freebsd package-pkg package-lpp \
-            package-depot package-mac
+            package-freebsd
 
         reference_end
 

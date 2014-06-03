@@ -15,13 +15,10 @@ make()
         mk/command/doc.sh \
         mk/script/group.sh \
         mk/script/scrub.sh \
-        mk/script/build-depot.sh \
         mk/script/compile.sh \
         mk/script/clean.sh \
-        mk/script/build-lpp.sh \
         mk/script/link.sh \
         mk/script/install.sh \
-        mk/script/build-macpkg.sh \
         mk/script/scour.sh \
         mk/module/doxygen.sh \
         mk/module/package.sh \
@@ -32,21 +29,17 @@ make()
         mk/module/core.sh \
         mk/module/package-rpm.sh \
         mk/module/platform.sh \
-        mk/module/package-lpp.sh \
         mk/module/chain-compiler.sh \
-        mk/module/package-depot.sh \
         mk/module/chain-autotools.sh \
         mk/module/package-freebsd.sh \
         mk/module/path.sh \
         mk/module/gnu-debuginfo.sh \
         mk/module/pkg-config.sh \
         mk/module/chain-generic.sh \
-        mk/module/package-pkg.sh \
         mk/module/compiler.sh \
         mk/module/darwin-debuginfo.sh \
         mk/module/program.sh \
-        mk/module/moonunit.sh \
-        mk/module/package-mac.sh
+        mk/module/moonunit.sh
         
     mk_target \
 	TARGET="${MK_BINDIR}/makekit" \
