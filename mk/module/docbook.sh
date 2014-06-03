@@ -473,8 +473,9 @@ _mk_docbook()
         mk_run_or_fail cp "$result" "$TMPDIR/$f"
     done
 
-    mk_msg "${OUTPUT#${MK_STAGE_DIR}}"
-    mk_mkdir "${OUTPUT%/*}"
+    mk_pretty_path "$OUTPUT"
+    mk_msg "$result"
+    mk_mkdirname "$OUTPUT"
     mk_cd_or_fail "$TMPDIR"
     mk_run_or_fail \
         "${XSLTPROC}" \
