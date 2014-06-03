@@ -26,13 +26,80 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-##
+#<
+# @module moonunit
+# @brief Build MoonUnit tests
 #
-# moonunit.sh -- support for building MoonUnit unit test libraries
+# Allows building tests using the MoonUnit test framework.
 #
-# FIXME: move to contrib module area?
+# To check for the availability of MoonUnit, use <funcref>mk_check_moonunit</funcref>.
+# To build a test library, use <funcref>mk_moonunit</funcref>.
+# When this module is included in a project, a <lit>test</lit> target is generated which
+# runs all MoonUnit test libraries within the project.  Other targets which run particular
+# test libraries can be manually defined with <funcref>mk_moonunit_test</funcref>.
 #
-##
+# All targets which run tests accept the following parameters to <lit>make</lit>:
+#
+# <deflist>
+#   <defentry>
+#     <term><lit>TEST=</lit><param>pattern</param></term>
+#     <item>
+#       Passes <param>pattern</param> as the <lit>-t</lit> option of MoonUnit,
+#       selecting a subset of tests to run.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>DEBUG=</lit><param>pattern</param></term>
+#     <item>
+#       Similar to <lit>TEST=</lit>, but also runs the unit tests in debug mode
+#       within a debugger.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>DEBUGGER=</lit><param>command</param></term>
+#     <item>
+#       Use <param>command</param> as the debugger in which MoonUnit is run when
+#       using the <lit>DEBUG=</lit> option.  Defaults to <lit>gdb --args</lit>.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>LOGLEVEL=</lit><param>level</param></term>
+#     <item>
+#       Use <param>level</param> as the log level when running tests.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>XML=</lit><param>file</param></term>
+#     <item>
+#       Outputs XML test results to <param>file</param> in addition to
+#       the human-readable output written to the console.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>HTML=</lit><param>dir</param></term>
+#     <item>
+#       Outputs XHTML test results to <param>dir</param> in addition to
+#       the human-readable output written to the console.
+#     </item>
+#   </defentry>
+#   <defentry>
+#     <term><lit>TITLE=</lit><param>title</param></term>
+#     <term><lit>RUN=</lit><param>run</param></term>
+#     <item>
+#       Sets the title and test run identifiers which appear in XML and HTML output.
+#     </item>
+#   </defentry>
+# </deflist>
+#>
+
+#<
+# @var MK_MOONUNIT_DIR
+# @brief Unit test output directory
+# @value mu The default directory name.
+#
+# The subdirectory of the build directory where MoonUnit unit test
+# libraries are placed.
+#>
 
 DEPENDS="path compiler program"
 
@@ -65,6 +132,25 @@ _mk_invoke_moonunit_stub()
 
 ### section configure
 
+#<
+# @brief Build a MoonUnit test library
+# @usage DLO=dlo SOURCES=sources options...
+# @option DLO=dlo The name of the library
+# @option SOURCES=sources The test sources
+# @option ... All options applicable to <funcref>mk_dlo</funcref>.
+#
+# Defines a target to build a MoonUnit test library.  This function
+# behaves nearly identically to <funcref>mk_dlo</funcref>, except that
+# <lit>moonunit-stub</lit> is automatically invoked on the source files to
+# generate a stub for the MoonUnit test loader, and <param>INSTALLDIR</param>
+# defaults to <lit>@$MK_MOONUNIT_DIR</lit>.
+#
+# To use this function, you must use first perform a configuration check
+# with <funcref>mk_check_moonunit</funcref>.  If you do not, or MoonUnit
+# is not found, this function will fail.
+#
+# Sets <var>result</var> to the generated library file target.
+#>
 mk_moonunit()
 {
     mk_have_moonunit || mk_fail "mk_moonunit: moonunit unavailable"
@@ -121,6 +207,28 @@ mk_moonunit()
     mk_pop_vars
 }
 
+#<
+# @brief Define a MoonUnit test target
+# @usage NAME=name libraries...
+# @option NAME=name The name of the test target
+# @option HELP=help Message to display for the target when running <lit>make help</lit>
+# @option libraries A list of libraries (as separate parameters) to run in target notation.
+# @option LIBRARIES=libraries An alternate way to specify the libraries using an
+#                             internally-quoted list.
+#
+# Defines a phony target with the given literal name which runs MoonUnit tests
+# in the specified libraries.
+#
+# To use this function, you must use first perform a configuration check
+# with <funcref>mk_check_moonunit</funcref>.  If you do not, or MoonUnit
+# is not found, this function will fail.
+#
+# This function is a no-op when cross-compiling, or when the build system
+# has the MoonUnit libraries, headers, and stub generator, but lacks the
+# <lit>moonunit</lit> binary, as tests cannot be run in these cases.
+#
+# Sets <var>result</var> to the generated phony target.
+#>
 mk_moonunit_test()
 {
     mk_push_vars LIBRARIES NAME HELP
@@ -159,8 +267,8 @@ mk_moonunit_test()
             RUN='$(RUN)' \
             PARAMS='$(PARAMS)' \
             "*$LIBRARIES"
-        
-        mk_add_phony_target "$result"
+    else
+        result=""
     fi
 
     mk_pop_vars
@@ -176,6 +284,13 @@ option()
         HELP="Directory where MoonUnit tests are placed"
 }
 
+#<
+# @brief Check for MoonUnit
+# @usage
+#
+# Checks for all prerequisites necessary to build MoonUnit tests.
+# You can test for the result with <funcref>mk_have_moonunit</funcref>.
+#>
 mk_check_moonunit()
 {
     mk_check_program moonunit-stub
@@ -194,6 +309,14 @@ mk_check_moonunit()
     mk_declare -i HAVE_MOONUNIT
 }
 
+#<
+# @brief Test if MoonUnit was found
+# @usage
+#
+# Returns <lit>0</lit> (logical true) if MoonUnit was found successfully by
+# <funcref>mk_check_moonunit</funcref>, and <lit>1</lit> (logical false)
+# otherwise.
+#>
 mk_have_moonunit()
 {
     [ "$HAVE_MOONUNIT" = "yes" ]

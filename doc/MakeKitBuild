@@ -115,6 +115,11 @@ make()
             --module doxygen
 
         reference \
+            OUTPUT="reference/moonunit.xml" -- \
+            --title "MoonUnit Module" \
+            --module moonunit
+
+        reference \
             OUTPUT="reference/package.xml" -- \
             --title "Package Modules" \
             --module package package-rpm package-deb \
