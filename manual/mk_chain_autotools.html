@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>mk_chain_autotools</title><link rel="stylesheet" type="text/css" href="docbook.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.78.1" /><link rel="home" href="index.html" title="MakeKit Manual" /><link rel="up" href="rn04.html" title="Chaining Modules" /><link rel="prev" href="chain-autotools.html" title="chain-autotools" /><link rel="next" href="chain-compiler.html" title="chain-compiler" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">mk_chain_autotools</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="chain-autotools.html">Prev</a> </td><th width="60%" align="center">Chaining Modules</th><td width="20%" align="right"> <a accesskey="n" href="chain-compiler.html">Next</a></td></tr></table><hr /></div><div class="refentry"><a id="mk_chain_autotools"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>mk_chain_autotools — Build autotools source component</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><pre class="programlisting">
-MODULES="... chain-autotools ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_chain_autotools</code>  <em class="replaceable"><code>options</code></em>...   <code class="literal">--</code>   <em class="replaceable"><code>configure_params</code></em>... </p></div></div><div class="refsection"><a id="idm140208484003456"></a><h2>Options</h2><div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="literal">MAKE_BUILD_TARGET=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
+MODULES="... chain-autotools ..."</pre><div class="cmdsynopsis"><p><code class="function">mk_chain_autotools</code>  <em class="replaceable"><code>options</code></em>...   <code class="literal">--</code>   <em class="replaceable"><code>configure_params</code></em>... </p></div></div><div class="refsection"><a id="idm139822664287120"></a><h2>Options</h2><div class="variablelist"><dl class="variablelist"><dt><span class="term"><code class="literal">MAKE_BUILD_TARGET=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
 The target name to pass to make when building the component.  Defaults to nothing (e.g. the default target in the Makefile, usually "all").
 </p></dd><dt><span class="term"><code class="literal">MAKE_INSTALL_TARGET=</code><em class="replaceable"><code>name</code></em></span></dt><dd><p>
 The target name to pass to make when installing the component.  Defaults to "install".
@@ -16,7 +16,7 @@ An optional list of patterns that will be passed to <code class="literal">find</
 Any option supported by <code class="function"><a class="xref" href="mk_chain_compiler.html" title="mk_chain_compiler"><span class="refentrytitle">mk_chain_compiler</span></a></code>.
 </p></dd><dt><span class="term"><em class="replaceable"><code>configure_params</code></em></span></dt><dd><p>
 Additional parameters to pass to the component's configure script.
-</p></dd></dl></div></div><div class="refsection"><a id="idm140208483988208"></a><h2>Description</h2>
+</p></dd></dl></div></div><div class="refsection"><a id="idm139822664271552"></a><h2>Description</h2>
 <p>
 Builds and installs an autotools (autoconf, automake, libtool) source
 component using <code class="function"><a class="xref" href="mk_chain_compiler.html" title="mk_chain_compiler"><span class="refentrytitle">mk_chain_compiler</span></a></code>.  Default configure
@@ -30,7 +30,7 @@ to the configure script of the component.  In addition, flags such as
 <code class="literal">--prefix</code> are passed automatically according to how the
 MakeKit project was configured.
 </p>
-</div><div class="refsection"><a id="idm140208483983632"></a><h2>Examples</h2><pre class="programlisting">
+</div><div class="refsection"><a id="idm139822664267280"></a><h2>Examples</h2><pre class="programlisting">
 make()
 {
     # Build popt in the popt-1.15 directory
