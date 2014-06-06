@@ -283,7 +283,7 @@ _mk_chain_stage()
     for target
     do
         mk_msg_domain "stage"
-        mk_pretty_target "$target"
+        mk_pretty_path "${target#@}"
         mk_msg "$result"
 
         mk_unquote_list "$outdirs"
