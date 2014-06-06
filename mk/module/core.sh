@@ -546,9 +546,6 @@ mk_pretty_target()
         "@$MK_SOURCE_SUBDIR"/*)
             result="${result#@$MK_SOURCE_SUBDIR/}"
             ;;
-        *)
-            result="@$result"
-            ;;
     esac
 }
 
