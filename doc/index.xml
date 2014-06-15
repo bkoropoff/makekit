@@ -19,6 +19,7 @@
     <xi:include href="reference/utils.xml"/>
     <xi:include href="reference/core.xml"/>
     <xi:include href="reference/compiler.xml"/>
+    <xi:include href="reference/rust.xml"/>
     <xi:include href="reference/chain.xml"/>
     <xi:include href="reference/fetch.xml"/>
     <xi:include href="reference/docbook.xml"/>

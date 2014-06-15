@@ -40,7 +40,8 @@ make()
         mk/module/compiler.sh \
         mk/module/darwin-debuginfo.sh \
         mk/module/program.sh \
-        mk/module/moonunit.sh
+        mk/module/moonunit.sh \
+        mk/module/rust.sh
         
     mk_target \
         TARGET="${MK_BINDIR}/makekit" \

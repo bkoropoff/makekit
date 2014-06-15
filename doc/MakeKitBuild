@@ -130,6 +130,11 @@ make()
             --module package package-rpm package-deb \
             package-freebsd
 
+        reference \
+            OUTPUT="reference/rust.xml" -- \
+            --title "Rust Module" \
+            --module rust
+
         reference_end
 
         mk_docbook_html \
