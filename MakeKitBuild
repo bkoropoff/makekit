@@ -10,6 +10,7 @@ make()
         mk/doc.awk \
         mk/build.sh \
         mk/build.awk \
+        mk/makekit \
         mk/command/configure.sh \
         mk/command/init.sh \
         mk/command/doc.sh \
