@@ -110,8 +110,8 @@ find_shell()
         do
             if [ -x "$_dir/$_shell" ]
             then
-	        MK_SHELL="$_dir/$_shell"
-	        return 0
+                MK_SHELL="$_dir/$_shell"
+                return 0
             fi
         done
         IFS="$_IFS"

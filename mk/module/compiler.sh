@@ -2964,7 +2964,7 @@ mk_check_sizeofs()
 
         mk_msg_result "$result"
 
-	[ "$result" != "no" ] && mk_define "SIZEOF_$DEFNAME" "$result"
+        [ "$result" != "no" ] && mk_define "SIZEOF_$DEFNAME" "$result"
     done
 
     mk_pop_vars
