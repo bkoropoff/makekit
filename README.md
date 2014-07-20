@@ -21,3 +21,8 @@ Feature Highlights
 - **Optimized for parallel building**
 
   MakeKit does a single configuration pass and generates a single global Makefile regardless of how many discrete subprojects are present in your build. This lets you efficiently saturate all your CPU cores with work.
+
+Documentation
+=============
+
+Consult the [manual](http://bkoropoff.github.io/makekit/manual/) for details.
