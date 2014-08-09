@@ -3128,6 +3128,24 @@ option()
         _default_OPTFLAGS="-O2 -g"
     fi
 
+    for _cand in clang gcc cc
+    do
+        if type "$_cand" >/dev/null 2>&1
+        then
+            _default_CC="$_cand"
+            break
+        fi
+    done
+
+    for _cand in clang++ g++ c++
+    do
+        if type "$_cand" >/dev/null 2>&1
+        then
+            _default_CXX="$_cand"
+            break
+        fi
+    done
+
     mk_option \
         OPTION="warn-all-flags" \
         VAR="MK_WARN_ALL_FLAGS" \
@@ -3152,18 +3170,32 @@ option()
     mk_option \
         VAR="CC" \
         PARAM="program" \
-        DEFAULT="gcc" \
+        DEFAULT="$_default_CC" \
         HELP="Default C compiler"
 
     MK_DEFAULT_CC="$CC"
 
+    # clang tends to generate a lot of unused argument warnings,
+    # so silence them by default
+    case "${MK_DEFAULT_CC}" in
+        clang)
+            _default_CFLAGS="-Qunused-arguments"
+            ;;
+    esac
+
     mk_option \
         VAR="CXX" \
         PARAM="program" \
-        DEFAULT="g++" \
+        DEFAULT="$_default_CXX" \
         HELP="Default C++ compiler"
 
     MK_DEFAULT_CXX="$CXX"
+
+    case "${MK_DEFAULT_CXX}" in
+        clang++)
+            _default_CXXFLAGS="-Qunused-arguments"
+            ;;
+    esac
 
     if [ "$MK_STATIC_LIBS" != "no" ]
     then
@@ -3195,7 +3227,7 @@ option()
     mk_option \
         VAR="CFLAGS" \
         PARAM="flags" \
-        DEFAULT="$_default_OPTFLAGS" \
+        DEFAULT="$_default_OPTFLAGS $_default_CFLAGS" \
         HELP="C compiler flags"
 
     MK_CFLAGS="$CFLAGS"
@@ -3203,7 +3235,7 @@ option()
     mk_option \
         VAR="CXXFLAGS" \
         PARAM="flags" \
-        DEFAULT="$_default_OPTFLAGS" \
+        DEFAULT="$_default_OPTFLAGS $_default_CXXFLAGS" \
         HELP="C++ compiler flags"
 
     MK_CXXFLAGS="$CXXFLAGS"
