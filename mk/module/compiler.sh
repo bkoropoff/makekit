@@ -737,6 +737,27 @@ _mk_compiler_invocation()
     mk_pop_vars
 }
 
+_mk_compile_emit_json()
+{
+    if [ "$COMPILER" = "c++" ]
+    then
+        mk_quote_c_string "$2 $JSON_CDB_CXXFLAGS"
+    else
+        mk_quote_c_string "$2 $JSON_CDB_CFLAGS"
+    fi
+
+    cat <<EOF >>"$JSON_CDB.new"
+  $JSON_CDB_COMMA
+  {
+    "directory": "$MK_ROOT_DIR",
+    "command": $result
+    "file": "$1"
+  }
+EOF
+
+    JSON_CDB_COMMA=','
+}
+
 _mk_compile_emit_inner()
 {
     mk_resolve_file "$1"
@@ -752,8 +773,11 @@ _mk_compile_emit_inner()
         mk_append_list command mk_mkdirname "@$DEP_FILE" '%;'
 
     # Invoke compiler
-    _mk_compiler_invocation "&$1" "&$2"
+    _mk_compiler_invocation "$1" "$2"
     command="$command mk_run_or_fail $result '%;'"
+
+    # Dump command to JSON database if configured
+    [ "$JSON_CDB" != "no" ] && _mk_compile_emit_json "$__src" "$result"
 
     # Update dependencies
     [ -n "$DEP_FILE" ] && \
@@ -3532,6 +3556,27 @@ option()
                 HELP="Runtime library path flags ($_sys/$_isa)"
         done
     done
+
+    mk_option \
+        OPTION="json-cdb" \
+        VAR="JSON_CDB" \
+        PARAM="path|yes|no" \
+        DEFAULT="no" \
+        HELP="Generate JSON compiler database"
+
+    mk_option \
+        OPTION="json-cdb-cflags" \
+        VAR="JSON_CDB_CFLAGS" \
+        PARAM="flags" \
+        DEFAULT="" \
+        HELP="Extra cflags to include in JSON compiler database"
+
+    mk_option \
+        OPTION="json-cdb-cxxflags" \
+        VAR="JSON_CDB_CXXFLAGS" \
+        PARAM="flags" \
+        DEFAULT="" \
+        HELP="Extra cflags to include in JSON compiler database"
 }
 
 _mk_cc_primitive()
@@ -3811,12 +3856,36 @@ configure()
         done
     done
 
+    [ "$JSON_CDB" = "yes" ] && JSON_CDB="compile_commands.json"
+
+    mk_msg "JSON compile database: $JSON_CDB"
+
+    if [ "$JSON_CDB" != "no" ]
+    then
+        mk_msg "JSON cdb extra CFLAGS: $JSON_CDB_CFLAGS"
+        mk_msg "JSON cdb extra CXXFLAGS: $JSON_CDB_CXXFLAGS"
+
+        JSON_CDB_COMMA=""
+        echo "[" > "$JSON_CDB.new"
+    fi
+
     # Each invocation of mk_config_header closes and finishes up
     # the previous header.  In order to close the final config
     # header in the project, we register a completion hook as well.
     mk_add_complete_hook _mk_close_config_header
 
     mk_add_configure_prehook _mk_compiler_preconfigure
+}
+
+make()
+{
+    if [ "$JSON_CDB" != "no" ]
+    then
+        echo "]" >> "$JSON_CDB.new"
+        mk_run_or_fail mv -f "$JSON_CDB.new" "$JSON_CDB"
+
+        mk_add_scour_target "$JSON_CDB"
+    fi
 }
 
 _mk_compiler_preconfigure()
