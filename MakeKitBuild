@@ -16,7 +16,6 @@ make()
         mk/command/doc.sh \
         mk/script/group.sh \
         mk/script/scrub.sh \
-        mk/script/compile.sh \
         mk/script/clean.sh \
         mk/script/link.sh \
         mk/script/install.sh \

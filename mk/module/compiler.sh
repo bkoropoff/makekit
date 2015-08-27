@@ -668,6 +668,135 @@ _mk_set_compiler_for_link()
     $USED_CXX && COMPILER=c++
 }
 
+# Generate compiler invocation command
+_mk_compiler_invocation()
+{
+    mk_push_vars \
+        dir iflags cprog flags pch_flags dep_flags \
+        src obj
+
+    mk_resolve_file "$1"
+    src="$result"
+    mk_resolve_file "$2"
+    obj="$result"
+
+    for dir in ${INCLUDEDIRS}
+    do
+        case "$dir" in
+            /*)
+                iflags="$iflags -I${MK_STAGE_DIR}$dir"
+                ;;
+            *)
+                iflags="$iflags -I${MK_SOURCE_DIR}${MK_SUBDIR}/$dir -I${MK_OBJECT_DIR}${MK_SUBDIR}/$dir"
+                ;;
+        esac
+    done
+
+    case "$COMPILER" in
+        c)
+            cprog="$MK_CC"
+            flags="$MK_ISA_CFLAGS $MK_CFLAGS $CFLAGS $iflags $MK_ISA_CPPFLAGS $MK_CPPFLAGS $CPPFLAGS"
+            ;;
+        c++)
+            cprog="$MK_CXX"
+            flags="$MK_ISA_CXXFLAGS $MK_CXXFLAGS $CXXFLAGS $iflags $MK_ISA_CPPFLAGS $MK_CPPFLAGS $CPPFLAGS"
+            ;;
+    esac
+
+    if [ "$PIC" = "yes" ]
+    then
+        flags="$flags -fPIC"
+    fi
+
+    if [ -z "$CONFTEST" ]
+    then 
+        flags="$flags -I${MK_STAGE_DIR}${MK_INCLUDEDIR}"
+ 
+        _mk_slashless_name "${obj%.o}"
+        mk_quote "$DEP_FILE.new"
+        dep_flags="-MMD -MP -MF $result"
+        if [ "$MK_MULTIARCH" = "combine" ]
+        then
+           dep_flags="$dep_flags -MT $obj"
+        fi
+    fi
+ 
+    mk_defname "$MK_CANONICAL_SYSTEM"
+    flags="$flags -DHAVE_CONFIG_H -D_MK_$result"
+    mk_defname "${MK_CANONICAL_SYSTEM%/*}"
+    flags="$flags -D_MK_$result"
+
+    if [ -n "$PCH" ]
+    then
+        mk_append_list pch_flags "-include" "${PCH%.*}"
+    fi
+
+    mk_unquote_list "$dep_flags" "$pch_flags"
+    mk_quote_list $cprog $flags "$@" -o "$obj" -c "$src"
+
+    mk_pop_vars
+}
+
+_mk_compile_emit_inner()
+{
+    mk_resolve_file "$1"
+    __src="$result"
+    # Print message
+    mk_append_list command mk_msg_domain "compile" '%;'
+    mk_pretty_path "$__src"
+    mk_append_list command mk_msg "$result ($MK_CANONICAL_SYSTEM)" '%;'
+
+    # Create directories
+    mk_append_list command mk_mkdirname "&$2" '%;'
+    [ -n "$DEP_FILE" ] && \
+        mk_append_list command mk_mkdirname "@$DEP_FILE" '%;'
+
+    # Invoke compiler
+    _mk_compiler_invocation "&$1" "&$2"
+    command="$command mk_run_or_fail $result '%;'"
+
+    # Update dependencies
+    [ -n "$DEP_FILE" ] && \
+        mk_append_list command _mk_update_depfile "@$DEP_FILE" '%;'
+}
+
+_mk_compile_emit()
+{
+    mk_push_vars command src="$1" obj="$2" isa
+
+    if [ -z "$CONFTEST" -a "$MK_SYSTEM" = "host" -a "$MK_MULTIARCH" = "combine" ]
+    then
+        parts=""
+        sys="$MK_SYSTEM"
+        for isa in ${MK_HOST_ISAS}
+        do
+            mk_system "host/$isa"
+            part="${obj%.o}.$isa.o"
+            _mk_compile_emit_inner "src" "$part"
+            mk_append_list parts "&$part"
+        done
+        mk_system "$sys"
+        mk_unquote_list "$parts"
+        mk_append_list command _mk_compiler_multiarch_combine "&$obj" "$@" '%;'
+        for part
+        do
+            mk_append_list command mk_safe_rm "&$part" '%;'
+        done
+    else
+        _mk_compile_emit_inner "$src" "$obj"
+    fi
+
+    mk_unquote_list "$command"
+
+    mk_target \
+        TARGET="$obj" \
+        DEPS="$DEPS" \
+        -- \
+        "$@"
+
+    mk_pop_vars
+}
+
 _mk_compile()
 {
     # Preserve variables so prehooks can change them
@@ -708,10 +837,7 @@ _mk_compile()
     mk_resolve_target "${SOURCE}"
     mk_append_list DEPS "$result"
     
-    mk_target \
-        TARGET="$OBJECT" \
-        DEPS="$DEPS" \
-        mk_run_script compile %INCLUDEDIRS %CPPFLAGS %CFLAGS %CXXFLAGS %COMPILER %PIC %PCH '$@' "$result"
+    _mk_compile_emit "$SOURCE" "$OBJECT"
 
     mk_pop_vars
 }
@@ -746,6 +872,10 @@ _mk_compile_detect()
         _mk_objname "$result" "$OSUFFIX" ".o"
         OBJECT="$result"
     fi
+
+    mk_resolve_file "$OBJECT"
+    _mk_slashless_name "${result%.o}"
+    DEP_FILE=".MakeKitDeps/$result.dep"
   
     _mk_compile
 
@@ -2108,6 +2238,27 @@ EOF
     mk_pop_vars
 }
 
+_mk_do_compile()
+{
+    mk_push_vars \
+        INCLUDEDIRS CPPFLAGS CFLAGS \
+        CXXFLAGS COMPILER PIC DEP_FILE
+    mk_parse_params
+
+    mk_msg_domain "compile"
+    mk_pretty_path "@$1"
+    mk_msg "$result ($MK_CANONICAL_SYSTEM)"
+
+    # Get the invocation command
+    _mk_compiler_invocation "@$1" "@$2"
+    mk_unquote_list "$result"
+
+    # Do it
+    mk_run_or_fail "$@"
+
+    mk_pop_vars
+}
+
 _mk_build_test()
 {
     __test="${2%.*}"
@@ -2117,12 +2268,12 @@ _mk_build_test()
             (
                 eval "exec ${MK_LOG_FD}>&-"
                 MK_LOG_FD=""
-                mk_run_script compile \
+                _mk_do_compile \
                     COMPILER="$MK_CHECK_LANG" \
                     CONFTEST=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
-                    "${__test}.o" "${__test}.c"
+                    "${__test}.c" "${__test}.o"
             ) >&${MK_LOG_FD} 2>&1            
             _ret="$?"
             if [ "${1}" != "compile-keep" ]
@@ -2134,12 +2285,12 @@ _mk_build_test()
             (
                 eval "exec ${MK_LOG_FD}>&-"
                 MK_LOG_FD=""
-                mk_run_script compile \
+                _mk_do_compile \
                     COMPILER="$MK_CHECK_LANG" \
                     CONFTEST=yes \
                     CPPFLAGS="$CPPFLAGS" \
                     CFLAGS="$CFLAGS" \
-                    "${__test}.o" "${__test}.c"
+                    "${__test}.c" "${__test}.o"
                 mk_run_script link \
                     COMPILER="$MK_CHECK_LANG" \
                     CONFTEST=yes \
@@ -3699,4 +3850,18 @@ mk_run_link_posthooks()
     do
         ${_hook} "$@"
     done
+}
+
+_mk_update_depfile()
+{
+    if [ -f "$1.new" ]
+    then
+        if diff -q -- "$1" "$1.new" >/dev/null 2>&1
+        then
+            mk_safe_rm "$1.new"
+        else
+            mk_run_or_fail mv -f "$1.new" "$1"
+            mk_incremental_deps_changed
+        fi
+    fi
 }
