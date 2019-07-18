@@ -629,6 +629,9 @@ option()
                 ppc)
                     _default_MK_BUILD_ARCH="powerpc"
                     ;;
+                aarch64)
+                    _default_MK_BUILD_ARCH="aarch64"
+                    ;;
                 *)
                     mk_fail "unknown architecture: `uname -m`"
                     ;;
